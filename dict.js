@@ -275,7 +275,13 @@ options.add(['dict-simple', 'dics'],
 options.add(['dict-engine', 'dice'],
 	'Dict engine',
 	'string',
-	'dict_cn'
+	'dict_cn',
+	{
+		completer: function(context) [
+			['dict_cn', 'Dict.cn 海词'],
+			['google', 'Google Translate']
+		]
+	}
 );
 
 group.commands.add(["di[ct]", "dic"],
