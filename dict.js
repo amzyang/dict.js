@@ -262,6 +262,7 @@ let dict = {
 
 	popup: function(str, url) {
 		// https://developer.mozilla.org/en/Using_popup_notifications
+		// check firefox version, enable on firefox 4.0 or above.
 		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
 			str,
 			null, /* anchor ID */
