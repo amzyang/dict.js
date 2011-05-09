@@ -96,13 +96,14 @@ let dict_cn = {
 			ret['pron'] = pronelem.length ? pronelem[0].textContent : false;
 
 			// def
-			ret['def'] = def[0].textContent;
+			ret['def'] = dict._html_entity_decode(def[0].textContent);
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName('sent');
 			var origTrans = sentelems.length ? [] : false;
 			for (var i = 0; i < sentelems.length; i++) {
-				origTrans.push([sentelems[i].firstChild.textContent, sentelems[i].lastChild.textContent]);
+				origTrans.push([dict._html_entity_decode(sentelems[i].firstChild.textContent),
+						dict._html_entity_decode(sentelems[i].lastChild.textContent)]);
 			}
 			ret['origTrans'] = origTrans;
 
@@ -113,7 +114,7 @@ let dict_cn = {
 			ret['simple'] = ret['key'] + ': ';
 			if (ret['pron'])
 				ret['simple'] += '['+ret['pron'] +'] ';
-			ret['simple'] += dict.eolToSpace(ret['def']);
+			ret['simple'] += dict._eolToSpace(ret['def']);
 
 			ret['complex'] = 'xxx';
 		} else {
@@ -228,7 +229,7 @@ let dict = {
 				var result_arr = JSON.parse(req.responseText);
 				var suggestions = [];
 				result_arr['s'].forEach(function (r) {
-						r['e'] = r['e'].trim().replace(/&nbsp;/g, " ");
+						r['e'] = dict._html_entity_decode(r['e'].trim());
 						r['g'] = r['g'].trim();
 						r['url'] = 'http://dict.cn/' + encodeURIComponent(r['g']);
 						suggestions.push(r); // trim blank chars
@@ -256,11 +257,11 @@ let dict = {
 		dactyl.echo("");
 	},
 
-	eolToSpace: function(str) {
+	_eolToSpace: function(str) {
 		return str.replace(/\n/g, " ");
 	},
 
-	popup: function(str, url) {
+	_popup: function(str, url) {
 		// https://developer.mozilla.org/en/Using_popup_notifications
 		// check firefox version, enable on firefox 4.0 or above.
 		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
@@ -275,6 +276,13 @@ let dict = {
 			},
 			null  /* secondary action */
 		);
+	},
+
+	// http://stackoverflow.com/questions/2808368/converting-html-entities-to-unicode-character-in-javascript
+	_html_entity_decode: function(str) {
+		var e = content.document.createElement('div');
+		e.innerHTML = str;
+		return e.childNodes[0].nodeValue;
 	}
 
 };
