@@ -135,7 +135,7 @@ let dict = {
 	init: function(args) {
 		let keyword = args.join(" ") || "";
 		if (keyword.length == 0) {
-			keyword = content.window.getSelection().toString() || dactyl.clipboardRead() || "";
+			keyword = content.window.getSelection().toString() || "";
 		}
 		if (keyword.length == 0) {
 			commandline.input("Lookup: ", function(keyword) {
