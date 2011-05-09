@@ -45,14 +45,21 @@ var INFO =
 </plugin>;
 
 let google = {
+	keyword: "",
+	url: "",
+	init: function(args) {
 
+	}
 };
 
 let dict_cn = {
 	// http://dict.cn/tools.html
 	keyword: "",
+	url: "",
 	init: function(keyword) {
 		var req = new XMLHttpRequest();
+		dict_cn.keyword = keyword;
+		dict_cn.url = "http://dict.cn/"+keyword;
 		req.open("POST",
 			"http://dict.cn/ws.php?utf8=true&q="+keyword,
 			true
@@ -251,7 +258,24 @@ let dict = {
 
 	eolToSpace: function(str) {
 		return str.replace(/\n/g, " ");
+	},
+
+	popup: function(str, url) {
+		// https://developer.mozilla.org/en/Using_popup_notifications
+		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
+			str,
+			null, /* anchor ID */
+			{
+				label: "查看详细解释",
+				accessKey: "D",
+				callback: function() {
+					dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
+				}
+			},
+			null  /* secondary action */
+		);
 	}
+
 };
 
 options.add(["dict-audioplayer", "dicp"],
