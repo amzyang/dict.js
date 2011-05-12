@@ -346,3 +346,5 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
 // FORCE_SINGLELINE | APPEND_MESSAGES
 // 使用mozilla notification box?
+// clear previous active request
+// cache or history
