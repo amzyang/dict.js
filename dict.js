@@ -175,7 +175,7 @@ let dict = {
 		} else {
 			if (options.get('dict-simple').value) {
 				dactyl.echomsg(ret['simple'], 0, commandline.FORCE_SINGLELINE);
-				dactyl.timeout(dict._clear, 3000);
+				dactyl.timeout(dict._clear, 5000);
 			} else {
 				dactyl.echomsg(ret['complex']); // commandline.FORCE_MULTILINE
 			}
