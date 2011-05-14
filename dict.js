@@ -263,7 +263,7 @@ let dict = {
 			let dict_sound = document.getElementById('dict-sound');
 			if (!dict_sound) {
 				let sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
-				let addonbar = document.getElementById('addon-bar');
+				let addonbar = document.getElementById('addon-bar'); // FIXME: firefox 3.6 support
 				addonbar.appendChild(sound);
 				dict_sound = document.getElementById('dict-sound');
 				dict_sound.setAttribute('hidden', 'false'); // dirty hack, tell me why.
@@ -314,20 +314,22 @@ let dict = {
 
 };
 
-options.add(["dict-audioplayer", "dicp"],
-	"External audio player.",
-	"string",
-	'mpg321',
-	{
-		validator: function() true,
-		completer: function(context) [
-			['wmplayer', ''],
-			['mpg321', 'mpg321'],
-			['mplayer', 'mplayer'],
-			['mpg123', 'mpg123']
-		]
-	}
-);
+if (dict.isWin()) {
+	options.add(["dict-audioplayer", "dicp"],
+		"External audio player.",
+		"string",
+		'mpg321',
+		{
+			validator: function() true,
+			completer: function(context) [
+				['wmplayer', ''],
+				['mpg321', 'mpg321'],
+				['mplayer', 'mplayer'],
+				['mpg123', 'mpg123']
+			]
+		}
+	);
+}
 
 options.add(["dict-hasaudio", "dich"],
 	"Audio support.",
