@@ -68,6 +68,7 @@ let dict_cn = {
 			dict.dict_cn(req);
 		};
 		req.send(null);
+		dict.req = req;
 		return req;
 	},
 
@@ -126,6 +127,18 @@ let dict_cn = {
 
 let dict = {
 	engines: {'dict_cn' : dict_cn, 'google' : google},
+	get req() dict._req || null,
+	set req(req) {
+		if (dict.req)
+			dict.req.abort();
+		dict._req = req;
+	},
+	get suggestReq() dict._suggestReq || null,
+	set suggestReq(req) {
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict._suggestReq = req;
+	},
 	get keyword() dict._keyword,
 	set keyword(keyword) {
 		dict._keyword = encodeURIComponent(keyword.trim());
@@ -193,7 +206,7 @@ let dict = {
 	},
 
 	makeRequest:  function (context, args) {
-		var url = function(item, text) 
+		var url = function(item, text)
 		<>
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>
@@ -205,6 +218,7 @@ let dict = {
 		context.quote = ['', util.identity, ''];
 		context.offset=context.value.indexOf(" ") + 1;
 		context.process[1] = url;
+		context.key = encodeURIComponent(args.join("_"));
 		if (args.length == 0) {
 		} else {
 			var req = new XMLHttpRequest();
@@ -219,6 +233,7 @@ let dict = {
 			formData.append('q', args.join(" "));
 			formData.append('s', 'd');
 			req.send(formData);
+			dict.suggestReq = req;
 			return req;
 		}
 	},
@@ -242,15 +257,27 @@ let dict = {
 	},
 
 	_play: function(uri) {
-		if (dict.isWin())
-			return false;
 		if (!options.get('dict-hasaudio').value)
 			return false;
-		let cmd = ":";
-		if (options.get('dict-audioplayer').value)
-			cmd = options.get('dict-audioplayer').value;
-		ex.silent("!" + cmd + " '" + uri + "' &"); // uri 要解析特殊字符
-		// ex.silent("!" + cmd + ' ' + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
+		if (dict.isWin()) {
+			let dict_sound = document.getElementById('dict-sound');
+			if (!dict_sound) {
+				let sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
+				let addonbar = document.getElementById('addon-bar');
+				addonbar.appendChild(sound);
+				dict_sound = document.getElementById('dict-sound');
+				dict_sound.setAttribute('hidden', 'false'); // dirty hack, tell me why.
+			}
+			dict_sound.setAttribute('src', uri);
+			dict_sound.setAttribute('src', uri);
+			dict_sound.Play();
+		} else {
+			let cmd = ":";
+			if (options.get('dict-audioplayer').value)
+				cmd = options.get('dict-audioplayer').value;
+			ex.silent("!" + cmd + " '" + uri + "' &"); // uri 要解析特殊字符
+			// ex.silent("!" + cmd + ' ' + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
+		}
 	},
 
 	_clear: function() {
@@ -290,13 +317,22 @@ let dict = {
 options.add(["dict-audioplayer", "dicp"],
 	"External audio player.",
 	"string",
-	'mpg321'
+	'mpg321',
+	{
+		validator: function() true,
+		completer: function(context) [
+			['wmplayer', ''],
+			['mpg321', 'mpg321'],
+			['mplayer', 'mplayer'],
+			['mpg123', 'mpg123']
+		]
+	}
 );
 
 options.add(["dict-hasaudio", "dich"],
 	"Audio support.",
 	"boolean",
-	true
+	dict.isWin() ? false : true
 );
 
 options.add(['dict-simple', 'dics'],
@@ -342,9 +378,10 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 );
 
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret['complex']
-// 返回查询的页面链接，最好可点击
+// * 返回查询的页面链接，最好可点击
 // http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
 // FORCE_SINGLELINE | APPEND_MESSAGES
 // 使用mozilla notification box?
-// clear previous active request
+// * clear previous active request
 // cache or history
+// - sound is broken out? linux/winxp okay
