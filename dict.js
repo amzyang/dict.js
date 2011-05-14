@@ -389,4 +389,5 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // 使用mozilla notification box?
 // * clear previous active request
 // cache or history
-// - sound is broken out? linux/winxp okay
+// - sound is broken out? linux/winxp/win7 okay
+// auto completion doesn't work when you've never open dict.cn web page. --cookie
