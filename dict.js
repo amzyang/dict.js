@@ -144,6 +144,13 @@ let dict = {
 		dict._keyword = encodeURIComponent(keyword.trim());
 	},
 
+	get timeout() dict._timeout || null,
+	set timeout(timeout) {
+		if (dict.timeout)
+			dict.timeout.cancel();
+		dict._timeout = timeout;
+	},
+
 	get engine() dict.engines[options.get('dict-engine').value],
 
 	init: function(args) {
@@ -188,7 +195,7 @@ let dict = {
 		} else {
 			if (options.get('dict-simple').value) {
 				dactyl.echomsg(ret['simple'], 0, commandline.FORCE_SINGLELINE);
-				dactyl.timeout(dict._clear, 5000);
+				dict.timeout = dactyl.timeout(dict._clear, 5000);
 			} else {
 				dactyl.echomsg(ret['complex']); // commandline.FORCE_MULTILINE
 			}
@@ -217,7 +224,7 @@ let dict = {
 		context.filterFunc = null;
 		context.quote = ['', util.identity, ''];
 		context.offset=context.value.indexOf(" ") + 1;
-		context.process[1] = url;
+		context.process.push(url);
 		context.key = encodeURIComponent(args.join("_"));
 		if (args.length == 0) {
 		} else {
