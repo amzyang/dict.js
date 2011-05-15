@@ -84,49 +84,49 @@ let dict_cn = {
 			audio: false
 		};
 		var parser = new DOMParser();
-		ret['text'] = text;
+		ret["text"] = text;
 		var xml = parser.parseFromString(text, "text/xml");
-		var def = xml.getElementsByTagName('def');
-		if (def.length && (def[0].textContent !== 'Not Found')) {
+		var def = xml.getElementsByTagName("def");
+		if (def.length && (def[0].textContent !== "Not Found")) {
 
 			// key
-			var keyelem = xml.getElementsByTagName('key');
-			ret['key'] = keyelem.length ? keyelem[0].textContent : false;
+			var keyelem = xml.getElementsByTagName("key");
+			ret["key"] = keyelem.length ? keyelem[0].textContent : false;
 			// pron
-			var pronelem = xml.getElementsByTagName('pron');
-			ret['pron'] = pronelem.length ? pronelem[0].textContent : false;
+			var pronelem = xml.getElementsByTagName("pron");
+			ret["pron"] = pronelem.length ? pronelem[0].textContent : false;
 
 			// def
-			ret['def'] = dict._html_entity_decode(def[0].textContent);
+			ret["def"] = dict._html_entity_decode(def[0].textContent);
 
 			// origTrans
-			var sentelems = xml.getElementsByTagName('sent');
+			var sentelems = xml.getElementsByTagName("sent");
 			var origTrans = sentelems.length ? [] : false;
 			for (var i = 0; i < sentelems.length; i++) {
 				origTrans.push([dict._html_entity_decode(sentelems[i].firstChild.textContent),
 						dict._html_entity_decode(sentelems[i].lastChild.textContent)]);
 			}
-			ret['origTrans'] = origTrans;
+			ret["origTrans"] = origTrans;
 
 			// audio
-			var audioelem = xml.getElementsByTagName('audio');
-			ret['audio'] = audioelem.length ? audioelem[0].textContent : false;
+			var audioelem = xml.getElementsByTagName("audio");
+			ret["audio"] = audioelem.length ? audioelem[0].textContent : false;
 
-			ret['simple'] = ret['key'] + ': ';
-			if (ret['pron'])
-				ret['simple'] += '['+ret['pron'] +'] ';
-			ret['simple'] += dict._eolToSpace(ret['def']);
+			ret["simple"] = ret["key"] + ": ";
+			if (ret["pron"])
+				ret["simple"] += "["+ret["pron"] +"] ";
+			ret["simple"] += dict._eolToSpace(ret["def"]);
 
-			ret['complex'] = 'xxx';
+			ret["complex"] = "xxx";
 		} else {
-			ret['notfound'] = true;
+			ret["notfound"] = true;
 		}
 		return ret;
 	}
 }
 
 let dict = {
-	engines: {'dict_cn' : dict_cn, 'google' : google},
+	engines: {"dict_cn" : dict_cn, "google" : google},
 	get req() dict._req || null,
 	set req(req) {
 		if (dict.req)
@@ -151,7 +151,7 @@ let dict = {
 		dict._timeout = timeout;
 	},
 
-	get engine() dict.engines[options.get('dict-engine').value],
+	get engine() dict.engines[options.get("dict-engine").value],
 
 	init: function(args) {
 		let keyword = args.join(" ") || "";
@@ -182,23 +182,23 @@ let dict = {
 	},
 	process: function(ret) {
 		// audio
-		if (ret['audio'])
-			dict._play(ret['audio']);
+		if (ret["audio"])
+			dict._play(ret["audio"]);
 		else {
-			let uri = 'http://translate.google.com/translate_tts?q=' + dict.keyword;
+			let uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
 			dict._play(uri);
 		}
 
-		if (ret['notfound']) {
+		if (ret["notfound"]) {
 			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE);
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 			// dactyl.echo("未找到<b>" + dict.keyword + "</b>的翻译");
 		} else {
-			if (options.get('dict-simple').value) {
-				dactyl.echomsg(ret['simple'], 0, commandline.FORCE_SINGLELINE);
+			if (options.get("dict-simple").value) {
+				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 				dict.timeout = dactyl.timeout(dict._clear, 5000);
 			} else {
-				dactyl.echomsg(ret['complex']); // commandline.FORCE_MULTILINE
+				dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
 			}
 		}
 	},
@@ -220,10 +220,10 @@ let dict = {
 		href={item.item.url} highlight="URL">{text || ""}</a>
 		</>;
 		// context.waitingForTab = true;
-		context.title = ['Original', 'Translation'];
-		context.keys = {"text":'g', "description":'e'};
+		context.title = ["Original", "Translation"];
+		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
-		context.quote = ['', util.identity, ''];
+		context.quote = ["", util.identity, ""];
 		context.offset=context.value.indexOf(" ") + 1;
 		context.process[1] = url;
 		context.key = encodeURIComponent(args.join("_"));
@@ -238,8 +238,8 @@ let dict = {
 			}
 			// req.send(null);
 			var formData = new FormData();
-			formData.append('q', args.join(" "));
-			formData.append('s', 'd');
+			formData.append("q", args.join(" "));
+			formData.append("s", "d");
 			req.send(formData);
 			dict.suggestReq = req;
 			return req;
@@ -251,10 +251,10 @@ let dict = {
 			if (req.status == 200) {
 				var result_arr = JSON.parse(req.responseText);
 				var suggestions = [];
-				result_arr['s'].forEach(function (r) {
-						r['e'] = dict._html_entity_decode(r['e'].trim());
-						r['g'] = r['g'].trim();
-						r['url'] = 'http://dict.cn/' + encodeURIComponent(r['g']);
+				result_arr["s"].forEach(function (r) {
+						r["e"] = dict._html_entity_decode(r["e"].trim());
+						r["g"] = r["g"].trim();
+						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"]);
 						suggestions.push(r); // trim blank chars
 				});
 				context.completions = suggestions;
@@ -265,29 +265,29 @@ let dict = {
 	},
 
 	_play: function(uri) {
-		if (!options.get('dict-hasaudio').value)
+		if (!options.get("dict-hasaudio").value)
 			return false;
 		if (dict.isWin()) {
-			let dict_sound = document.getElementById('dict-sound');
+			let dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
 				let sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
-				let addonbar = document.getElementById('addon-bar'); // FIXME: firefox 3.6 support
+				let addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
 				addonbar.appendChild(sound);
-				dict_sound = document.getElementById('dict-sound');
-				dict_sound.setAttribute('hidden', 'false'); // dirty hack, tell me why.
+				dict_sound = document.getElementById("dict-sound");
+				dict_sound.setAttribute("hidden", "false"); // dirty hack, tell me why.
 				if (!dict_sound.Play)
-					dict_sound.setAttribute('autostart', 'true');
+					dict_sound.setAttribute("autostart", "true");
 			}
-			dict_sound.setAttribute('src', uri);
-			dict_sound.setAttribute('src', uri);
+			dict_sound.setAttribute("src", uri);
+			dict_sound.setAttribute("src", uri);
 			if (dict_sound.Play)
 				dict_sound.Play();
 		} else {
 			let cmd = ":";
-			if (options.get('dict-audioplayer').value)
-				cmd = options.get('dict-audioplayer').value;
+			if (options.get("dict-audioplayer").value)
+				cmd = options.get("dict-audioplayer").value;
 			ex.silent("!" + cmd + " '" + uri + "' &"); // uri 要解析特殊字符
-			// ex.silent("!" + cmd + ' ' + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
+			// ex.silent("!" + cmd + " " + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
 		}
 	},
 
@@ -337,13 +337,13 @@ if (!dict.isWin()) {
 	options.add(["dict-audioplayer", "dicp"],
 		"External audio player.",
 		"string",
-		'mplayer',
+		"mplayer",
 		{
 			validator: function() true,
 			completer: function(context) [
-				['mplayer', 'mplayer'],
-				['mpg321', 'mpg321'],
-				['mpg123', 'mpg123']
+				["mplayer", "mplayer"],
+				["mpg321 -o alsa", "mpg321"],
+				["mpg123", "mpg123"]
 			]
 		}
 	);
@@ -355,21 +355,41 @@ options.add(["dict-hasaudio", "dich"],
 	dict.isWin() ? false : true
 );
 
-options.add(['dict-simple', 'dics'],
+options.add(["dict-simple", "dics"],
 	"Simple Output",
 	"boolean",
 	true
 );
 
-options.add(['dict-engine', 'dice'],
-	'Dict engine',
-	'string',
-	'dict_cn',
+options.add(["dict-engine", "dice"],
+	"Dict engine",
+	"string",
+	"dict_cn",
 	{
 		completer: function(context) [
-			['dict_cn', 'Dict.cn 海词'],
-			['google', 'Google Translate']
+			["dict_cn", "Dict.cn 海词"],
+			["google", "Google Translate"]
 		]
+	}
+);
+
+function dblclick() {
+	let re = /([a-z]|[0-9])+/i;
+	ex.dict();
+}
+
+options.add(["dict-dblclick", "dicd"],
+	"Use Double Click",
+	"boolean",
+	false,
+	{
+		setter: function(value) {
+			if (value)
+				gBrowser.addEventListener("dblclick", dblclick, false);
+			else
+				gBrowser.removeEventListener("dblclick", dblclick, false);
+			return value;
+		}
 	}
 );
 
@@ -397,7 +417,7 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 	}
 );
 
-// dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret['complex']
+// dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
 // * 返回查询的页面链接，最好可点击
 // http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
 // FORCE_SINGLELINE | APPEND_MESSAGES
