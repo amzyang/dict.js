@@ -224,7 +224,7 @@ let dict = {
 		context.filterFunc = null;
 		context.quote = ['', util.identity, ''];
 		context.offset=context.value.indexOf(" ") + 1;
-		context.process.push(url);
+		context.process[1] = url;
 		context.key = encodeURIComponent(args.join("_"));
 		if (args.length == 0) {
 		} else {
@@ -405,3 +405,4 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // cache or history
 // - sound is broken out? linux/winxp/win7 okay
 // auto completion doesn't work when you've never open dict.cn web page. --cookie
+// support dblclick?
