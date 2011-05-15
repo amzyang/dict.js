@@ -317,8 +317,7 @@ let dict = {
 
 	// http://stackoverflow.com/questions/2808368/converting-html-entities-to-unicode-character-in-javascript
 	_html_entity_decode: function(str) {
-		var e = content.document.createElement('div');
-		e.innerHTML = str;
+		var e = util.xmlToDom(<div xmlns={XHTML}>{str}</div>, document);
 		return e.childNodes[0].nodeValue;
 	}
 
