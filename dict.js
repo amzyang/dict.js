@@ -336,13 +336,12 @@ if (!dict.isWin()) {
 	options.add(["dict-audioplayer", "dicp"],
 		"External audio player.",
 		"string",
-		'mpg321',
+		'mplayer',
 		{
 			validator: function() true,
 			completer: function(context) [
-				['wmplayer', ''],
-				['mpg321', 'mpg321'],
 				['mplayer', 'mplayer'],
+				['mpg321', 'mpg321'],
 				['mpg123', 'mpg123']
 			]
 		}
