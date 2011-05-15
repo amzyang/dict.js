@@ -190,7 +190,8 @@ let dict = {
 		}
 
 		if (ret['notfound']) {
-			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译");
+			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE);
+			dict.timeout = dactyl.timeout(dict._clear, 3000);
 			// dactyl.echo("未找到<b>" + dict.keyword + "</b>的翻译");
 		} else {
 			if (options.get('dict-simple').value) {
@@ -406,3 +407,5 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // - sound is broken out? linux/winxp/win7 okay
 // auto completion doesn't work when you've never open dict.cn web page. --cookie
 // support dblclick?
+// www.zdic.net support?
+// 当为汉字时，使用www.zdic.net的自动补全和解释
