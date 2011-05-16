@@ -196,7 +196,7 @@ let dict = {
 		} else {
 			if (options.get("dict-simple").value) {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
-				dict.timeout = dactyl.timeout(dict._clear, 5000);
+				dict.timeout = dactyl.timeout(dict._clear, 60000);
 			} else {
 				dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
 			}
@@ -384,10 +384,13 @@ options.add(["dict-dblclick", "dicd"],
 	false,
 	{
 		setter: function(value) {
-			if (value)
+			if (value) {
 				gBrowser.addEventListener("dblclick", dblclick, false);
-			else
+				gBrowser.addEventListener("click", function () { dactyl.echo("", commandline.FORCE_SINGLELINE); }, false);
+			} else {
 				gBrowser.removeEventListener("dblclick", dblclick, false);
+				gBrowser.removeEventListener("click", function () { dactyl.echo("", commandline.FORCE_SINGLELINE); }, false);
+			}
 			return value;
 		}
 	}
@@ -429,3 +432,4 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
+// nmap -builtin <Esc> :echo ""<CR><Esc>
