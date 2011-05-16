@@ -117,7 +117,7 @@ let dict_cn = {
 				ret["simple"] += "["+ret["pron"] +"] ";
 			ret["simple"] += dict._eolToSpace(ret["def"]);
 
-			ret["complex"] = "xxx";
+			ret["complex"] = "xxx"; // TODO
 		} else {
 			ret["notfound"] = true;
 		}
@@ -178,25 +178,26 @@ let dict = {
 	// check whether we are on Windows Platform.
 	isWin: function() {
 		let re = /^Win/;
-		return re.exec(window.navigator.platform) !== null;
+		return re.test(window.navigator.platform);
 	},
 	process: function(ret) {
 		// audio
 		if (ret["audio"])
 			dict._play(ret["audio"]);
 		else {
-			let uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
-			dict._play(uri);
+			if (/^[\u0001-\u00ff]+$/.test(dict.keyword)) { // 0-255
+				let uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
+				dict._play(uri);
+			}
 		}
 
 		if (ret["notfound"]) {
-			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE);
+			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE); // TODO: i18n?
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
-			// dactyl.echo("未找到<b>" + dict.keyword + "</b>的翻译");
 		} else {
 			if (options.get("dict-simple").value) {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
-				dict.timeout = dactyl.timeout(dict._clear, 60000);
+				dict.timeout = dactyl.timeout(dict._clear, 60000); // TODO: clickable, styling
 			} else {
 				dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
 			}
@@ -292,7 +293,7 @@ let dict = {
 	},
 
 	_clear: function() {
-		dactyl.echo("");
+		dactyl.echo("", commandline.FORCE_SINGLELINE);
 	},
 
 	_eolToSpace: function(str) {
@@ -373,9 +374,17 @@ options.add(["dict-engine", "dice"],
 	}
 );
 
-function dblclick() {
-	let re = /([a-z]|[0-9])+/i;
-	ex.dict();
+function dblclick(event) {
+	if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) {
+		return false;
+	}
+	let keyword = content.window.getSelection().toString().trim();
+	let re = /^[^_\s]+$/; // ao
+
+	if (event.detail == 2 && keyword.length && re.test(keyword))
+		ex.dict();
+	else
+		dict._clear();
 }
 
 options.add(["dict-dblclick", "dicd"],
@@ -385,11 +394,9 @@ options.add(["dict-dblclick", "dicd"],
 	{
 		setter: function(value) {
 			if (value) {
-				gBrowser.addEventListener("dblclick", dblclick, false);
-				gBrowser.addEventListener("click", function () { dactyl.echo("", commandline.FORCE_SINGLELINE); }, false);
+				gBrowser.addEventListener("click", dblclick, false);
 			} else {
-				gBrowser.removeEventListener("dblclick", dblclick, false);
-				gBrowser.removeEventListener("click", function () { dactyl.echo("", commandline.FORCE_SINGLELINE); }, false);
+				gBrowser.removeEventListener("click", dblclick, false);
 			}
 			return value;
 		}
@@ -405,7 +412,7 @@ group.commands.add(["di[ct]", "dic"],
 		// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		completer: function (context, args) dict.suggest(dict.makeRequest(context, args), context),
-		bang: true,
+		bang: true, // TODO
 		options: []
 	}
 );
@@ -419,7 +426,7 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 
 	}
 );
-
+dactyl.execute("map -modes=n,v -builtin -silent <Esc> :echo ''<CR><Esc>");
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
 // * 返回查询的页面链接，最好可点击
 // http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
@@ -432,4 +439,3 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 // support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
-// nmap -builtin <Esc> :echo ""<CR><Esc>
