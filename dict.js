@@ -195,6 +195,7 @@ let dict = {
 			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE); // TODO: i18n?
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 		} else {
+			// dict._popup(ret);
 			if (options.get("dict-simple").value) {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 				dict.timeout = dactyl.timeout(dict._clear, 60000); // TODO: clickable, styling
@@ -300,21 +301,26 @@ let dict = {
 		return str.replace(/\n/g, " ");
 	},
 
-	_popup: function(str, url) {
+	_popup: function(ret/*, url*/) {
+		let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
+		let title = ret["key"];
+		if (ret["pron"])
+			title += ": [" + ret["pron"] + "]";
+		notify.showAlertNotification(null, title, ret["def"], false, '', null);
 		// https://developer.mozilla.org/en/Using_popup_notifications
 		// check firefox version, enable on firefox 4.0 or above.
-		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
-			str,
-			null, /* anchor ID */
-			{
-				label: "查看详细解释",
-				accessKey: "D",
-				callback: function() {
-					dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
-				}
-			},
-			null  /* secondary action */
-		);
+		// PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
+			// str,
+			// null, [> anchor ID <]
+			// {
+				// label: "查看详细解释",
+				// accessKey: "D",
+				// callback: function() {
+					// dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
+				// }
+			// },
+			// null  [> secondary action <]
+		// );
 	},
 
 	// http://stackoverflow.com/questions/2808368/converting-html-entities-to-unicode-character-in-javascript
