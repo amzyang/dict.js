@@ -432,7 +432,7 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 
 	}
 );
-dactyl.execute("map -modes=n,v -builtin -silent <Esc> :echo ''<CR><Esc><Esc>");
+dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
 // * 返回查询的页面链接，最好可点击
 // http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
