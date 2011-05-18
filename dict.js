@@ -378,14 +378,17 @@ let dict = {
 	},
 
 	_selection: function() {
+		// check focused frame first
 		let focusedSel = buffer.focusedFrame.getSelection().toString().trim() || "";
 		if (focusedSel != '')
 			return focusedSel;
+		// now the main window
 		let sel = content.window.getSelection().toString().trim() || "";
 		if (sel != "")
 			return sel;
 		let frames = content.parent.frames;
 		let i = 0;
+		// loop frames
 		while ( i < frames.length) {
 			var selection = frames[i].getSelection();
 			if (selection)
@@ -395,8 +398,11 @@ let dict = {
 			i += 1;
 		}
 		return sel;
-	}
+	},
 
+	_nl2br: function(str) {
+
+	}
 };
 
 if (!dict.isWin()) {
