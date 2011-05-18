@@ -378,6 +378,9 @@ let dict = {
 	},
 
 	_selection: function() {
+		let focusedSel = buffer.focusedFrame.getSelection().toString().trim() || "";
+		if (focusedSel != '')
+			return focusedSel;
 		let sel = content.window.getSelection().toString().trim() || "";
 		if (sel != "")
 			return sel;
