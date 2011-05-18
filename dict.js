@@ -56,6 +56,7 @@ let dict_cn = {
 	// http://dict.cn/tools.html
 	keyword: "",
 	url: "",
+	template: "",
 	init: function(keyword) {
 		var req = new XMLHttpRequest();
 		dict_cn.keyword = keyword;
@@ -72,7 +73,7 @@ let dict_cn = {
 		return req;
 	},
 
-	process: function(text) {
+	process: function(text) { // FIXME: too complex
 		let ret = {
 			notfound: false,
 			ok: true,
@@ -88,6 +89,7 @@ let dict_cn = {
 		var xml = parser.parseFromString(text, "text/xml");
 		var def = xml.getElementsByTagName("def");
 		if (def.length && (def[0].textContent !== "Not Found")) {
+			ret["complex"] = {title: "", sub: {}}; // TODO
 
 			// key
 			var keyelem = xml.getElementsByTagName("key");
@@ -96,17 +98,52 @@ let dict_cn = {
 			var pronelem = xml.getElementsByTagName("pron");
 			ret["pron"] = pronelem.length ? pronelem[0].textContent : false;
 
+			if (ret["pron"]) {
+				ret["complex"]["title"] = <>
+					<p xmlns={XHTML}><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a>
+					<span xmlns={XHTML} style="margin-left:0.8em;">[{ret["pron"]}]</span></p>
+				</>;
+			} else {
+				ret["complex"]["title"] = <>
+					<p xmlns={XHTML}><a href="" target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a></p>
+				</>;
+			}
+
 			// def
 			ret["def"] = dict._html_entity_decode(def[0].textContent);
+			ret["complex"]["sub"]["单词解释"] = ret["def"];
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
-			var origTrans = sentelems.length ? [] : false;
-			for (var i = 0; i < sentelems.length; i++) {
-				origTrans.push([dict._html_entity_decode(sentelems[i].firstChild.textContent),
-						dict._html_entity_decode(sentelems[i].lastChild.textContent)]);
-			}
-			ret["origTrans"] = origTrans;
+			if (sentelems.length) {
+				var origTrans = [];
+				let oT = <></>;
+				for (var i = 0; i < sentelems.length; i++) {
+					let org = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].firstChild.textContent)); // <em></em>
+					let trans = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].lastChild.textContent));
+					let dt = <><dt xmlns={XHTML} style="font-weight:bolder;">{org}</dt></>;
+					let dd = <><dd xmlns={XHTML} style="margin:0.2em 0;">{trans}</dd></>;
+					oT += <>{dt}{dd}</>;
+
+					origTrans.push([org, trans]);
+				}
+				ret["complex"]["sub"]["例句"] = <><dl xmlns={XHTML} style="line-height:22px;">{oT}</dl></>;
+				ret["origTrans"] = origTrans;
+			} else
+				ret["origTrans"] = false;
+
+			// rel
+			var rels = xml.getElementsByTagName("rel");
+			if (rels.length) {
+				ret["rels"] = [];
+				let rs = <></>;
+				for (var i = 0; i < rels.length; i++) {
+					rs += <><span xmlns={XHTML}>{rels[i].textContent}</span></>;
+					ret["rels"].push(rels[i].textContent);
+				}
+				ret["complex"]["sub"]["相关单词"] = rs;
+			} else
+				ret["rels"] = false;
 
 			// audio
 			var audioelem = xml.getElementsByTagName("audio");
@@ -117,7 +154,6 @@ let dict_cn = {
 				ret["simple"] += "["+ret["pron"] +"] ";
 			ret["simple"] += dict._eolToSpace(ret["def"]);
 
-			ret["complex"] = "xxx"; // TODO
 		} else {
 			ret["notfound"] = true;
 		}
@@ -200,7 +236,9 @@ let dict = {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 				dict.timeout = dactyl.timeout(dict._clear, 60000); // TODO: clickable, styling
 			} else {
-				dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
+				let list = template.table(ret["complex"]["title"], ret["complex"]["sub"]);
+				dactyl.echo(list, commandline.FORCE_MULTILINE);
+				// dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
 			}
 		}
 	},
@@ -329,7 +367,7 @@ let dict = {
 		let str_decode = str;
 		try {
 			elem.innerHTML = str;
-			str_decode = elem.childNodes[0].nodeValue;
+			str_decode = elem.textContent;
 			str_decode = str_decode.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
 		} catch (e) {
 			str_decode = str_decode.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
@@ -381,7 +419,7 @@ options.add(["dict-engine", "dice"],
 );
 
 function dblclick(event) {
-	if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) {
+	if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) { // FIXME: contenteditable=true
 		return false;
 	}
 	let keyword = content.window.getSelection().toString().trim();
@@ -389,8 +427,12 @@ function dblclick(event) {
 
 	if (event.detail == 2 && keyword.length && re.test(keyword))
 		ex.dict();
-	else
-		dict._clear();
+	else {
+		if (options.get("dict-simple").value)
+			dict._clear(); // TODO
+		else
+			if (mow.visible) events.feedkeys("<Space>");
+	}
 }
 
 options.add(["dict-dblclick", "dicd"],
