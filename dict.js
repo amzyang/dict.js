@@ -222,7 +222,7 @@ let dict = {
 		if (ret["audio"])
 			dict._play(ret["audio"]);
 		else {
-			if (/^[\u0001-\u00ff]+$/.test(dict.keyword)) { // 0-255
+			if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
 				let uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
 				dict._play(uri);
 			}
