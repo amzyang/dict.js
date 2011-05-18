@@ -192,7 +192,8 @@ let dict = {
 	init: function(args) {
 		let keyword = args.join(" ") || "";
 		if (keyword.length == 0) {
-			keyword = content.window.getSelection().toString() || "";
+			// keyword = content.window.getSelection().toString() || "";
+			keyword = dict._selection();
 		}
 		if (keyword.length == 0) {
 			commandline.input("Lookup: ", function(keyword) {
@@ -374,6 +375,23 @@ let dict = {
 		} finally {
 			return str_decode;
 		}
+	},
+
+	_selection: function() {
+		let sel = content.window.getSelection().toString().trim() || "";
+		if (sel != "")
+			return sel;
+		let frames = content.parent.frames;
+		let i = 0;
+		while ( i < frames.length) {
+			var selection = frames[i].getSelection();
+			if (selection)
+				sel = selection.toString().trim();
+			if (sel != "")
+				return sel;
+			i += 1;
+		}
+		return sel;
 	}
 
 };
@@ -422,7 +440,8 @@ function dblclick(event) {
 	if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) { // FIXME: contenteditable=true
 		return false;
 	}
-	let keyword = content.window.getSelection().toString().trim();
+	// let keyword = content.window.getSelection().toString().trim();
+	let keyword = dict._selection();
 	let re = /^[^_\s]+$/; // ao
 
 	if (event.detail == 2 && keyword.length && re.test(keyword))
