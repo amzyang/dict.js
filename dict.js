@@ -44,11 +44,158 @@ var INFO =
       </item>
 </plugin>;
 
+// http://code.google.com/apis/language/translate/v1/using_rest_translate.html
+// http://code.google.com/apis/language/translate/v1/using_rest_langdetect.html
+// http://code.google.com/apis/language/translate/v1/reference.html
+// http://code.google.com/apis/language/translate/v1/getting_started.html
+// http://code.google.com/apis/language/
 let google = {
+	languages: [
+		['af', 'Afrikaans'],
+		['sq', 'Albanian'],
+		['am', 'Amharic'],
+		['ar', 'Arabic'],
+		['hy', 'Armenian'],
+		['az', 'Azerbaijani'],
+		['eu', 'Basque'],
+		['be', 'Belarusian'],
+		['bn', 'Bengali'],
+		['bh', 'Bihari'],
+		['br', 'Breton'],
+		['bg', 'Bulgarian'],
+		['my', 'Burmese'],
+		['ca', 'Catalan'],
+		['chr', 'Cherokee'],
+		['zh', 'Chinese'],
+		['zh-CN', 'Chinese Simplified'],
+		['zh-TW', 'Chinese Traditional'],
+		['co', 'Corsican'],
+		['hr', 'Croatian'],
+		['cs', 'Czech'],
+		['da', 'Danish'],
+		['dv', 'Dhivehi'],
+		['nl', 'Dutch'],
+		['en', 'English'],
+		['eo', 'Esperanto'],
+		['et', 'Estonian'],
+		['fo', 'Faroese'],
+		['tl', 'Filipino'],
+		['fi', 'Finnish'],
+		['fr', 'French'],
+		['fy', 'Frisian'],
+		['gl', 'Galician'],
+		['ka', 'Georgian'],
+		['de', 'German'],
+		['el', 'Greek'],
+		['gu', 'Gujarati'],
+		['ht', 'Haitian Creole'],
+		['iw', 'Hebrew'],
+		['hi', 'Hindi'],
+		['hu', 'Hungarian'],
+		['is', 'Icelandic'],
+		['id', 'Indonesian'],
+		['iu', 'Inuktitut'],
+		['ga', 'Irish'],
+		['it', 'Italian'],
+		['ja', 'Japanese'],
+		['jw', 'Javanese'],
+		['kn', 'Kannada'],
+		['kk', 'Kazakh'],
+		['km', 'Khmer'],
+		['ko', 'Korean'],
+		['ku', 'Kurdish'],
+		['ky', 'Kyrgyz'],
+		['lo', 'Lao'],
+		['la', 'Latin'],
+		['lv', 'Latvian'],
+		['lt', 'Lithuanian'],
+		['lb', 'Luxembourgish'],
+		['mk', 'Macedonian'],
+		['ms', 'Malay'],
+		['ml', 'Malayalam'],
+		['mt', 'Maltese'],
+		['mi', 'Maori'],
+		['mr', 'Marathi'],
+		['mn', 'Mongolian'],
+		['ne', 'Nepali'],
+		['no', 'Norwegian'],
+		['oc', 'Occitan'],
+		['or', 'Oriya'],
+		['ps', 'Pashto'],
+		['fa', 'Persian'],
+		['pl', 'Polish'],
+		['pt', 'Portuguese'],
+		['pt-PT', 'Portuguese Portugal'],
+		['pa', 'Ppnjabi'],
+		['qu', 'Qpechua'],
+		['ro', 'Rpmanian'],
+		['ru', 'Rpssian'],
+		['sa', 'Sanskrit'],
+		['gd', 'Scots Gaelic'],
+		['sr', 'Serbian'],
+		['sd', 'Sindhi'],
+		['si', 'Sinhalese'],
+		['sk', 'Slovak'],
+		['sl', 'Slovenian'],
+		['es', 'Spanish'],
+		['su', 'Sundanese'],
+		['sw', 'Swahili'],
+		['sv', 'Swedish'],
+		['syr', 'Syriac'],
+		['tg', 'Tajik'],
+		['ta', 'Tamil'],
+		['tt', 'Tatar'],
+		['te', 'Telugu'],
+		['th', 'Thai'],
+		['bo', 'Tibetan'],
+		['to', 'Tonga'],
+		['tr', 'Turkish'],
+		['uk', 'Ukrainian'],
+		['ur', 'Urdu'],
+		['uz', 'Uzbek'],
+		['ug', 'Uighur'],
+		['vi', 'Vietnamese'],
+		['cy', 'Welsh'],
+		['yi', 'Yiddish'],
+		['yo', 'Yoruba'],
+		['', 'Unknown']
+	],
+	api: "",
+	key: "",
 	keyword: "",
-	url: "",
-	init: function(args) {
+	url: "https://ajax.googleapis.com/ajax/services/language/translate",
+	userip: "", // TODO http://code.google.com/apis/language/translate/v1/using_rest_translate.html#userip
+	init: function(keyword, args) {
+		let langpair = "en|zh-CN";
+		if (args.langpair)
+			langpair=args.langpair;
+		var formData = new FormData();
+		formData.append("v", "1.0");
+		formData.append("q", decodeURIComponent(keyword));
+		formData.append("langpair", langpair); // en|zh_CN
+		// formData.append("langpair", options.get('dict-langpair').value); // en|zh_CN
+		// formData.append('key', 'YOUR KEY HERE');
+		formData.append("userip", "192.168.0.1"); // FIXME random ip address
+		formData.append("format", "text"); // 
+		var req = new XMLHttpRequest();
+		req.open("POST", google.url, true);
+		req.send(formData);
+		req.onreadystatechange = function(ev) {
+			dict.google(req);
+		};
+		dict.req = req;
+		return req;
+	},
+	opts: function() {
+		return {
+			names: ["-langpair", "-la"],
+			// description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|), which escapes as %7C. In order to translate from English to Spanish, specify a value of langpair=en%7Ces.
 
+// To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=%7Ces.",
+			description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+			default: "en|zh-CN", // TODO en,zh-CN
+			type: CommandOption.STRING
+		};
 	}
 };
 
@@ -57,7 +204,7 @@ let dict_cn = {
 	keyword: "",
 	url: "",
 	template: "",
-	init: function(keyword) {
+	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict_cn.keyword = keyword;
 		dict_cn.url = "http://dict.cn/"+keyword;
@@ -198,7 +345,7 @@ let dict = {
 		if (keyword.length == 0) {
 			commandline.input("Lookup: ", function(keyword) {
 					dict.keyword = keyword;
-					dict.engine.init(dict.keyword);
+					dict.engine.init(dict.keyword, args);
 				},
 				{
 					completer: function (context) {
@@ -208,7 +355,7 @@ let dict = {
 			);
 		} else {
 			dict.keyword = keyword;
-			dict.engine.init(dict.keyword);
+			dict.engine.init(dict.keyword, args);
 		}
 	},
 
@@ -250,6 +397,16 @@ let dict = {
 			if (req.status == 200)
 				ret = dict_cn.process(req.responseText);
 			dict.process(ret);
+			req.onreadystatechange = function() {};
+		}
+	},
+
+	google: function(req) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				let g = JSON.parse(req.responseText);
+				dactyl.echo(g.responseData.translatedText, commandline.FORCE_MULTILINE);
+			}
 			req.onreadystatechange = function() {};
 		}
 	},
@@ -305,6 +462,12 @@ let dict = {
 		}
 	},
 
+	opts: function () {
+		if (dict.engine.hasOwnProperty('opts'))
+			return dict.engine.opts() || undefined;
+		return undefined;
+	},
+
 	_play: function(uri) {
 		if (!options.get("dict-hasaudio").value)
 			return false;
@@ -337,7 +500,7 @@ let dict = {
 	},
 
 	_eolToSpace: function(str) {
-		return str.replace(/\n/g, "| ");
+		return str.replace(/\n/g, " | ").replace(/\s+/g, " ");
 	},
 
 	_popup: function(ret/*, url*/) {
@@ -488,7 +651,9 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		completer: function (context, args) dict.suggest(dict.makeRequest(context, args), context),
 		bang: true, // TODO
-		options: []
+		// options: [
+			// update({}, dict.opts())
+		// ]
 	}
 );
 
@@ -496,7 +661,7 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 	//["<Leader>z"],
 	["<A-d>"],
 	"Dict Lookup",
-	ex.dict,
+	function() {ex.dict();},
 	{
 
 	}
