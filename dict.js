@@ -337,7 +337,7 @@ let dict = {
 	},
 
 	_eolToSpace: function(str) {
-		return str.replace(/\n/g, " ");
+		return str.replace(/\n/g, "| ");
 	},
 
 	_popup: function(ret/*, url*/) {
@@ -482,7 +482,6 @@ options.add(["dict-dblclick", "dicd"],
 group.commands.add(["di[ct]", "dic"],
 	"Dict Lookup",
 	dict.init,
-	// dictBaidu,
 	{
 		argCount: "*",
 		// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
@@ -497,21 +496,23 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 	//["<Leader>z"],
 	["<A-d>"],
 	"Dict Lookup",
-	function() {ex.dict();},
+	ex.dict,
 	{
 
 	}
 );
+
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
+
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
-// * 返回查询的页面链接，最好可点击
-// http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
+// 返回查询的页面链接，最好可点击
+// * http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
 // FORCE_SINGLELINE | APPEND_MESSAGES
 // 使用mozilla notification box?
 // * clear previous active request
 // cache or history
 // - sound is broken out? linux/winxp/win7 okay
 // auto completion doesn't work when you've never open dict.cn web page. --cookie
-// support dblclick?
+// * support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
