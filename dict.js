@@ -273,7 +273,7 @@ let dict_cn = {
 				</>;
 			} else {
 				ret["complex"]["title"] = <>
-					<p xmlns={XHTML}><a href="" target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a></p>
+					<p xmlns={XHTML} style="text-indent:14px;"><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a></p>
 				</>;
 			}
 
