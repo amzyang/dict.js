@@ -364,6 +364,8 @@ let dict = {
 
 	init: function(args) {
 		let keyword = args.join(" ") || "";
+		if (!dict.isWin()) // Support keyword in clibpoard
+			keyword = keyword || dactyl.clipboardRead().trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
 			keyword = dict._selection();
