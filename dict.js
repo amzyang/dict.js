@@ -166,7 +166,7 @@ let google = {
 	url: "https://ajax.googleapis.com/ajax/services/language/translate",
 	userip: "", // TODO http://code.google.com/apis/language/translate/v1/using_rest_translate.html#userip
 	init: function(keyword, args) {
-		let langpair = "en|zh-CN";
+		let langpair = options.get('dict-langpair').value;
 		if (args.langpair)
 			langpair=args.langpair;
 		var formData = new FormData();
@@ -405,7 +405,11 @@ let dict = {
 		if (req.readyState == 4) {
 			if (req.status == 200) {
 				let g = JSON.parse(req.responseText);
-				dactyl.echo(g.responseData.translatedText, commandline.FORCE_MULTILINE);
+				let t = g.responseData.translatedText.replace(/\n$/, "").split("\n");
+				if (t.length > 1 && !mow.visible)
+					dactyl.echo("\n");
+				for (let [i, v] in  Iterator(t))
+					dactyl.echo(v);
 			}
 			req.onreadystatechange = function() {};
 		}
@@ -638,6 +642,29 @@ options.add(["dict-dblclick", "dicd"],
 				gBrowser.removeEventListener("click", dblclick, false);
 			}
 			return value;
+		}
+	}
+);
+
+options.add(["dict-langpair", "dicl"],
+	"This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+	"string",
+	"en|zh-CN",
+	{
+		completer: function(context) {
+			context.quote = ["", util.identity, ""];
+			context.title = ["Langpair", "Description"];
+			let cpt = [];
+			for (let [, [abbr, lang]] in Iterator(google.languages)) {
+				for (let [, [inabbr, inlang]] in Iterator(google.languages)) {
+					if (inabbr == "")
+						continue;
+					if (abbr == inabbr)
+						continue;
+					cpt.push([abbr+"|"+inabbr, "From "+lang+" to " + inlang]);
+				}
+			}
+			return cpt;
 		}
 	}
 );
