@@ -310,7 +310,8 @@ let dict_cn = {
 				ret["rels"] = [];
 				let rs = <></>;
 				for (var i = 0; i < rels.length; i++) {
-					rs += <><span xmlns={XHTML}>{rels[i].textContent}</span></>;
+					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
+					rs += <><span style="margin-right:1em;" xmlns={XHTML}><a href={url} target="_blank" highlight="URL" xmlns={XHTML}>{rels[i].textContent}</a></span></>;
 					ret["rels"].push(rels[i].textContent);
 				}
 				ret["complex"]["sub"]["相关单词"] = rs;
