@@ -160,6 +160,10 @@ let google = {
 		['yo', 'Yoruba'],
 		['', 'Unknown']
 	],
+	get langpair() google._langpair || false,
+	set langpair(langpair) {
+		dict._langpair = langpair;
+	},
 	api: "",
 	key: "",
 	keyword: "",
@@ -173,7 +177,6 @@ let google = {
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
 		formData.append("langpair", langpair); // en|zh_CN
-		// formData.append("langpair", options.get('dict-langpair').value); // en|zh_CN
 		// formData.append('key', 'YOUR KEY HERE');
 		formData.append("userip", "192.168.0.1"); // FIXME random ip address
 		formData.append("format", "text"); // 
@@ -185,6 +188,24 @@ let google = {
 		};
 		dict.req = req;
 		return req;
+	},
+	optsCompleter: function(context) {
+		context.quote = ["", util.identity, ""];
+		context.title = ["Langpair", "Description"];
+		if (google.langpair)
+			return google.langpair;
+		let cpt = [];
+		for (let [, [abbr, lang]] in Iterator(google.languages)) {
+			for (let [, [inabbr, inlang]] in Iterator(google.languages)) {
+				if (inabbr == "")
+					continue;
+				if (abbr == inabbr)
+					continue;
+				cpt.push([abbr+"|"+inabbr, "From "+lang+" to " + inlang]);
+			}
+		}
+		google.langpair = cpt;
+		return cpt;
 	},
 	opts: function() {
 		return {
@@ -651,21 +672,7 @@ options.add(["dict-langpair", "dicl"],
 	"string",
 	"en|zh-CN",
 	{
-		completer: function(context) {
-			context.quote = ["", util.identity, ""];
-			context.title = ["Langpair", "Description"];
-			let cpt = [];
-			for (let [, [abbr, lang]] in Iterator(google.languages)) {
-				for (let [, [inabbr, inlang]] in Iterator(google.languages)) {
-					if (inabbr == "")
-						continue;
-					if (abbr == inabbr)
-						continue;
-					cpt.push([abbr+"|"+inabbr, "From "+lang+" to " + inlang]);
-				}
-			}
-			return cpt;
-		}
+		completer: function(context) google.optsCompleter(context)
 	}
 );
 
