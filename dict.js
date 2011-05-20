@@ -268,7 +268,7 @@ let dict_cn = {
 
 			if (ret["pron"]) {
 				ret["complex"]["title"] = <>
-					<p xmlns={XHTML}><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a>
+					<p xmlns={XHTML} style="text-indent:14px;"><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a>
 					<span xmlns={XHTML} style="margin-left:0.8em;">[{ret["pron"]}]</span></p>
 				</>;
 			} else {
@@ -279,7 +279,11 @@ let dict_cn = {
 
 			// def
 			ret["def"] = dict._html_entity_decode(def[0].textContent);
-			ret["complex"]["sub"]["单词解释"] = ret["def"];
+			let piece = <></>;
+			let ps = ret["def"].trim().split("\n");
+			for (let [i, v] in Iterator(ps))
+				piece += <><span xmlns={XHTML}>{v}</span><br/></>;
+			ret["complex"]["sub"]["单词解释"] = <><div xmlns={XHTML}>{piece}</div></>;
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
@@ -589,7 +593,7 @@ let dict = {
 	},
 
 	_nl2br: function(str) {
-
+		return str.replace(/\n/g, "<br/>");
 	}
 };
 
