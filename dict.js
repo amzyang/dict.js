@@ -371,7 +371,8 @@ let dict = {
 		dict.args = args;
 		let keyword = args.join(" ") || "";
 		if (!dict.isWin()) // Support keyword in clibpoard
-			keyword = keyword || dactyl.clipboardRead().trim();
+			keyword = keyword || dactyl.clipboardRead() || "";
+		keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
 			keyword = dict._selection();
@@ -383,6 +384,7 @@ let dict = {
 				},
 				{
 					completer: function (context) {
+						context.commandline = true;
 						dict.suggest(dict.makeRequest(context, [commandline.command]), context); // this != dict
 					}
 				}
@@ -481,7 +483,8 @@ let dict = {
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.quote = ["", util.identity, ""];
-		context.offset=guessOffset(context.value, ["-l", "-e"]);
+		if (!context.commandline)
+			context.offset=guessOffset(context.value, ["-l", "-e"]);
 		context.process[1] = url;
 		context.key = encodeURIComponent(args.join("_"));
 		if (args.length == 0) {
