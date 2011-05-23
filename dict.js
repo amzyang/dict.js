@@ -421,7 +421,7 @@ let dict = {
 				invert = !invert;
 			if (invert) {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
-				dict.timeout = dactyl.timeout(dict._clear, 60000); // TODO: clickable, styling
+				dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
 			} else {
 				let list = template.table(ret["complex"]["title"], ret["complex"]["sub"]);
 				dactyl.echo(list, commandline.FORCE_MULTILINE);
@@ -449,6 +449,8 @@ let dict = {
 					dactyl.echo("\n");
 				for (let [i, v] in  Iterator(t))
 					dactyl.echo(v);
+				if (!mow.visible)
+					dict.timeout = dactyl.timeout(dict._clear, 15000);
 			}
 			req.onreadystatechange = function() {};
 		}
@@ -707,7 +709,7 @@ options.add(["dict-dblclick", "dicd"],
 options.add(["dict-langpair", "dicl"],
 	"This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
 	"string",
-	"|zh-CN",
+	"en|zh-CN",
 	{
 		completer: function(context) google.optsCompleter(context)
 	}
