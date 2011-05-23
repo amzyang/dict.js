@@ -168,17 +168,16 @@ let google = {
 	key: "",
 	keyword: "",
 	url: "https://ajax.googleapis.com/ajax/services/language/translate",
-	userip: "", // TODO http://code.google.com/apis/language/translate/v1/using_rest_translate.html#userip
 	init: function(keyword, args) {
 		let langpair = options.get('dict-langpair').value;
-		if (args.langpair)
-			langpair=args.langpair;
+		if (args["-l"])
+			langpair=args["-l"];
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
 		formData.append("langpair", langpair); // en|zh_CN
 		// formData.append('key', 'YOUR KEY HERE');
-		formData.append("userip", "192.168.0.1"); // FIXME random ip address
+		formData.append("userip", google._randomIp());
 		formData.append("format", "text"); // 
 		var req = new XMLHttpRequest();
 		req.open("POST", google.url, true);
@@ -217,6 +216,12 @@ let google = {
 			default: "en|zh-CN", // TODO en,zh-CN
 			type: CommandOption.STRING
 		};
+	},
+	_randomIp: function() {
+		let pieces = [];
+		for (var i = 0; i < 4; i++)
+			pieces.push(Math.floor(Math.random()*254)+1);
+		return pieces.join(".");
 	}
 };
 
@@ -335,7 +340,7 @@ let dict_cn = {
 }
 
 let dict = {
-	engines: {"dict_cn" : dict_cn, "google" : google},
+	engines: {"d" : dict_cn, "g" : google},
 	get req() dict._req || null,
 	set req(req) {
 		if (dict.req)
@@ -360,7 +365,7 @@ let dict = {
 		dict._timeout = timeout;
 	},
 
-	get engine() dict.engines[options.get("dict-engine").value],
+	get engine() dict.engines[dict.args["-e"] || options.get("dict-engine").value],
 	args: {},
 	init: function(args) {
 		dict.args = args;
@@ -453,12 +458,30 @@ let dict = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>
 		</>;
+		let guessOffset = function(string, opts) { // This was not so robust, be careful.
+			var pieces = string.split(/\s+/g);
+			if (pieces.length <= 1)
+				return string.length;
+			let start = 1;
+			let finded = start;
+			let idx = pieces[start].length;
+			for (var i = start; i < pieces.length; i++) {
+				if (opts.indexOf(pieces[i]) > -1) {
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+					i++;
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+				} else {
+					break;
+				}
+			}
+			return idx+1;
+		};
 		// context.waitingForTab = true;
 		context.title = ["Original", "Translation"];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.quote = ["", util.identity, ""];
-		context.offset=context.value.indexOf(" ") + 1;
+		context.offset=guessOffset(context.value, ["-l", "-e"]);
 		context.process[1] = url;
 		context.key = encodeURIComponent(args.join("_"));
 		if (args.length == 0) {
@@ -635,11 +658,11 @@ options.add(["dict-simple", "dics"],
 options.add(["dict-engine", "dice"],
 	"Dict engine",
 	"string",
-	"dict_cn",
+	"d",
 	{
 		completer: function(context) [
-			["dict_cn", "Dict.cn 海词"],
-			["google", "Google Translate"]
+			["d", "Dict.cn 海词"],
+			["g", "Google Translate"]
 		]
 	}
 );
@@ -681,7 +704,7 @@ options.add(["dict-dblclick", "dicd"],
 options.add(["dict-langpair", "dicl"],
 	"This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
 	"string",
-	"en|zh-CN",
+	"|zh-CN",
 	{
 		completer: function(context) google.optsCompleter(context)
 	}
@@ -694,11 +717,28 @@ group.commands.add(["di[ct]", "dic"],
 		argCount: "*",
 		// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
-		completer: function (context, args) dict.suggest(dict.makeRequest(context, args), context),
+		completer: function (context, args) {
+			if (args.length >= 1)
+				return dict.suggest(dict.makeRequest(context, args), context);
+		},
 		bang: true, // TODO
-		// options: [
-			// update({}, dict.opts())
-		// ]
+		options: [
+			{
+				names: ["-e"],
+				description: "Dict engine",
+				type: CommandOption.STRING,
+				completer: [
+					["d", "Dict.cn 海词"],
+					["g", "Google Translate"]
+				]
+			},
+			{
+				names: ["-l"],
+				description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+				type: CommandOption.STRING,
+				completer: function(context) google.optsCompleter(context)
+			},
+		]
 	}
 );
 
