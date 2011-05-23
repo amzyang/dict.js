@@ -361,8 +361,9 @@ let dict = {
 	},
 
 	get engine() dict.engines[options.get("dict-engine").value],
-
+	args: {},
 	init: function(args) {
+		dict.args = args;
 		let keyword = args.join(" ") || "";
 		if (!dict.isWin()) // Support keyword in clibpoard
 			keyword = keyword || dactyl.clipboardRead().trim();
@@ -408,7 +409,10 @@ let dict = {
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 		} else {
 			// dict._popup(ret);
-			if (options.get("dict-simple").value) {
+			let invert = options.get("dict-simple").value;
+			if (dict.args.bang)
+				invert = !invert;
+			if (invert) {
 				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 				dict.timeout = dactyl.timeout(dict._clear, 60000); // TODO: clickable, styling
 			} else {
