@@ -468,7 +468,7 @@ let dict = {
 				return string.length;
 			let start = 1;
 			let finded = start;
-			let idx = pieces[start].length;
+			let idx = pieces[0].length;
 			for (var i = start; i < pieces.length; i++) {
 				if (opts.indexOf(pieces[i]) > -1) {
 					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
