@@ -188,11 +188,13 @@ let google = {
 		dict.req = req;
 		return req;
 	},
-	optsCompleter: function(context) {
+	optsCompleter: function(context, args) {
 		context.quote = ["", util.identity, ""];
 		context.title = ["Langpair", "Description"];
-		if (google.langpair)
-			return google.langpair;
+		if (google.langpair) {
+			context.completions = google.langpair;
+			return;
+		}
 		let cpt = [];
 		for (let [, [abbr, lang]] in Iterator(google.languages)) {
 			for (let [, [inabbr, inlang]] in Iterator(google.languages)) {
@@ -204,7 +206,7 @@ let google = {
 			}
 		}
 		google.langpair = cpt;
-		return cpt;
+		context.completions = cpt;
 	},
 	opts: function() {
 		return {
@@ -711,7 +713,7 @@ options.add(["dict-langpair", "dicl"],
 	"string",
 	"en|zh-CN",
 	{
-		completer: function(context) google.optsCompleter(context)
+		completer: function(context, args) google.optsCompleter(context, args)
 	}
 );
 
@@ -741,7 +743,7 @@ group.commands.add(["di[ct]", "dic"],
 				names: ["-l"],
 				description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
 				type: CommandOption.STRING,
-				completer: function(context) google.optsCompleter(context)
+				completer: function(context, args) google.optsCompleter(context,args)
 			},
 		]
 	}
@@ -758,6 +760,23 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 );
 
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
+
+let language = window.navigator.language;
+
+let tr = {
+	'en-US': [
+		"Description",
+		"From",
+		"to",
+		"Lookup: ",
+	],
+	'zh-CN': [
+		"描述",
+		"从",
+		"到",
+		"查找：",
+	]
+};
 
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
 // 返回查询的页面链接，最好可点击
