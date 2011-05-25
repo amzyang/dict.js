@@ -522,6 +522,14 @@ let dict = {
 						suggestions.push(r); // trim blank chars
 				});
 				context.completions = suggestions;
+			} else if (req.status == 404) {
+				var suggestions = [];
+				var r = {};
+				r["g"] = "自动补全地址不存在";
+				r["e"] = "如果你从来没访问过 http://dict.cn, 有可能会出现这种情况。点击此处即可解决！";
+				r["url"] = "http://dict.cn/";
+				suggestions.push(r);
+				context.completions = suggestions;
 			} else {
 			}
 			req.onreadystatechange = function() {};
