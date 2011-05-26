@@ -523,13 +523,11 @@ let dict = {
 				});
 				context.completions = suggestions;
 			} else if (req.status == 404) {
-				var suggestions = [];
-				var r = {};
-				r["g"] = "自动补全地址不存在";
-				r["e"] = "如果你从来没访问过 http://dict.cn, 有可能会出现这种情况。点击此处即可解决！";
-				r["url"] = "http://dict.cn/";
-				suggestions.push(r);
-				context.completions = suggestions;
+				// 辞海的自动补全需要 cookie
+				// 因此我们对dict.cn请求一次
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", "http://dict.cn");
+				xhr.send(null);
 			} else {
 			}
 			req.onreadystatechange = function() {};
@@ -794,7 +792,7 @@ let tr = {
 // * clear previous active request
 // cache or history
 // - sound is broken out? linux/winxp/win7 okay
-// auto completion doesn't work when you've never open dict.cn web page. --cookie
+// * auto completion doesn't work when you've never open dict.cn web page. --cookie
 // * support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
