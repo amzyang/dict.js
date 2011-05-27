@@ -274,14 +274,12 @@ let dict_cn = {
 			ret["pron"] = pronelem.length ? pronelem[0].textContent : false;
 
 			if (ret["pron"]) {
-				ret["complex"]["title"] = <>
-					<p xmlns={XHTML} style="text-indent:14px;"><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a>
-					<span xmlns={XHTML} style="margin-left:0.8em;">[{ret["pron"]}]</span></p>
-				</>;
+				ret["complex"]["title"] = <p style="text-indent:14px;">
+					<a href={dict_cn.url} target="_blank" alt="" highlight="URL">{ret["key"]}</a>
+					<span style="margin-left:0.8em;">[{ret["pron"]}]</span>
+				</p>;
 			} else {
-				ret["complex"]["title"] = <>
-					<p xmlns={XHTML} style="text-indent:14px;"><a href={dict_cn.url} target="_blank" alt="" highlight="URL" xmlns={XHTML}>{ret["key"]}</a></p>
-				</>;
+				ret["complex"]["title"] = <p style="text-indent:14px;"><a href={dict_cn.url} target="_blank" highlight="URL">{ret["key"]}</a></p>;
 			}
 
 			// def
@@ -289,8 +287,8 @@ let dict_cn = {
 			let piece = <></>;
 			let ps = ret["def"].trim().split("\n");
 			for (let [i, v] in Iterator(ps))
-				piece += <><span xmlns={XHTML}>{v}</span><br/></>;
-			ret["complex"]["sub"]["单词解释"] = <><div xmlns={XHTML}>{piece}</div></>;
+				piece += <><span>{v}</span><br/></>;
+			ret["complex"]["sub"]["单词解释"] = <div>{piece}</div>;
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
@@ -300,13 +298,13 @@ let dict_cn = {
 				for (var i = 0; i < sentelems.length; i++) {
 					let org = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].firstChild.textContent)); // <em></em>
 					let trans = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].lastChild.textContent));
-					let dt = <><dt xmlns={XHTML} style="font-weight:bolder;">{org}</dt></>;
-					let dd = <><dd xmlns={XHTML} style="margin:0.2em 0;">{trans}</dd></>;
+					let dt = <dt style="font-weight:bolder;">{org}</dt>;
+					let dd = <dd style="margin:0.1em 0 0.2em;">{trans}</dd>;
 					oT += <>{dt}{dd}</>;
 
 					origTrans.push([org, trans]);
 				}
-				ret["complex"]["sub"]["例句"] = <><dl xmlns={XHTML} style="line-height:22px;">{oT}</dl></>;
+				ret["complex"]["sub"]["例句"] = <dl style="line-height:22px;">{oT}</dl>;
 				ret["origTrans"] = origTrans;
 			} else
 				ret["origTrans"] = false;
@@ -318,7 +316,7 @@ let dict_cn = {
 				let rs = <></>;
 				for (var i = 0; i < rels.length; i++) {
 					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
-					rs += <><span style="margin-right:1em;" xmlns={XHTML}><a href={url} target="_blank" highlight="URL" xmlns={XHTML}>{rels[i].textContent}</a></span></>;
+					rs += <><span style="margin-right:1em;"><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
 					ret["rels"].push(rels[i].textContent);
 				}
 				ret["complex"]["sub"]["相关单词"] = rs;
@@ -460,10 +458,8 @@ let dict = {
 
 	makeRequest:  function (context, args) {
 		var url = function(item, text)
-		<>
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>
-		</>;
+		href={item.item.url} highlight="URL">{text || ""}</a>;
 		let guessOffset = function(string, opts) { // This was not so robust, be careful.
 			var pieces = string.split(/\s+/g);
 			if (pieces.length <= 1)
@@ -575,26 +571,30 @@ let dict = {
 		return str.replace(/\n/g, " | ").replace(/\s+/g, " ");
 	},
 
-	_popup: function(ret/*, url*/) {
+	_alert: function(ret/*, url*/) {
 		let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
 		let title = ret["key"];
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
 		notify.showAlertNotification(null, title, ret["def"], false, '', null);
+	},
+
+	_notification: function(ret, url) {
 		// https://developer.mozilla.org/en/Using_popup_notifications
 		// check firefox version, enable on firefox 4.0 or above.
-		// PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
-			// str,
-			// null, [> anchor ID <]
-			// {
-				// label: "查看详细解释",
-				// accessKey: "D",
-				// callback: function() {
-					// dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
-				// }
-			// },
-			// null  [> secondary action <]
-		// );
+		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
+			str,
+			null, /* anchor ID */
+			{
+				label: "查看详细解释",
+				accessKey: "D",
+				callback: function() {
+					dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
+				}
+			},
+			null  /* secondary action */
+		);
+
 	},
 
 	// http://stackoverflow.com/questions/2808368/converting-html-entities-to-unicode-character-in-javascript
@@ -676,6 +676,19 @@ options.add(["dict-engine", "dice"],
 		completer: function(context) [
 			["d", "Dict.cn 海词"],
 			["g", "Google Translate"]
+		]
+	}
+);
+
+options.add(["dict-show", "dico"],
+	"Show Results",
+	"string",
+	"s",
+	{
+		completer: function(context) [
+			["s", "Statusline"],
+			["a", "Alert"],
+			["n", "Desktop Notification"]
 		]
 	}
 );
@@ -775,12 +788,14 @@ let tr = {
 		"From",
 		"to",
 		"Lookup: ",
+		"Details",
 	],
 	'zh-CN': [
 		"描述",
 		"从",
 		"到",
 		"查找：",
+		"详情",
 	]
 };
 
