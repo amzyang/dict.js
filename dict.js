@@ -1,48 +1,6 @@
 "use strict";
 XML.ignoreWhitespace = false;
 XML.prettyPrinting = false;
-var INFO =
-<plugin name="dict.js" version="0.9.0"
-    href="https://github.com/grassofhust/dict.js"
-    summary="An online dict."
-    xmlns={NS}>
-    <author email="frederick.zou@gmail.com">Yang Zou</author>
-    <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
-    <project name="Pentadactyl" minVersion="1.0"/>
-      <p>
-      A dict plugin for pentadactyl, dict.js only support dict.cn now.
-      I will add google translate later.
-      </p>
-
-      <p>
-      Dict.js use mpg321 to support sound, you can use other program (:set dict-audioplayer=mplayer)
-      or just disable it (:set dict-hasaudio=false).
-      </p>
-
-      <item>
-        <tags>'dich' 'dict-hasaudio'</tags>
-        <spec>'dict-hasaudio' 'dich'</spec>
-        <type>boolean</type>
-        <default>true</default>
-        <description>
-          <p>
-          Toggle sound on or off.
-          </p>
-        </description>
-      </item>
-
-      <item>
-        <tags>'dica' 'dict-audioplayer'</tags>
-        <spec>'dict-audioplayer' 'dica'</spec>
-        <type>string</type>
-        <default>mpg321</default>
-        <description>
-        <p>
-          External audio player, may be work not well on Windows.
-          </p>
-        </description>
-      </item>
-</plugin>;
 
 const STYLE = <style type="text/css">
 <![CDATA[
@@ -153,7 +111,8 @@ let qq = {
 			let ph = <></>;
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
-				ph += <><li><a href={href} highlight="URL">{item["phs"]}</a><span>{item["phd"]}</span></li></>;
+				let phs = dict._html_entity_decode(item["phs"]);
+				ph += <><li><a href={href} highlight="URL">{phs}</a><span>{item["phd"]}</span></li></>;
 			});
 			full["sub"]["相关词组"] = <ol>{ph}</ol>;
 		}
@@ -709,13 +668,12 @@ let dict = {
 	init: function(args) {
 		dict.args = args;
 		let keyword = args.join(" ") || "";
-		if (!dict.isWin()) // Support keyword in clibpoard
-			keyword = keyword || dactyl.clipboardRead() || "";
 		keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
-			keyword = dict._selection();
+			keyword = dict._selection() || dactyl.clipboardRead() || "";
 		}
+		keyword.trim();
 		if (keyword.length == 0) {
 			commandline.input(T(4), function(keyword) {
 					dict.keyword = keyword;
@@ -964,6 +922,7 @@ if (!dict.isWin()) {
 	);
 }
 
+// check whether windows media player plugin exists.
 options.add(["dict-hasaudio", "dich"],
 	"Audio support.",
 	"boolean",
@@ -1122,6 +1081,213 @@ var tr = {
 function T(i) {
 	return tr[DICT_LANGUAGE][i];
 };
+
+if (DICT_LANGUAGE == "zh-CN") {
+var INFO =
+<plugin name="dict.js" version="0.9.0"
+    href="https://github.com/grassofhust/dict.js"
+    summary="dict.js 在线词典"
+    xmlns={NS}>
+    <author email="frederick.zou@gmail.com">Yang Zou</author>
+    <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
+    <project name="Pentadactyl" minVersion="1.0"/>
+      <p>
+	  Pentadactyl 的词典插件。dict.js 目前支持 QQ词典，海词，谷歌翻译。
+      </p>
+
+      <item>
+        <tags>'dica' 'dict-audioplayer'</tags>
+        <spec>'dict-audioplayer' 'dica'</spec>
+        <type>string</type>
+        <default>mplayer</default>
+        <description>
+        <p>
+          dict.js 朗读单词或者句子时调用的外部音频播放器，该选项在非微软视窗平台下有效。
+          </p>
+		  <warning>在 Windows 平台下，dict.js 使用 Windows Media Player 插件来进行声音输出。如果出现了声音方面的问题，请参考：<link topic="http://support.mozilla.com/zh-CN/kb/%E5%9C%A8%20Firefox%20%E4%B8%AD%E4%BD%BF%E7%94%A8%20Windows%20Media%20Player%20%E6%8F%92%E4%BB%B6">在 Firefox 中使用 Windows Media Player 插件</link></warning>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dicd' 'dict-dblclick'</tags>
+        <spec>'dict-dblclick' 'dicd'</spec>
+        <type>boolean</type>
+        <default>false</default>
+        <description>
+          <p>
+          使用双击选定单词时，翻译被选定的文字。
+          </p>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dice' 'dict-engine'</tags>
+        <spec>'dict-engine' 'dice'</spec>
+        <type>string</type>
+        <default>d</default>
+        <description>
+		  <p>dict.js 当前支持的网站：</p>
+        <dl dt="width: 6em;">
+            <dt>d</dt>      <dd><link topic="http://dict.cn/">海词</link></dd>
+            <dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
+            <dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
+        </dl>
+		<p>dict.js 默认使用海词。</p>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dich' 'dict-hasaudio'</tags>
+        <spec>'dict-hasaudio' 'dich'</spec>
+        <type>boolean</type>
+        <default>true</default>
+        <description>
+          <p>开启或者关闭声音。</p>
+		  <warning>在 Windows 平台下，默认关闭声音输出。</warning>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dicl' 'dict-langpair'</tags>
+        <spec>'dict-langpair' 'dicl'</spec>
+        <type>string</type>
+        <default>en|zh-CN</default>
+        <description>
+		<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
+		<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
+		<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dico' 'dict-show'</tags>
+        <spec>'dict-show' 'dico'</spec>
+        <type>string</type>
+        <default>'s'</default>
+        <description>
+		<p>翻译结果的输出形式：</p>
+        <dl dt="width: 6em;">
+            <dt>a</dt>      <dd>Firefox 通知窗口</dd>
+            <dt>n</dt>      <dd>桌面通知</dd>
+            <dt>s</dt>      <dd>Pentadactyl 状态栏</dd>
+        </dl>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dics' 'dict-simple'</tags>
+        <spec>'dics' 'dics'</spec>
+        <type>boolean</type>
+        <default>true</default>
+        <description>
+		<p>是否输出单词的详细信息，默认为简洁形式。</p>
+		<note>目前只有当翻译结果输出到状态栏时有效。Firefox 通知窗口、桌面通知均以简洁形式输出。</note>
+        </description>
+      </item>
+
+	  <item>
+	  <spec>:dict [action] ...</spec>
+	  <tags>:dict :di</tags>
+	  <description>
+	  <p>
+	  翻译单词或者句子，如果输入的翻译内容为空，将会首先尝试翻译当前页面被选中的文字，其次是剪贴板中的内容，如果这些都为空，则会提供一个输入框来输入想要翻译的内容。
+	  </p>
+	  </description>
+	  <strut/>
+	  </item>
+
+	  <item>
+	  <tags>:dict! :di!</tags>
+	  <strut/>
+	  <spec>:dict!</spec>
+	  <description>
+	  <p>
+	  翻译单词或者句子，此时反转<o>dics</o>的设置。
+	  </p>
+	  </description>
+	  </item>
+
+	  <item>
+	  <tags>:dict-options</tags>
+	  <strut/>
+	  <spec>dict.js 命令行选项</spec>
+	  <description>
+	  <p>
+	  <ex>:dict</ex> <ex>:dict!</ex>支持的命令行选项：
+	  </p>
+        <dl dt="width: 6em;">
+            <dt>-e</dt>      <dd>给定使用的翻译网站 <note><o>dice</o></note></dd>
+            <dt>-l</dt>      <dd>谷歌翻译时的语言设置 <note><o>dicl</o></note></dd>
+            <dt>-o</dt>      <dd>翻译结果的输出设置 <note><o>dico</o></note></dd>
+        </dl>
+	  </description>
+	  </item>
+
+	  <item>
+	  <tags>:dict-shortcut</tags>
+	  <strut/>
+	  <spec>dict.js 快捷键</spec>
+	  <description>
+	  <p>dict.js 默认使用<k name="A-d"/>来快速翻译当前选区或者是剪贴板中的内容。如果选区和剪贴板都为空，则会提供一个输入框。</p>
+	  </description>
+	  </item>
+
+	  <item>
+		  <tags><![CDATA[<A-d>]]></tags>
+		  <spec><![CDATA[<A-d>]]></spec>
+		  <description>
+			  <p>翻译当前选区或者是剪贴板中的内容。</p>
+		  </description>
+	  </item>
+
+</plugin>;
+
+} else {
+var INFO =
+<plugin name="dict.js" version="0.9.0"
+    href="https://github.com/grassofhust/dict.js"
+    summary="An online dict."
+    xmlns={NS}>
+    <author email="frederick.zou@gmail.com">Yang Zou</author>
+    <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
+    <project name="Pentadactyl" minVersion="1.0"/>
+      <p>
+      A dict plugin for pentadactyl, dict.js only support dict.cn now.
+      I will add google translate later.
+      </p>
+
+      <p>
+      Dict.js use mpg321 to support sound, you can use other program (:set dict-audioplayer=mplayer)
+      or just disable it (:set dict-hasaudio=false).
+      </p>
+
+      <item>
+        <tags>'dich' 'dict-hasaudio'</tags>
+        <spec>'dict-hasaudio' 'dich'</spec>
+        <type>boolean</type>
+        <default>true</default>
+        <description>
+          <p>
+          Toggle sound on or off.
+          </p>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dica' 'dict-audioplayer'</tags>
+        <spec>'dict-audioplayer' 'dica'</spec>
+        <type>string</type>
+        <default>mpg321</default>
+        <description>
+        <p>
+          External audio player, may be work not well on Windows.
+          </p>
+        </description>
+      </item>
+</plugin>;
+
+
+}
 
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["full"]
 // 返回查询的页面链接，最好可点击
