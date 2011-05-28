@@ -44,6 +44,191 @@ var INFO =
       </item>
 </plugin>;
 
+const STYLE = <style type="text/css">
+<![CDATA[
+body { line-height:22px; }
+th, dt { font-weight:bolder; }
+dt { list-style-type: disc; }
+dd { margin:0.1em 0 0.2em; }
+.title { text-indent: 14px; }
+.title > span { margin-left: 0.8em; }
+p > span, li > a { margin-right: 1em; }
+span > b { margin-right: 0.4em; }
+.basic dt + span { margin-right: 0.4em; }
+]]>
+</style>;
+
+let qq = {
+	keyword: "",
+	favicon: "http://dict.qq.com/favicon.ico",
+	init: function(keyword, args) {
+		var req = new XMLHttpRequest();
+		req.open("GET", "http://dict.qq.com/dict?f=web&q="+keyword, true);
+		req.setRequestHeader("Referer", "http://dict.qq.com/");
+		req.send(null);
+		req.onreadystatechange = function(ev) {
+			dict.qq(req);
+		};
+		dict.req = req;
+		return req;
+	},
+
+	href: function (params) {
+		const QQ_PREFIX = "http://dict.qq.com/dict?f=cloudmore&q=";
+		let keyword = params['keyword'];
+		if (decodeURIComponent(keyword) != keyword)
+			return QQ_PREFIX + keyword;
+		else
+			return QQ_PREFIX + encodeURIComponent(keyword);
+	},
+
+	process: function(text) {
+		let j = JSON.parse(text);
+		let ret = {
+			notfound: false,
+			ok: true,
+			pron: false,
+			def: false,
+			simple: false,
+			full: false,
+			text: false,
+			audio: false
+		};
+		if (j["local"]) {
+			let _ret = qq._simple(j);
+			ret["keyword"] = _ret["word"];
+			ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
+			ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
+			ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
+			if (ret["pron"])
+				ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
+			else
+				ret["simple"] = ret["keyword"] + " " + ret["def"];
+		} else
+			ret["notfound"] = true;
+		ret["full"] = qq._full(j);
+		ret["fullText"] = "";
+		return ret;
+	},
+
+	_full: function(e) {
+		let local = e['local'];
+		let t = local[0];
+		let full = {title: "", sub: {}};
+		let _simple = qq._simple(e);
+		let keyword_url = qq.href({"keyword":_simple["word"]});
+		if (_simple["pron"]) {
+			full["title"] = <p class="title">
+				<a href={keyword_url} target="_blank" highlight="URL">{_simple["word"]}</a>
+				<span>[{_simple["pron"]}]</span>
+			</p>;
+		} else {
+			full["title"] = <p class="title">
+				<a href={keyword_url} target="_blank" highlight="URL">{_simple["word"]}</a>
+			</p>;
+		}
+		if (t.des) {
+			let des = <></>;
+			let gsen = [];
+			if (t.sen)
+				gsen = t.sen;
+			t.des.forEach(function(item) {
+				let pos = item["p"];
+				let sen = qq._digIntoSen(pos, gsen);
+				let dt = <dt><span>{item["p"]}</span><span>{item["d"]}</span></dt>;
+				let dds = <></>;
+				if (sen) {
+					sen.s.forEach(function(single) {
+						let es = dict._html_entity_decode(single["es"]);
+						let cs = dict._html_entity_decode(single["cs"]);
+						dds += <><dd>{es}</dd></>;
+						dds += <><dd>{cs}</dd></>;
+					});
+				}
+				des += <><dl>{dt}{dds}</dl></>;
+			});
+			full["sub"]["基本解释"] = <div class="basic">{des}</div>;
+		}
+
+		if (t.ph) { // 相关词组
+			let ph = <></>;
+			t.ph.forEach(function(item) {
+				let href = qq.href({"keyword": item["phs"]});
+				ph += <><li><a href={href} highlight="URL">{item["phs"]}</a><span>{item["phd"]}</span></li></>;
+			});
+			full["sub"]["相关词组"] = <ol>{ph}</ol>;
+		}
+
+		if (t.syn) { // 同义词
+			let syn = <></>;
+			t.syn.forEach(function(item) {
+				let syn_item = <></>;
+				item.c.forEach(function(single) {
+					let href = qq.href({"keyword": single});
+					syn_item += <><span><a href={href} highlight="URL">{single}</a></span></>;
+				});
+				syn += <>{syn_item}</>;
+			});
+			full["sub"]["同反义词"] = <p><span>同义词：</span>{syn}</p>;
+		}
+		if (t.ant) { // 反义词
+			let ant = <></>;
+			t.ant.forEach(function(item) {
+				let ant_item = <></>;
+				item.c.forEach(function(single) {
+					let href = qq.href({"keyword": single});
+					ant_item += <><span><a href={href} highlight="URL">{single}</a></span></>;
+				});
+				ant += <>{ant_item}</>;
+			});
+			if (full["sub"]["同反义词"])
+				full["sub"]["同反义词"] += <p><span>反义词：</span>{ant}</p>;
+			else
+				full["sub"]["同反义词"] = <p><span>反义词：</span>{ant}</p>;
+		}
+		if (t.mor) { // 词型变换
+			let mor = <></>;
+			t.mor.forEach(function(item) {
+				let href = qq.href({"keyword": item["m"]});
+				mor += <><span><b>{item["c"]}</b><a href={href} highlight="URL">{item["m"]}</a></span></>;
+			});
+			full["sub"]["词型变换"] = <p>{mor}</p>;
+		}
+		return full;
+	},
+	_simple: function(e) {
+		let local = e["local"];
+		let t = local[0];
+		let _ret = {};
+		_ret["word"] = t.word;
+		if (t.sd)
+			_ret["audio"] = qq._audioUri(t.sd);
+		if (t.pho)
+			_ret["pron"] = dict._html_entity_decode(t.pho.join(", "));
+		if (t.des) {
+			_ret["def"] = [];
+			t.des.forEach(function(item) {
+					_ret["def"].push(item["p"] + " " + item["d"]);
+			});
+			_ret["def"] = _ret["def"].join(" | ");
+		}
+		return _ret;
+	},
+
+	_audioUri: function(str) {
+		let prefix = "http://speech.dict.qq.com/audio/";
+		let uri = prefix + str[0] + "/" + str[1] + "/"  +str[2] + "/" + str + ".mp3";
+	},
+
+	_digIntoSen: function(pos, sen) {
+		for (var i = 0; i < sen.length; i++) {
+			if (sen[i]["p"] == pos)
+				return sen[i];
+		}
+		return false;
+	}
+};
+
 // http://code.google.com/apis/language/translate/v1/using_rest_translate.html
 // http://code.google.com/apis/language/translate/v1/using_rest_langdetect.html
 // http://code.google.com/apis/language/translate/v1/reference.html
@@ -160,12 +345,11 @@ let google = {
 		['yo', 'Yoruba'],
 		['', 'Unknown']
 	],
+	favicon: "http://translate.google.com/favicon.ico",
 	get langpair() google._langpair || false,
 	set langpair(langpair) {
 		dict._langpair = langpair;
 	},
-	api: "",
-	key: "",
 	keyword: "",
 	url: "https://ajax.googleapis.com/ajax/services/language/translate",
 	init: function(keyword, args) {
@@ -190,7 +374,7 @@ let google = {
 	},
 	optsCompleter: function(context, args) {
 		context.quote = ["", util.identity, ""];
-		context.title = ["Langpair", "Description"];
+		context.title = ["Langpair", T(1)];
 		if (google.langpair) {
 			context.completions = google.langpair;
 			return;
@@ -202,7 +386,7 @@ let google = {
 					continue;
 				if (abbr == inabbr)
 					continue;
-				cpt.push([abbr+"|"+inabbr, "From "+lang+" to " + inlang]);
+				cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
 			}
 		}
 		google.langpair = cpt;
@@ -219,6 +403,7 @@ let google = {
 			type: CommandOption.STRING
 		};
 	},
+	href: false,
 	_randomIp: function() {
 		let pieces = [];
 		for (var i = 0; i < 4; i++)
@@ -232,6 +417,7 @@ let dict_cn = {
 	keyword: "",
 	url: "",
 	template: "",
+	favicon: "http://dict.cn/favicon.ico",
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict_cn.keyword = keyword;
@@ -248,7 +434,16 @@ let dict_cn = {
 		return req;
 	},
 
-	process: function(text) { // FIXME: too complex
+	href: function (params) {
+		const DICT_CN_PREFIX = "http://dict.cn/";
+		let keyword = params['keyword'];
+		if (decodeURIComponent(keyword) != keyword)
+			return DICT_CN_PREFIX + keyword;
+		else
+			return DICT_CN_PREFIX + encodeURIComponent(keyword);
+	},
+
+	process: function(text) { // FIXME: kiss
 		let ret = {
 			notfound: false,
 			ok: true,
@@ -264,22 +459,22 @@ let dict_cn = {
 		var xml = parser.parseFromString(text, "text/xml");
 		var def = xml.getElementsByTagName("def");
 		if (def.length && (def[0].textContent !== "Not Found")) {
-			ret["complex"] = {title: "", sub: {}}; // TODO
+			ret["full"] = {title: "", sub: {}};
 
 			// key
 			var keyelem = xml.getElementsByTagName("key");
-			ret["key"] = keyelem.length ? keyelem[0].textContent : false;
+			ret["keyword"] = keyelem.length ? keyelem[0].textContent : false;
 			// pron
 			var pronelem = xml.getElementsByTagName("pron");
 			ret["pron"] = pronelem.length ? pronelem[0].textContent : false;
 
 			if (ret["pron"]) {
-				ret["complex"]["title"] = <p style="text-indent:14px;">
-					<a href={dict_cn.url} target="_blank" alt="" highlight="URL">{ret["key"]}</a>
-					<span style="margin-left:0.8em;">[{ret["pron"]}]</span>
+				ret["full"]["title"] = <p class="title">
+					<a href={dict_cn.url} target="_blank" highlight="URL">{ret["keyword"]}</a>
+					<span>[{ret["pron"]}]</span>
 				</p>;
 			} else {
-				ret["complex"]["title"] = <p style="text-indent:14px;"><a href={dict_cn.url} target="_blank" highlight="URL">{ret["key"]}</a></p>;
+				ret["full"]["title"] = <p class="title"><a href={dict_cn.url} target="_blank" highlight="URL">{ret["keyword"]}</a></p>;
 			}
 
 			// def
@@ -288,7 +483,7 @@ let dict_cn = {
 			let ps = ret["def"].trim().split("\n");
 			for (let [i, v] in Iterator(ps))
 				piece += <><span>{v}</span><br/></>;
-			ret["complex"]["sub"]["单词解释"] = <div>{piece}</div>;
+			ret["full"]["sub"]["单词解释"] = <div>{piece}</div>;
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
@@ -298,13 +493,13 @@ let dict_cn = {
 				for (var i = 0; i < sentelems.length; i++) {
 					let org = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].firstChild.textContent)); // <em></em>
 					let trans = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].lastChild.textContent));
-					let dt = <dt style="font-weight:bolder;">{org}</dt>;
-					let dd = <dd style="margin:0.1em 0 0.2em;">{trans}</dd>;
+					let dt = <dt>{org}</dt>;
+					let dd = <dd>{trans}</dd>;
 					oT += <>{dt}{dd}</>;
 
 					origTrans.push([org, trans]);
 				}
-				ret["complex"]["sub"]["例句"] = <dl style="line-height:22px;">{oT}</dl>;
+				ret["full"]["sub"]["例句"] = <dl>{oT}</dl>;
 				ret["origTrans"] = origTrans;
 			} else
 				ret["origTrans"] = false;
@@ -316,10 +511,10 @@ let dict_cn = {
 				let rs = <></>;
 				for (var i = 0; i < rels.length; i++) {
 					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
-					rs += <><span style="margin-right:1em;"><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
+					rs += <><span><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
 					ret["rels"].push(rels[i].textContent);
 				}
-				ret["complex"]["sub"]["相关单词"] = rs;
+				ret["full"]["sub"]["相关单词"] = rs;
 			} else
 				ret["rels"] = false;
 
@@ -327,7 +522,7 @@ let dict_cn = {
 			var audioelem = xml.getElementsByTagName("audio");
 			ret["audio"] = audioelem.length ? audioelem[0].textContent : false;
 
-			ret["simple"] = ret["key"] + ": ";
+			ret["simple"] = ret["keyword"] + ": ";
 			if (ret["pron"])
 				ret["simple"] += "["+ret["pron"] +"] ";
 			ret["simple"] += dict._eolToSpace(ret["def"]);
@@ -340,7 +535,7 @@ let dict_cn = {
 }
 
 let dict = {
-	engines: {"d" : dict_cn, "g" : google},
+	engines: {"d" : dict_cn, "q": qq, "g" : google},
 	get req() dict._req || null,
 	set req(req) {
 		if (dict.req)
@@ -378,7 +573,7 @@ let dict = {
 			keyword = dict._selection();
 		}
 		if (keyword.length == 0) {
-			commandline.input("Lookup: ", function(keyword) {
+			commandline.input(T(4), function(keyword) {
 					dict.keyword = keyword;
 					dict.engine.init(dict.keyword, args);
 				},
@@ -412,20 +607,37 @@ let dict = {
 		}
 
 		if (ret["notfound"]) {
-			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword) + " 的翻译", commandline.FORCE_SINGLELINE); // TODO: i18n?
+			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE); // TODO: i18n?
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 		} else {
-			// dict._popup(ret);
-			let invert = options.get("dict-simple").value;
-			if (dict.args.bang)
-				invert = !invert;
-			if (invert) {
-				dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
-				dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
-			} else {
-				let list = template.table(ret["complex"]["title"], ret["complex"]["sub"]);
-				dactyl.echo(list, commandline.FORCE_MULTILINE);
-				// dactyl.echomsg(ret["complex"]); // commandline.FORCE_MULTILINE
+			let show = options.get("dict-show").value;
+			if (dict.args["-o"])
+				show = dict.args["-o"];
+			switch ( show ) {
+				case "s" :
+				let invert = options.get("dict-simple").value;
+				if (dict.args.bang)
+					invert = !invert;
+				if (invert) {
+					dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
+					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
+				} else {
+					let list = template.table(ret["full"]["title"], ret["full"]["sub"]);
+					dactyl.echo(<>{STYLE}{list}</>, commandline.FORCE_MULTILINE);
+					// dactyl.echomsg(ret["full"]); // commandline.FORCE_MULTILINE
+				}
+				break;
+
+				case "a":
+				dict._alert(ret);
+				break;
+
+				case "n":
+				dict._notification(ret);
+				break;
+
+				default:
+				break;
 			}
 		}
 	},
@@ -435,6 +647,16 @@ let dict = {
 			let ret = {};
 			if (req.status == 200)
 				ret = dict_cn.process(req.responseText);
+			dict.process(ret);
+			req.onreadystatechange = function() {};
+		}
+	},
+
+	qq: function(req) {
+		if (req.readyState == 4) {
+			let ret = {};
+			if (req.status == 200)
+				ret = qq.process(req.responseText);
 			dict.process(ret);
 			req.onreadystatechange = function() {};
 		}
@@ -571,29 +793,30 @@ let dict = {
 		return str.replace(/\n/g, " | ").replace(/\s+/g, " ");
 	},
 
-	_alert: function(ret/*, url*/) {
+	_notification: function(ret/*, url*/) {
 		let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
-		let title = ret["key"];
+		let title = ret["keyword"];
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
 		notify.showAlertNotification(null, title, ret["def"], false, '', null);
 	},
 
-	_notification: function(ret, url) {
+	_alert: function(ret) {
 		// https://developer.mozilla.org/en/Using_popup_notifications
 		// check firefox version, enable on firefox 4.0 or above.
 		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
-			str,
+			ret['simple'],
 			null, /* anchor ID */
 			{
-				label: "查看详细解释",
-				accessKey: "D",
+				label: T(5),
+				accessKey: "S",
 				callback: function() {
-					dactyl.open(url, {background:false, where:dactyl.NEW_TAB});
+					dactyl.open(dict.engine.href({'keyword':ret['keyword']}), {background:false, where:dactyl.NEW_TAB});
 				}
 			},
 			null  /* secondary action */
 		);
+		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { list-style-image: url("'+dict.engine.favicon+'");}');
 
 	},
 
@@ -637,7 +860,7 @@ let dict = {
 
 	_nl2br: function(str) {
 		return str.replace(/\n/g, "<br/>");
-	}
+	},
 };
 
 if (!dict.isWin()) {
@@ -675,6 +898,7 @@ options.add(["dict-engine", "dice"],
 	{
 		completer: function(context) [
 			["d", "Dict.cn 海词"],
+			["q", "QQ词典"],
 			["g", "Google Translate"]
 		]
 	}
@@ -755,6 +979,7 @@ group.commands.add(["di[ct]", "dic"],
 				type: CommandOption.STRING,
 				completer: [
 					["d", "Dict.cn 海词"],
+					["q", "QQ词典"],
 					["g", "Google Translate"]
 				]
 			},
@@ -763,6 +988,16 @@ group.commands.add(["di[ct]", "dic"],
 				description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
 				type: CommandOption.STRING,
 				completer: function(context, args) google.optsCompleter(context,args)
+			},
+			{
+				names: ["-o"],
+				description: "Show Results",
+				type: CommandOption.STRING,
+				completer: [
+					["s", "Statusline"],
+					["a", "Alert"],
+					["n", "Desktop Notification"]
+				]
 			},
 		]
 	}
@@ -780,30 +1015,34 @@ group.mappings.add([modes.NORMAL, modes.VISUAL],
 
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
-let language = window.navigator.language;
+const DICT_LANGUAGE = window.navigator.language;
 
-let tr = {
-	'en-US': [
-		"Description",
-		"From",
-		"to",
-		"Lookup: ",
-		"Details",
-	],
-	'zh-CN': [
-		"描述",
-		"从",
-		"到",
-		"查找：",
-		"详情",
-	]
+var tr = {
+	'en-US': {
+		1: "Description",
+		2: "From ",
+		3: "to ",
+		4: "Lookup: ",
+		5: "Details"
+	},
+	'zh-CN': {
+		1: "描述",
+		2: "从 ",
+		3: "到 ",
+		4: "查找：",
+		5: "详情"
+	}
 };
 
-// dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["complex"]
+function T(i) {
+	return tr[DICT_LANGUAGE][i];
+};
+
+// dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["full"]
 // 返回查询的页面链接，最好可点击
 // * http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
-// FORCE_SINGLELINE | APPEND_MESSAGES
-// 使用mozilla notification box?
+// * FORCE_SINGLELINE | APPEND_MESSAGES
+// * 使用mozilla notification box?
 // * clear previous active request
 // cache or history
 // - sound is broken out? linux/winxp/win7 okay
