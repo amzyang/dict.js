@@ -104,10 +104,9 @@ let qq = {
 				ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
 			else
 				ret["simple"] = ret["keyword"] + " " + ret["def"];
+			ret["full"] = qq._full(j);
 		} else
 			ret["notfound"] = true;
-		ret["full"] = qq._full(j);
-		ret["fullText"] = "";
 		return ret;
 	},
 
@@ -218,6 +217,7 @@ let qq = {
 	_audioUri: function(str) {
 		let prefix = "http://speech.dict.qq.com/audio/";
 		let uri = prefix + str[0] + "/" + str[1] + "/"  +str[2] + "/" + str + ".mp3";
+		return uri;
 	},
 
 	_digIntoSen: function(pos, sen) {
@@ -226,7 +226,76 @@ let qq = {
 				return sen[i];
 		}
 		return false;
-	}
+	},
+
+	makeRequest: function(context, args) {
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+		let guessOffset = function(string, opts) { // This was not so robust, be careful.
+			var pieces = string.split(/\s+/g);
+			if (pieces.length <= 1)
+				return string.length;
+			let start = 1;
+			let finded = start;
+			let idx = pieces[0].length;
+			for (var i = start; i < pieces.length; i++) {
+				if (opts.indexOf(pieces[i]) > -1) {
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+					i++;
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+				} else {
+					break;
+				}
+			}
+			return idx+1;
+		};
+		// context.waitingForTab = true;
+		context.title = ["Original", "Translation"];
+		context.keys = {"text":"g", "description":"e"};
+		context.filterFunc = null;
+		context.quote = ["", util.identity, ""];
+		if (!context.commandline)
+			context.offset=guessOffset(context.value, ["-l", "-e", "-o"]);
+		context.process[1] = url;
+		context.key = encodeURIComponent(args.join("_"));
+		if (args.length == 0) {
+		} else {
+			var req = new XMLHttpRequest();
+			req.open("GET",
+				"http://dict.qq.com/sug?" + args.join(" ")
+			);
+			req.setRequestHeader("Referer", "http://dict.qq.com/");
+			req.send(null);
+			req.onreadystatechange = function () {
+				qq.suggest(req, context);
+			}
+			dict.suggestReq = req;
+			return req;
+		}
+	},
+
+	suggest: function(req, context) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				var text = req.responseText.trim();
+				var result_arr = text.split("\n");
+				let suggestions = [];
+				result_arr.forEach(function(line) {
+						let pair = line.split("\t");
+						let r = {};
+						r["g"] = pair[0].trim();
+						r["e"] = pair[1].trim();
+						r["url"] = qq.href({"keyword": r["g"]});
+						suggestions.push(r);
+				});
+				context.completions = suggestions;
+			} else {
+			}
+			req.onreadystatechange = function() {};
+		}
+	},
+
 };
 
 // http://code.google.com/apis/language/translate/v1/using_rest_translate.html
@@ -531,7 +600,82 @@ let dict_cn = {
 			ret["notfound"] = true;
 		}
 		return ret;
-	}
+	},
+
+	makeRequest:  function (context, args) {
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+		let guessOffset = function(string, opts) { // This was not so robust, be careful.
+			var pieces = string.split(/\s+/g);
+			if (pieces.length <= 1)
+				return string.length;
+			let start = 1;
+			let finded = start;
+			let idx = pieces[0].length;
+			for (var i = start; i < pieces.length; i++) {
+				if (opts.indexOf(pieces[i]) > -1) {
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+					i++;
+					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
+				} else {
+					break;
+				}
+			}
+			return idx+1;
+		};
+		// context.waitingForTab = true;
+		context.title = ["Original", "Translation"];
+		context.keys = {"text":"g", "description":"e"};
+		context.filterFunc = null;
+		context.quote = ["", util.identity, ""];
+		if (!context.commandline)
+			context.offset=guessOffset(context.value, ["-l", "-e", "-o"]);
+		context.process[1] = url;
+		context.key = encodeURIComponent(args.join("_"));
+		if (args.length == 0) {
+		} else {
+			var req = new XMLHttpRequest();
+			req.open("POST",
+				"http://dict.cn/ajax/suggestion.php"
+			);
+			req.onreadystatechange = function () {
+				dict_cn.suggest(req, context);
+			}
+			// req.send(null);
+			var formData = new FormData();
+			formData.append("q", args.join(" "));
+			formData.append("s", "d");
+			req.send(formData);
+			dict.suggestReq = req;
+			return req;
+		}
+	},
+
+	suggest: function(req, context) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				var result_arr = JSON.parse(req.responseText);
+				var suggestions = [];
+				result_arr["s"].forEach(function (r) {
+						r["e"] = dict._html_entity_decode(r["e"].trim());
+						r["g"] = r["g"].trim();
+						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"]);
+						suggestions.push(r); // trim blank chars
+				});
+				context.completions = suggestions;
+			} else if (req.status == 404) {
+				// 辞海的自动补全需要 cookie
+				// 因此我们对dict.cn请求一次
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", "http://dict.cn");
+				xhr.send(null);
+			} else {
+			}
+			req.onreadystatechange = function() {};
+		}
+	},
+
 }
 
 let dict = {
@@ -580,7 +724,7 @@ let dict = {
 				{
 					completer: function (context) {
 						context.commandline = true;
-						dict.suggest(dict.makeRequest(context, [commandline.command]), context); // this != dict
+						dict.suggest(context, [commandline.command]); // this != dict
 					}
 				}
 			);
@@ -678,77 +822,18 @@ let dict = {
 		}
 	},
 
-	makeRequest:  function (context, args) {
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
-		let guessOffset = function(string, opts) { // This was not so robust, be careful.
-			var pieces = string.split(/\s+/g);
-			if (pieces.length <= 1)
-				return string.length;
-			let start = 1;
-			let finded = start;
-			let idx = pieces[0].length;
-			for (var i = start; i < pieces.length; i++) {
-				if (opts.indexOf(pieces[i]) > -1) {
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-					i++;
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-				} else {
-					break;
-				}
-			}
-			return idx+1;
-		};
-		// context.waitingForTab = true;
-		context.title = ["Original", "Translation"];
-		context.keys = {"text":"g", "description":"e"};
-		context.filterFunc = null;
-		context.quote = ["", util.identity, ""];
-		if (!context.commandline)
-			context.offset=guessOffset(context.value, ["-l", "-e"]);
-		context.process[1] = url;
-		context.key = encodeURIComponent(args.join("_"));
-		if (args.length == 0) {
-		} else {
-			var req = new XMLHttpRequest();
-			req.open("POST",
-				"http://dict.cn/ajax/suggestion.php"
-			);
-			req.onreadystatechange = function () {
-				dict.suggest(req, context);
-			}
-			// req.send(null);
-			var formData = new FormData();
-			formData.append("q", args.join(" "));
-			formData.append("s", "d");
-			req.send(formData);
-			dict.suggestReq = req;
-			return req;
+	suggest: function(context, args) {
+		let e = options.get("dict-engine").value;
+		let engine = dict.engines[e];
+		if (args["-e"]) {
+			e = args["-e"];
+			if (dict.engines[e])
+				engine = dict.engines[e];
 		}
-	},
-
-	suggest: function(req, context) {
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				var result_arr = JSON.parse(req.responseText);
-				var suggestions = [];
-				result_arr["s"].forEach(function (r) {
-						r["e"] = dict._html_entity_decode(r["e"].trim());
-						r["g"] = r["g"].trim();
-						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"]);
-						suggestions.push(r); // trim blank chars
-				});
-				context.completions = suggestions;
-			} else if (req.status == 404) {
-				// 辞海的自动补全需要 cookie
-				// 因此我们对dict.cn请求一次
-				var xhr = new XMLHttpRequest();
-				xhr.open("GET", "http://dict.cn");
-				xhr.send(null);
-			} else {
-			}
-			req.onreadystatechange = function() {};
+		if (engine.suggest) {
+			engine.suggest(engine.makeRequest(context, args), context);
+		} else {
+			dict_cn.suggest(dict_cn.makeRequest(context, args), context);
 		}
 	},
 
@@ -969,7 +1054,7 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		completer: function (context, args) {
 			if (args.length >= 1)
-				return dict.suggest(dict.makeRequest(context, args), context);
+				return dict.suggest(context, args);
 		},
 		bang: true, // TODO
 		options: [
