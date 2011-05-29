@@ -93,7 +93,7 @@ let qq = {
 				if (item["p"]) {
 					let pos = item["p"];
 					let sen = qq._digIntoSen(pos, gsen);
-					let dt = <dt><span>{item["p"]}</span><span>{item["d"]}</span></dt>;
+					let dt = new XML("<dt><span>"+item["p"]+"</span><span>"+item["d"]+"</span></dt>");
 					let dds = <></>;
 					if (sen) {
 						sen.s.forEach(function(single) {
@@ -105,7 +105,7 @@ let qq = {
 					}
 					des += <><dl>{dt}{dds}</dl></>;
 				} else {
-					let dt = <dt><span>{item["d"]}</span></dt>;
+					let dt = new XML("<dt><span>"+item["d"]+"</span></dt>");
 					des += <><dl>{dt}</dl></>;
 				}
 			});
@@ -176,7 +176,7 @@ let qq = {
 					else
 						_ret["def"].push(item["d"]);
 			});
-			_ret["def"] = _ret["def"].join(" | ");
+			_ret["def"] = dict._html_entity_decode(_ret["def"].join(" | "));
 		}
 		return _ret;
 	},
