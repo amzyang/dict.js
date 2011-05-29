@@ -76,7 +76,7 @@ let qq = {
 		let keyword_url = qq.href({"keyword":_simple["word"]});
 		if (_simple["pron"]) {
 			full["title"] = <p class="title">
-				<a href={keyword_url} target="_blank" highlight="URL">{_simple["word"]}</a>
+			<a href={keyword_url} target="_new" highlight="URL">{_simple["word"]}</a>
 				<span>[{_simple["pron"]}]</span>
 			</p>;
 		} else {
@@ -878,7 +878,7 @@ let dict = {
 	},
 
 	_xmlPre: function(str) {
-		return str.replace(/&nbsp;/g, "&#160;");
+		return str.replace(/&nbsp;/g, "&#160;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 	},
 
 	_selection: function() {
