@@ -90,19 +90,24 @@ let qq = {
 			if (t.sen)
 				gsen = t.sen;
 			t.des.forEach(function(item) {
-				let pos = item["p"];
-				let sen = qq._digIntoSen(pos, gsen);
-				let dt = <dt><span>{item["p"]}</span><span>{item["d"]}</span></dt>;
-				let dds = <></>;
-				if (sen) {
-					sen.s.forEach(function(single) {
-						let es = dict._html_entity_decode(single["es"]);
-						let cs = dict._html_entity_decode(single["cs"]);
-						dds += <><dd>{es}</dd></>;
-						dds += <><dd>{cs}</dd></>;
-					});
+				if (item["p"]) {
+					let pos = item["p"];
+					let sen = qq._digIntoSen(pos, gsen);
+					let dt = <dt><span>{item["p"]}</span><span>{item["d"]}</span></dt>;
+					let dds = <></>;
+					if (sen) {
+						sen.s.forEach(function(single) {
+								let es = dict._html_entity_decode(single["es"]);
+								let cs = dict._html_entity_decode(single["cs"]);
+								dds += <><dd>{es}</dd></>;
+								dds += <><dd>{cs}</dd></>;
+						});
+					}
+					des += <><dl>{dt}{dds}</dl></>;
+				} else {
+					let dt = <dt><span>{item["d"]}</span></dt>;
+					des += <><dl>{dt}</dl></>;
 				}
-				des += <><dl>{dt}{dds}</dl></>;
 			});
 			full["sub"]["基本解释"] = <div class="basic">{des}</div>;
 		}
