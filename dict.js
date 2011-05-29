@@ -1054,7 +1054,7 @@ dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译' -bu
 dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译详情' -builtin -silent <A-S-d> :dict!<CR>");
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
-const DICT_LANGUAGE = window.navigator.language;
+const DICT_LANGUAGE = "zh-CN";
 
 var tr = {
 	'en-US': {
@@ -1223,7 +1223,7 @@ var INFO =
 	  <strut/>
 	  <spec>dict.js 快捷键</spec>
 	  <description>
-	  <p>dict.js 默认使用<k name="A-d"/>来快速翻译当前选区或者是剪贴板中的内容。如果选区和剪贴板都为空，则会提供一个输入框。</p>
+	  <p>dict.js 默认使用<k name="A-d"/>和<k name="A-S-d"/>来快速翻译当前选区或者是剪贴板中的内容。如果选区和剪贴板都为空，则会提供一个输入框。</p>
 	  </description>
 	  </item>
 
@@ -1232,6 +1232,14 @@ var INFO =
 		  <spec><![CDATA[<A-d>]]></spec>
 		  <description>
 			  <p>翻译当前选区或者是剪贴板中的内容。</p>
+		  </description>
+	  </item>
+
+	  <item>
+		  <tags><![CDATA[<A-S-d>]]></tags>
+		  <spec><![CDATA[<A-S-d>]]></spec>
+		  <description>
+			  <p>翻译当前选区或者是剪贴板中的内容，实际效果等同于调用<ex>:dict!</ex>。</p>
 		  </description>
 	  </item>
 
