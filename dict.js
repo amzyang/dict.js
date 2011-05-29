@@ -97,10 +97,10 @@ let qq = {
 					let dds = <></>;
 					if (sen) {
 						sen.s.forEach(function(single) {
-								let es = dict._html_entity_decode(single["es"]);
-								let cs = dict._html_entity_decode(single["cs"]);
-								dds += <><dd>{es}</dd></>;
-								dds += <><dd>{cs}</dd></>;
+								let es = single["es"];
+								let cs = single["cs"];
+								dds += new XML("<dd>"+es+"</dd>");
+								dds += new XML("<dd>"+cs+"</dd>");
 						});
 					}
 					des += <><dl>{dt}{dds}</dl></>;
@@ -116,7 +116,7 @@ let qq = {
 			let ph = <></>;
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
-				let phs = dict._html_entity_decode(item["phs"]);
+				let phs = new XML(item["phs"]);
 				ph += <><li><a href={href} highlight="URL">{phs}</a><span>{item["phd"]}</span></li></>;
 			});
 			full["sub"]["相关词组"] = <ol>{ph}</ol>;
@@ -171,7 +171,10 @@ let qq = {
 		if (t.des) {
 			_ret["def"] = [];
 			t.des.forEach(function(item) {
-					_ret["def"].push(item["p"] + " " + item["d"]);
+					if (item["p"])
+						_ret["def"].push(item["p"] + " " + item["d"]);
+					else
+						_ret["def"].push(item["d"]);
 			});
 			_ret["def"] = _ret["def"].join(" | ");
 		}
@@ -524,10 +527,10 @@ let dict_cn = {
 				var origTrans = [];
 				let oT = <></>;
 				for (var i = 0; i < sentelems.length; i++) {
-					let org = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].firstChild.textContent)); // <em></em>
-					let trans = dict._html_entity_decode(dict._html_entity_decode(sentelems[i].lastChild.textContent));
-					let dt = <dt>{org}</dt>;
-					let dd = <dd>{trans}</dd>;
+					let org = sentelems[i].firstChild.textContent
+					let trans = sentelems[i].lastChild.textContent;
+					let dt = new XML("<dt>"+org+"</dt>");
+					let dd = new XML("<dd>"+trans+"</dd>");
 					oT += <>{dt}{dd}</>;
 
 					origTrans.push([org, trans]);
@@ -870,17 +873,12 @@ let dict = {
 
 	// http://stackoverflow.com/questions/2808368/converting-html-entities-to-unicode-character-in-javascript
 	_html_entity_decode: function(str) {
-		var elem = util.xmlToDom(<html:div xmlns:html={XHTML}></html:div>, content.document);
-		let str_decode = str;
-		try {
-			elem.innerHTML = str;
-			str_decode = elem.textContent;
-			str_decode = str_decode.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
-		} catch (e) {
-			str_decode = str_decode.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
-		} finally {
-			return str_decode;
-		}
+		var xml = new XML(dict._xmlPre(str));
+		return xml.toString();
+	},
+
+	_xmlPre: function(str) {
+		return str.replace(/&nbsp;/g, "&#160;");
 	},
 
 	_selection: function() {
@@ -1052,16 +1050,8 @@ group.commands.add(["di[ct]", "dic"],
 	}
 );
 
-group.mappings.add([modes.NORMAL, modes.VISUAL],
-	//["<Leader>z"],
-	["<A-d>"],
-	"Dict Lookup",
-	function() {ex.dict();},
-	{
-
-	}
-);
-
+dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译' -builtin -silent <A-d> :dict<CR>");
+dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译详情' -builtin -silent <A-S-d> :dict!<CR>");
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
 const DICT_LANGUAGE = window.navigator.language;
