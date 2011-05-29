@@ -251,9 +251,9 @@ let qq = {
 				result_arr.forEach(function(line) {
 						let pair = line.split("\t");
 						let r = {};
-						r["g"] = pair[0].trim();
+						r["g"] = pair[0].trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
 						r["e"] = pair[1].trim();
-						r["url"] = qq.href({"keyword": r["g"]});
+						r["url"] = qq.href({"keyword": pair[0].trim()});
 						suggestions.push(r);
 				});
 				context.completions = suggestions;
@@ -626,8 +626,8 @@ let dict_cn = {
 				var suggestions = [];
 				result_arr["s"].forEach(function (r) {
 						r["e"] = dict._html_entity_decode(r["e"].trim());
-						r["g"] = r["g"].trim();
-						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"]);
+						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
+						r["g"] = r["g"].trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
 						suggestions.push(r); // trim blank chars
 				});
 				context.completions = suggestions;
