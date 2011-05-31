@@ -18,16 +18,16 @@ span > b { margin-right: 0.4em; }
 
 let qq = {
 	keyword: "",
-	favicon: "http://dict.qq.com/favicon.ico",
+	favicon: "http://im-img.qq.com/inc/images/new_header2/logo.gif",
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
+		dict.req = req;
 		req.open("GET", "http://dict.qq.com/dict?f=web&q="+keyword, true);
 		req.setRequestHeader("Referer", "http://dict.qq.com/");
 		req.send(null);
 		req.onreadystatechange = function(ev) {
 			dict.qq(req);
 		};
-		dict.req = req;
 		return req;
 	},
 
@@ -229,6 +229,7 @@ let qq = {
 		if (args.length == 0) {
 		} else {
 			var req = new XMLHttpRequest();
+			dict.suggestReq = req;
 			req.open("GET",
 				"http://dict.qq.com/sug?" + args.join(" ")
 			);
@@ -237,7 +238,6 @@ let qq = {
 			req.onreadystatechange = function () {
 				qq.suggest(req, context);
 			}
-			dict.suggestReq = req;
 			return req;
 		}
 	},
@@ -381,7 +381,7 @@ let google = {
 		['yo', 'Yoruba'],
 		['', 'Unknown']
 	],
-	favicon: "http://translate.google.com/favicon.ico",
+	favicon: "http://www.gstatic.com/translate/intl/en/logo.png",
 	get langpair() google._langpair || false,
 	set langpair(langpair) {
 		dict._langpair = langpair;
@@ -400,12 +400,12 @@ let google = {
 		formData.append("userip", google._randomIp());
 		formData.append("format", "text"); // 
 		var req = new XMLHttpRequest();
+		dict.req = req;
 		req.open("POST", google.url, true);
 		req.send(formData);
 		req.onreadystatechange = function(ev) {
 			dict.google(req);
 		};
-		dict.req = req;
 		return req;
 	},
 	optsCompleter: function(context, args) {
@@ -453,9 +453,10 @@ let dict_cn = {
 	keyword: "",
 	url: "",
 	template: "",
-	favicon: "http://dict.cn/favicon.ico",
+	favicon: "http://dict.cn/imgs/logo_b.png",
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
+		dict.req = req;
 		dict_cn.keyword = keyword;
 		dict_cn.url = "http://dict.cn/"+keyword;
 		req.open("POST",
@@ -466,7 +467,6 @@ let dict_cn = {
 			dict.dict_cn(req);
 		};
 		req.send(null);
-		dict.req = req;
 		return req;
 	},
 
@@ -603,6 +603,7 @@ let dict_cn = {
 		if (args.length == 0) {
 		} else {
 			var req = new XMLHttpRequest();
+			dict.suggestReq = req;
 			req.open("POST",
 				"http://dict.cn/ajax/suggestion.php"
 			);
@@ -614,7 +615,6 @@ let dict_cn = {
 			formData.append("q", args.join(" "));
 			formData.append("s", "d");
 			req.send(formData);
-			dict.suggestReq = req;
 			return req;
 		}
 	},
@@ -652,6 +652,31 @@ let dict = {
 		if (dict.req)
 			dict.req.abort();
 		dict._req = req;
+
+		// show progressing
+		var self = this;
+		var p = document.getElementById('statusbar-display');
+		req.addEventListener('loadstart', function(evt) {
+			self.timeoutid = window.setTimeout(function() {
+					p.label = T(6); delete self.timeoutid;
+					self.intervalid = window.setInterval(function() {p.label = T(6);}, 400);
+				},
+				400);
+		},
+		false);
+		["load", "error", "abort"].forEach(function(st) { // loadend
+			req.addEventListener(st, function(evt) {
+				if (self.timeoutid) {
+					window.clearTimeout(self.timeoutid);
+					delete self.timeoutid;
+				} else {
+					p.label = "";
+					window.clearInterval(self.intervalid);
+					delete self.intervalid;
+				}
+			},
+			false);
+		});
 	},
 	get suggestReq() dict._suggestReq || null,
 	set suggestReq(req) {
@@ -777,12 +802,44 @@ let dict = {
 			if (req.status == 200) {
 				let g = JSON.parse(req.responseText);
 				let t = g.responseData.translatedText.replace(/\n$/, "").split("\n");
-				if (t.length > 1 && !mow.visible)
-					dactyl.echo("\n");
-				for (let [i, v] in  Iterator(t))
-					dactyl.echo(v);
-				if (!mow.visible)
-					dict.timeout = dactyl.timeout(dict._clear, 15000);
+				let show = options.get("dict-show").value;
+				if (dict.args["-o"])
+					show = dict.args["-o"];
+				switch (show) {
+					case "s":
+					if (t.length > 1 && !mow.visible)
+						dactyl.echo("\n");
+					for (let [i, v] in  Iterator(t))
+						dactyl.echo(v);
+					if (!mow.visible)
+						dict.timeout = dactyl.timeout(dict._clear, 15000);
+					break;
+
+					case "a":
+					PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
+						g.responseData.translatedText,
+						null, /* anchor ID */
+						{
+							label: T(5),
+							accessKey: "S",
+							callback: function() {
+								dactyl.open("http://translate.google.com/", {background:false, where:dactyl.NEW_TAB});
+							}
+						},
+						null  /* secondary action */
+					);
+					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.favicon+'") no-repeat left 50%;}');
+					break;
+
+					case "n":
+					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
+					let title = T(7);
+					notify.showAlertNotification(null, title, g.responseData.translatedText, false, '', null);
+					break;
+
+					default:
+					break;
+				}
 			}
 			req.onreadystatechange = function() {};
 		}
@@ -796,6 +853,27 @@ let dict = {
 			if (dict.engines[e])
 				engine = dict.engines[e];
 		}
+		/*
+		var keyword = args.join(" ").trim();
+		if (keyword.length < 3)
+			return;
+		var words = content.document.body.textContent.split(/\:|\"|\[|\]|\.|,|\s|\t|\n/).filter(function(i) {
+			return i.length >= 3 && /^[\-\.a-zA-Z]+$/.test(i);
+		}).map(function(i) {
+			return i.toLowerCase().replace(/^\.|\.$/g, "");
+		}).filter(function(i, index, allwords) {
+			return (allwords.indexOf(i) == index) && (i.indexOf(keyword.toLowerCase()) > -1);
+		});
+		var completions = [];
+		words.forEach(function(r) {
+			let w = {};
+			w["e"] = r;
+			w["g"] = r;
+			completions.push(w);
+		});
+		context.keys = {"text":"g", "description":"e"};
+		context.completions = completions;
+		*/
 		if (engine.suggest) {
 			engine.suggest(engine.makeRequest(context, args), context);
 		} else {
@@ -867,7 +945,7 @@ let dict = {
 			},
 			null  /* secondary action */
 		);
-		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { list-style-image: url("'+dict.engine.favicon+'");}');
+		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.favicon+'") no-repeat left -8px;}');
 
 	},
 
@@ -906,7 +984,7 @@ let dict = {
 
 	_nl2br: function(str) {
 		return str.replace(/\n/g, "<br/>");
-	},
+	}
 };
 
 if (!dict.isWin()) {
@@ -1054,7 +1132,7 @@ dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译' -bu
 dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译详情' -builtin -silent <A-S-d> :dict!<CR>");
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
-const DICT_LANGUAGE = "zh-CN";
+const DICT_LANGUAGE = window.navigator.language;
 
 var tr = {
 	'en-US': {
@@ -1062,14 +1140,18 @@ var tr = {
 		2: "From ",
 		3: "to ",
 		4: "Lookup: ",
-		5: "Details"
+		5: "Details",
+		6: "In Progressing...",
+		7: "Google Translate"
 	},
 	'zh-CN': {
 		1: "描述",
 		2: "从 ",
 		3: "到 ",
 		4: "查找：",
-		5: "详情"
+		5: "详情",
+		6: "查询进行中...",
+		7: "谷歌翻译"
 	}
 };
 
