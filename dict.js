@@ -18,7 +18,8 @@ span > b { margin-right: 0.4em; }
 
 let qq = {
 	keyword: "",
-	favicon: "http://im-img.qq.com/inc/images/new_header2/logo.gif",
+	logo: "http://im-img.qq.com/inc/images/new_header2/logo.gif",
+	favicon: "http://dict.qq.com/favicon.ico",
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict.req = req;
@@ -381,7 +382,8 @@ let google = {
 		['yo', 'Yoruba'],
 		['', 'Unknown']
 	],
-	favicon: "http://www.gstatic.com/translate/intl/en/logo.png",
+	favicon: "http://translate.google.com/favicon.ico",
+	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
 	get langpair() google._langpair || false,
 	set langpair(langpair) {
 		dict._langpair = langpair;
@@ -453,7 +455,8 @@ let dict_cn = {
 	keyword: "",
 	url: "",
 	template: "",
-	favicon: "http://dict.cn/imgs/logo_b.png",
+	favicon: "http://dict.cn/favicon.ico",
+	logo: "http://dict.cn/imgs/logo_b.png",
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict.req = req;
@@ -818,7 +821,7 @@ let dict = {
 					case "a":
 					PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
 						g.responseData.translatedText,
-						null, /* anchor ID */
+						"dict-popup-anchor", /* anchor ID */
 						{
 							label: T(5),
 							accessKey: "S",
@@ -826,15 +829,24 @@ let dict = {
 								dactyl.open("http://translate.google.com/", {background:false, where:dactyl.NEW_TAB});
 							}
 						},
-						null  /* secondary action */
+						null,  /* secondary action */
+						{
+							timeout: Date.now() + 15000
+						}
 					);
-					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.favicon+'") no-repeat left 50%;}');
+					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left 50%;}');
 					break;
 
 					case "n":
 					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
+					let listener = {
+						observe: function(subject, topic, data) {
+							if (topic == "alertclickcallback")
+								dactyl.open(data, {background:true, where:dactyl.NEW_TAB});
+						}
+					}
 					let title = T(7);
-					notify.showAlertNotification(null, title, g.responseData.translatedText, false, '', null);
+					notify.showAlertNotification(dict.engine.favicon, title, g.responseData.translatedText, true, 'http://translate.google.com/', listener, "dict-js-popup");
 					break;
 
 					default:
@@ -923,11 +935,18 @@ let dict = {
 	},
 
 	_notification: function(ret/*, url*/) {
+		// https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIAlertsService
 		let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
+		let listener = {
+			observe: function(subject, topic, data) {
+				if (topic == "alertclickcallback")
+					dactyl.open(data, {background:true, where:dactyl.NEW_TAB});
+			}
+		}
 		let title = ret["keyword"];
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
-		notify.showAlertNotification(null, title, ret["def"], false, '', null);
+		notify.showAlertNotification(dict.engine.favicon, title, ret["def"], true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
 	},
 
 	_alert: function(ret) {
@@ -935,7 +954,7 @@ let dict = {
 		// check firefox version, enable on firefox 4.0 or above.
 		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
 			ret['simple'],
-			null, /* anchor ID */
+			"dict-popup-anchor", /* anchor ID */
 			{
 				label: T(5),
 				accessKey: "S",
@@ -943,9 +962,12 @@ let dict = {
 					dactyl.open(dict.engine.href({'keyword':ret['keyword']}), {background:false, where:dactyl.NEW_TAB});
 				}
 			},
-			null  /* secondary action */
+			null,  /* secondary action */
+			{
+				timeout: Date.now() + 15000
+			}
 		);
-		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.favicon+'") no-repeat left -8px;}');
+		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left -8px;}');
 
 	},
 
@@ -1142,7 +1164,7 @@ var tr = {
 		4: "Lookup: ",
 		5: "Details",
 		6: "In Progressing...",
-		7: "Google Translate"
+		7: "Google Translate: "
 	},
 	'zh-CN': {
 		1: "描述",
@@ -1151,7 +1173,7 @@ var tr = {
 		4: "查找：",
 		5: "详情",
 		6: "查询进行中...",
-		7: "谷歌翻译"
+		7: "谷歌翻译："
 	}
 };
 
