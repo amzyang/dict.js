@@ -16,6 +16,91 @@ span > b { margin-right: 0.4em; }
 ]]>
 </style>;
 
+const DICT_JS_VERSION = "0.9.9";
+const DICT_JS_URL = "https://github.com/grassofhust/dict.js";
+const DICT_LANGUAGE = window.navigator.language;
+
+const tr = {
+	"en-US": {
+		1:  "Description",
+		2:  "From ",
+		3:  " to ",
+		4:  "Lookup: ",
+		5:  "Details",
+		6:  "In Progressing...",
+		7:  "Google Translate: ",
+		8:  "Define",
+		9:  "Related phrases",
+		10: "Synonyms: ",
+		11: "Antonyms: ",
+		12: "Thesaurus",
+		13: "Inflected",
+		14: "Original Text",
+		15: "Translation",
+		16: "Langpair",
+		17: "Source language and destination language, separated by a properly escaped vertical bar (|)",
+		18: "Examples",
+		19: "Not found: ",
+		20: "External audio player",
+		21: "Audio support",
+		22: "Simple output",
+		23: "Dictionary engine",
+		24: "Dict.cn",
+		25: "QQ Dictionary",
+		26: "Show result",
+		27: "Statusline",
+		28: "Alert",
+		29: "Desktop notification",
+		30: "Enable double click",
+		31: "Dict lookup",
+		32: "View translation for mouse selection or clipboard",
+		33: "View details for mouse selection or clipboard",
+		34: "Google Translate"
+	},
+	"zh-CN": {
+		1:  "描述",
+		2:  "从 ",
+		3:  " 到 ",
+		4:  "查找：",
+		5:  "详情",
+		6:  "查询进行中...",
+		7:  "谷歌翻译：",
+		8:  "解释",
+		9:  "相关词组",
+		10: "同义词：",
+		11: "反义词：",
+		12: "同反义词",
+		13: "词形变化",
+		14: "原文",
+		15: "翻译",
+		16: "语言对",
+		17: "来源语言和目标语言，用 | 来分隔",
+		18: "例句",
+		19: "未找到：",
+		20: "外部音频播放程序",
+		21: "支持声音",
+		22: "简洁输出",
+		23: "词典引擎",
+		24: "海词",
+		25: "QQ 词典",
+		26: "显示结果方式",
+		27: "状态栏",
+		28: "提醒",
+		29: "桌面通知",
+		30: "双击取词",
+		31: "词典查找",
+		32: "查看选区或者剪贴板的翻译",
+		33: "查看选区或者剪贴板的翻译详情",
+		34: "谷歌翻译",
+	}
+};
+
+function T(i) {
+	if (DICT_LANGUAGE == "zh-CN")
+		return tr["zh-CN"][i];
+	return tr["en-US"][i];
+}
+
 let qq = {
 	keyword: "",
 	logo: "http://im-img.qq.com/inc/images/new_header2/logo.gif",
@@ -85,7 +170,7 @@ let qq = {
 				<a href={keyword_url} target="_blank" highlight="URL">{_simple["word"]}</a>
 			</p>;
 		}
-		if (t.des) {
+		if (t.des) { // Define
 			let des = <></>;
 			let gsen = [];
 			if (t.sen)
@@ -110,20 +195,20 @@ let qq = {
 					des += <><dl>{dt}</dl></>;
 				}
 			});
-			full["sub"]["基本解释"] = <div class="basic">{des}</div>;
+			full["sub"][T(8)] = <div class="basic">{des}</div>;
 		}
 
-		if (t.ph) { // 相关词组
+		if (t.ph) { // Related phrases
 			let ph = <></>;
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
 				let phs = new XML(item["phs"]);
 				ph += <><li><a href={href} highlight="URL">{phs}</a><span>{item["phd"]}</span></li></>;
 			});
-			full["sub"]["相关词组"] = <ol>{ph}</ol>;
+			full["sub"][T(9)] = <ol>{ph}</ol>;
 		}
 
-		if (t.syn) { // 同义词
+		if (t.syn) { // Synonyms
 			let syn = <></>;
 			t.syn.forEach(function(item) {
 				let syn_item = <></>;
@@ -133,9 +218,9 @@ let qq = {
 				});
 				syn += <>{syn_item}</>;
 			});
-			full["sub"]["同反义词"] = <p><span>同义词：</span>{syn}</p>;
+			full["sub"][T(12)] = <p><span>{T(10)}</span>{syn}</p>;
 		}
-		if (t.ant) { // 反义词
+		if (t.ant) { // Antonyms
 			let ant = <></>;
 			t.ant.forEach(function(item) {
 				let ant_item = <></>;
@@ -145,18 +230,18 @@ let qq = {
 				});
 				ant += <>{ant_item}</>;
 			});
-			if (full["sub"]["同反义词"])
-				full["sub"]["同反义词"] += <p><span>反义词：</span>{ant}</p>;
+			if (full["sub"][T(12)])
+				full["sub"][T(12)] += <p><span>{T(11)}</span>{ant}</p>;
 			else
-				full["sub"]["同反义词"] = <p><span>反义词：</span>{ant}</p>;
+				full["sub"][T(12)] = <p><span>{T(11)}</span>{ant}</p>;
 		}
-		if (t.mor) { // 词型变换
+		if (t.mor) { // Inflected
 			let mor = <></>;
 			t.mor.forEach(function(item) {
 				let href = qq.href({"keyword": item["m"]});
 				mor += <><span><b>{item["c"]}</b><a href={href} highlight="URL">{item["m"]}</a></span></>;
 			});
-			full["sub"]["词型变换"] = <p>{mor}</p>;
+			full["sub"][T(13)] = <p>{mor}</p>;
 		}
 		return full;
 	},
@@ -219,7 +304,7 @@ let qq = {
 			return idx+1;
 		};
 		// context.waitingForTab = true;
-		context.title = ["Original", "Translation"];
+		context.title = [T(14), T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.quote = ["", util.identity, ""];
@@ -273,114 +358,114 @@ let qq = {
 // http://code.google.com/apis/language/
 let google = {
 	languages: [
-		['af', 'Afrikaans'],
-		['sq', 'Albanian'],
-		['am', 'Amharic'],
-		['ar', 'Arabic'],
-		['hy', 'Armenian'],
-		['az', 'Azerbaijani'],
-		['eu', 'Basque'],
-		['be', 'Belarusian'],
-		['bn', 'Bengali'],
-		['bh', 'Bihari'],
-		['br', 'Breton'],
-		['bg', 'Bulgarian'],
-		['my', 'Burmese'],
-		['ca', 'Catalan'],
-		['chr', 'Cherokee'],
-		['zh', 'Chinese'],
-		['zh-CN', 'Chinese Simplified'],
-		['zh-TW', 'Chinese Traditional'],
-		['co', 'Corsican'],
-		['hr', 'Croatian'],
-		['cs', 'Czech'],
-		['da', 'Danish'],
-		['dv', 'Dhivehi'],
-		['nl', 'Dutch'],
-		['en', 'English'],
-		['eo', 'Esperanto'],
-		['et', 'Estonian'],
-		['fo', 'Faroese'],
-		['tl', 'Filipino'],
-		['fi', 'Finnish'],
-		['fr', 'French'],
-		['fy', 'Frisian'],
-		['gl', 'Galician'],
-		['ka', 'Georgian'],
-		['de', 'German'],
-		['el', 'Greek'],
-		['gu', 'Gujarati'],
-		['ht', 'Haitian Creole'],
-		['iw', 'Hebrew'],
-		['hi', 'Hindi'],
-		['hu', 'Hungarian'],
-		['is', 'Icelandic'],
-		['id', 'Indonesian'],
-		['iu', 'Inuktitut'],
-		['ga', 'Irish'],
-		['it', 'Italian'],
-		['ja', 'Japanese'],
-		['jw', 'Javanese'],
-		['kn', 'Kannada'],
-		['kk', 'Kazakh'],
-		['km', 'Khmer'],
-		['ko', 'Korean'],
-		['ku', 'Kurdish'],
-		['ky', 'Kyrgyz'],
-		['lo', 'Lao'],
-		['la', 'Latin'],
-		['lv', 'Latvian'],
-		['lt', 'Lithuanian'],
-		['lb', 'Luxembourgish'],
-		['mk', 'Macedonian'],
-		['ms', 'Malay'],
-		['ml', 'Malayalam'],
-		['mt', 'Maltese'],
-		['mi', 'Maori'],
-		['mr', 'Marathi'],
-		['mn', 'Mongolian'],
-		['ne', 'Nepali'],
-		['no', 'Norwegian'],
-		['oc', 'Occitan'],
-		['or', 'Oriya'],
-		['ps', 'Pashto'],
-		['fa', 'Persian'],
-		['pl', 'Polish'],
-		['pt', 'Portuguese'],
-		['pt-PT', 'Portuguese Portugal'],
-		['pa', 'Ppnjabi'],
-		['qu', 'Qpechua'],
-		['ro', 'Rpmanian'],
-		['ru', 'Rpssian'],
-		['sa', 'Sanskrit'],
-		['gd', 'Scots Gaelic'],
-		['sr', 'Serbian'],
-		['sd', 'Sindhi'],
-		['si', 'Sinhalese'],
-		['sk', 'Slovak'],
-		['sl', 'Slovenian'],
-		['es', 'Spanish'],
-		['su', 'Sundanese'],
-		['sw', 'Swahili'],
-		['sv', 'Swedish'],
-		['syr', 'Syriac'],
-		['tg', 'Tajik'],
-		['ta', 'Tamil'],
-		['tt', 'Tatar'],
-		['te', 'Telugu'],
-		['th', 'Thai'],
-		['bo', 'Tibetan'],
-		['to', 'Tonga'],
-		['tr', 'Turkish'],
-		['uk', 'Ukrainian'],
-		['ur', 'Urdu'],
-		['uz', 'Uzbek'],
-		['ug', 'Uighur'],
-		['vi', 'Vietnamese'],
-		['cy', 'Welsh'],
-		['yi', 'Yiddish'],
-		['yo', 'Yoruba'],
-		['', 'Unknown']
+		["af", "Afrikaans"],
+		["sq", "Albanian"],
+		["am", "Amharic"],
+		["ar", "Arabic"],
+		["hy", "Armenian"],
+		["az", "Azerbaijani"],
+		["eu", "Basque"],
+		["be", "Belarusian"],
+		["bn", "Bengali"],
+		["bh", "Bihari"],
+		["br", "Breton"],
+		["bg", "Bulgarian"],
+		["my", "Burmese"],
+		["ca", "Catalan"],
+		["chr", "Cherokee"],
+		["zh", "Chinese"],
+		["zh-CN", "Chinese Simplified"],
+		["zh-TW", "Chinese Traditional"],
+		["co", "Corsican"],
+		["hr", "Croatian"],
+		["cs", "Czech"],
+		["da", "Danish"],
+		["dv", "Dhivehi"],
+		["nl", "Dutch"],
+		["en", "English"],
+		["eo", "Esperanto"],
+		["et", "Estonian"],
+		["fo", "Faroese"],
+		["tl", "Filipino"],
+		["fi", "Finnish"],
+		["fr", "French"],
+		["fy", "Frisian"],
+		["gl", "Galician"],
+		["ka", "Georgian"],
+		["de", "German"],
+		["el", "Greek"],
+		["gu", "Gujarati"],
+		["ht", "Haitian Creole"],
+		["iw", "Hebrew"],
+		["hi", "Hindi"],
+		["hu", "Hungarian"],
+		["is", "Icelandic"],
+		["id", "Indonesian"],
+		["iu", "Inuktitut"],
+		["ga", "Irish"],
+		["it", "Italian"],
+		["ja", "Japanese"],
+		["jw", "Javanese"],
+		["kn", "Kannada"],
+		["kk", "Kazakh"],
+		["km", "Khmer"],
+		["ko", "Korean"],
+		["ku", "Kurdish"],
+		["ky", "Kyrgyz"],
+		["lo", "Lao"],
+		["la", "Latin"],
+		["lv", "Latvian"],
+		["lt", "Lithuanian"],
+		["lb", "Luxembourgish"],
+		["mk", "Macedonian"],
+		["ms", "Malay"],
+		["ml", "Malayalam"],
+		["mt", "Maltese"],
+		["mi", "Maori"],
+		["mr", "Marathi"],
+		["mn", "Mongolian"],
+		["ne", "Nepali"],
+		["no", "Norwegian"],
+		["oc", "Occitan"],
+		["or", "Oriya"],
+		["ps", "Pashto"],
+		["fa", "Persian"],
+		["pl", "Polish"],
+		["pt", "Portuguese"],
+		["pt-PT", "Portuguese Portugal"],
+		["pa", "Ppnjabi"],
+		["qu", "Qpechua"],
+		["ro", "Rpmanian"],
+		["ru", "Rpssian"],
+		["sa", "Sanskrit"],
+		["gd", "Scots Gaelic"],
+		["sr", "Serbian"],
+		["sd", "Sindhi"],
+		["si", "Sinhalese"],
+		["sk", "Slovak"],
+		["sl", "Slovenian"],
+		["es", "Spanish"],
+		["su", "Sundanese"],
+		["sw", "Swahili"],
+		["sv", "Swedish"],
+		["syr", "Syriac"],
+		["tg", "Tajik"],
+		["ta", "Tamil"],
+		["tt", "Tatar"],
+		["te", "Telugu"],
+		["th", "Thai"],
+		["bo", "Tibetan"],
+		["to", "Tonga"],
+		["tr", "Turkish"],
+		["uk", "Ukrainian"],
+		["ur", "Urdu"],
+		["uz", "Uzbek"],
+		["ug", "Uighur"],
+		["vi", "Vietnamese"],
+		["cy", "Welsh"],
+		["yi", "Yiddish"],
+		["yo", "Yoruba"],
+		["", "Unknown"]
 	],
 	favicon: "http://translate.google.com/favicon.ico",
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
@@ -391,14 +476,14 @@ let google = {
 	keyword: "",
 	url: "https://ajax.googleapis.com/ajax/services/language/translate",
 	init: function(keyword, args) {
-		let langpair = options.get('dict-langpair').value;
+		let langpair = options.get("dict-langpair").value;
 		if (args["-l"])
 			langpair=args["-l"];
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
 		formData.append("langpair", langpair); // en|zh_CN
-		// formData.append('key', 'YOUR KEY HERE');
+		// formData.append("key", "YOUR KEY HERE");
 		formData.append("userip", google._randomIp());
 		formData.append("format", "text"); // 
 		var req = new XMLHttpRequest();
@@ -412,7 +497,7 @@ let google = {
 	},
 	optsCompleter: function(context, args) {
 		context.quote = ["", util.identity, ""];
-		context.title = ["Langpair", T(1)];
+		context.title = [T(16), T(1)];
 		if (google.langpair) {
 			context.completions = google.langpair;
 			return;
@@ -433,10 +518,7 @@ let google = {
 	opts: function() {
 		return {
 			names: ["-langpair", "-la"],
-			// description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|), which escapes as %7C. In order to translate from English to Spanish, specify a value of langpair=en%7Ces.
-
-// To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=%7Ces.",
-			description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+			description: T(17),
 			default: "en|zh-CN", // TODO en,zh-CN
 			type: CommandOption.STRING
 		};
@@ -475,7 +557,7 @@ let dict_cn = {
 
 	href: function (params) {
 		const DICT_CN_PREFIX = "http://dict.cn/";
-		let keyword = params['keyword'];
+		let keyword = params["keyword"];
 		if (decodeURIComponent(keyword) != keyword)
 			return DICT_CN_PREFIX + keyword;
 		else
@@ -522,7 +604,7 @@ let dict_cn = {
 			let ps = ret["def"].trim().split("\n");
 			for (let [i, v] in Iterator(ps))
 				piece += <><span>{v}</span><br/></>;
-			ret["full"]["sub"]["单词解释"] = <div>{piece}</div>;
+			ret["full"]["sub"][T(8)] = <div>{piece}</div>;
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
@@ -538,7 +620,7 @@ let dict_cn = {
 
 					origTrans.push([org, trans]);
 				}
-				ret["full"]["sub"]["例句"] = <dl>{oT}</dl>;
+				ret["full"]["sub"][T(18)] = <dl>{oT}</dl>;
 				ret["origTrans"] = origTrans;
 			} else
 				ret["origTrans"] = false;
@@ -553,7 +635,7 @@ let dict_cn = {
 					rs += <><span><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
 					ret["rels"].push(rels[i].textContent);
 				}
-				ret["full"]["sub"]["相关单词"] = rs;
+				ret["full"]["sub"][T(9)] = rs;
 			} else
 				ret["rels"] = false;
 
@@ -595,7 +677,7 @@ let dict_cn = {
 			return idx+1;
 		};
 		// context.waitingForTab = true;
-		context.title = ["Original", "Translation"];
+		context.title = [T(14),T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.quote = ["", util.identity, ""];
@@ -717,7 +799,7 @@ let dict = {
 				},
 				{
 					completer: function (context) {
-						context.commandline = true;
+						context.commandline = true; // call from commandline.input
 						dict.suggest(context, [commandline.command]); // this != dict
 					}
 				}
@@ -745,7 +827,7 @@ let dict = {
 		}
 
 		if (ret["notfound"]) {
-			dactyl.echo("未找到 " + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE); // TODO: i18n?
+			dactyl.echo(T(19) + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE); // TODO: i18n?
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 		} else {
 			let show = options.get("dict-show").value;
@@ -845,7 +927,7 @@ let dict = {
 								dactyl.open(data, {background:true, where:dactyl.NEW_TAB});
 						}
 					}
-					let title = T(7);
+					let title = T(34);
 					notify.showAlertNotification(dict.engine.favicon, title, g.responseData.translatedText, true, 'http://translate.google.com/', listener, "dict-js-popup");
 					break;
 
@@ -934,6 +1016,10 @@ let dict = {
 		return str.replace(/\n/g, " | ").replace(/\s+/g, " ");
 	},
 
+	_pipelineToBr: function(str) {
+		return str.replace(/\s\|\s/g, "\n");
+	},
+
 	_notification: function(ret/*, url*/) {
 		// https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIAlertsService
 		let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
@@ -946,14 +1032,15 @@ let dict = {
 		let title = ret["keyword"];
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
-		notify.showAlertNotification(dict.engine.favicon, title, ret["def"], true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
+		let def = dict._pipelineToBr(ret["def"]);
+		notify.showAlertNotification(dict.engine.favicon, title, def, true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
 	},
 
 	_alert: function(ret) {
 		// https://developer.mozilla.org/en/Using_popup_notifications
 		// check firefox version, enable on firefox 4.0 or above.
 		PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
-			ret['simple'],
+			dict._pipelineToBr(ret["simple"]),
 			"dict-popup-anchor", /* anchor ID */
 			{
 				label: T(5),
@@ -1011,7 +1098,7 @@ let dict = {
 
 if (!dict.isWin()) {
 	options.add(["dict-audioplayer", "dicp"],
-		"External audio player.",
+		T(20),
 		"string",
 		"mplayer",
 		{
@@ -1027,39 +1114,39 @@ if (!dict.isWin()) {
 
 // check whether windows media player plugin exists.
 options.add(["dict-hasaudio", "dich"],
-	"Audio support.",
+	T(21),
 	"boolean",
 	dict.isWin() ? false : true
 );
 
 options.add(["dict-simple", "dics"],
-	"Simple Output",
+	T(22),
 	"boolean",
 	true
 );
 
 options.add(["dict-engine", "dice"],
-	"Dict engine",
+	T(23),
 	"string",
 	"d",
 	{
 		completer: function(context) [
-			["d", "Dict.cn 海词"],
-			["q", "QQ词典"],
-			["g", "Google Translate"]
+			["d", T(24)],
+			["q", T(25)],
+			["g", T(34)]
 		]
 	}
 );
 
 options.add(["dict-show", "dico"],
-	"Show Results",
+	T(26),
 	"string",
 	"s",
 	{
 		completer: function(context) [
-			["s", "Statusline"],
-			["a", "Alert"],
-			["n", "Desktop Notification"]
+			["s", T(27)],
+			["a", T(28)],
+			["n", T(29)]
 		]
 	}
 );
@@ -1083,7 +1170,7 @@ function dblclick(event) {
 }
 
 options.add(["dict-dblclick", "dicd"],
-	"Use Double Click",
+	T(30),
 	"boolean",
 	false,
 	{
@@ -1099,7 +1186,7 @@ options.add(["dict-dblclick", "dicd"],
 );
 
 options.add(["dict-langpair", "dicl"],
-	"This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+	T(17),
 	"string",
 	"en|zh-CN",
 	{
@@ -1108,7 +1195,7 @@ options.add(["dict-langpair", "dicl"],
 );
 
 group.commands.add(["di[ct]", "dic"],
-	"Dict Lookup",
+	T(31),
 	dict.init,
 	{
 		argCount: "*",
@@ -1122,76 +1209,49 @@ group.commands.add(["di[ct]", "dic"],
 		options: [
 			{
 				names: ["-e"],
-				description: "Dict engine",
+				description: T(23),
 				type: CommandOption.STRING,
 				completer: [
-					["d", "Dict.cn 海词"],
-					["q", "QQ词典"],
-					["g", "Google Translate"]
+					["d", T(24)],
+					["q", T(25)],
+					["g", T(34)]
 				]
 			},
 			{
 				names: ["-l"],
-				description: "This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|).",
+				description: T(17),
 				type: CommandOption.STRING,
 				completer: function(context, args) google.optsCompleter(context,args)
 			},
 			{
 				names: ["-o"],
-				description: "Show Results",
+				description: T(26),
 				type: CommandOption.STRING,
 				completer: [
-					["s", "Statusline"],
-					["a", "Alert"],
-					["n", "Desktop Notification"]
+					["s", T(27)],
+					["a", T(28)],
+					["n", T(29)]
 				]
 			},
 		]
 	}
 );
 
-dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译' -builtin -silent <A-d> :dict<CR>");
-dactyl.execute("map -modes=n,v -description='查找选区或剪贴板翻译详情' -builtin -silent <A-S-d> :dict!<CR>");
+dactyl.execute("map -modes=n,v -description='"+T(32)+"' -builtin -silent <A-d> :dict<CR>");
+dactyl.execute("map -modes=n,v -description='"+T(33)+"' -builtin -silent <A-S-d> :dict!<CR>");
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
-
-const DICT_LANGUAGE = window.navigator.language;
-
-var tr = {
-	'en-US': {
-		1: "Description",
-		2: "From ",
-		3: "to ",
-		4: "Lookup: ",
-		5: "Details",
-		6: "In Progressing...",
-		7: "Google Translate: "
-	},
-	'zh-CN': {
-		1: "描述",
-		2: "从 ",
-		3: "到 ",
-		4: "查找：",
-		5: "详情",
-		6: "查询进行中...",
-		7: "谷歌翻译："
-	}
-};
-
-function T(i) {
-	return tr[DICT_LANGUAGE][i];
-};
 
 if (DICT_LANGUAGE == "zh-CN") {
 var INFO =
-<plugin name="dict.js" version="0.9.0"
-    href="https://github.com/grassofhust/dict.js"
-    summary="dict.js 在线词典"
+<plugin name="dict.js" version={DICT_JS_VERSION}
+    href={DICT_JS_URL}
+    summary="Dict.js - 在线词典"
     xmlns={NS}>
     <author email="frederick.zou@gmail.com">Yang Zou</author>
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
       <p>
-	  Pentadactyl 的词典插件。dict.js 目前支持 QQ词典，海词，谷歌翻译。
+	  Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。
       </p>
 
       <item>
@@ -1343,7 +1403,7 @@ var INFO =
 		  <tags><![CDATA[<A-S-d>]]></tags>
 		  <spec><![CDATA[<A-S-d>]]></spec>
 		  <description>
-			  <p>翻译当前选区或者是剪贴板中的内容，实际效果等同于调用<ex>:dict!</ex>。</p>
+			  <p>翻译当前选区或者是剪贴板中的内容，实际效果等同于调用<ex>:dict!&lt;Return&gt;</ex>。</p>
 		  </description>
 	  </item>
 
@@ -1351,22 +1411,57 @@ var INFO =
 
 } else {
 var INFO =
-<plugin name="dict.js" version="0.9.0"
+<plugin name="dict.js" version={DICT_JS_VERSION}
     href="https://github.com/grassofhust/dict.js"
-    summary="An online dict."
+    summary="Dict.js - an online dictionary"
     xmlns={NS}>
     <author email="frederick.zou@gmail.com">Yang Zou</author>
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
       <p>
-      A dict plugin for pentadactyl, dict.js only support dict.cn now.
-      I will add google translate later.
+	  Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.
       </p>
 
-      <p>
-      Dict.js use mpg321 to support sound, you can use other program (:set dict-audioplayer=mplayer)
-      or just disable it (:set dict-hasaudio=false).
-      </p>
+      <item>
+        <tags>'dica' 'dict-audioplayer'</tags>
+        <spec>'dict-audioplayer' 'dica'</spec>
+        <type>string</type>
+        <default>mplayer</default>
+        <description>
+        <p>
+          Dict.js use external player to play sounds, this option only workable when you are on non Microsoft Windows Platform.
+          </p>
+		  <warning>When you are on Windows Platform, dict.js use Windows Media Player plugin. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dicd' 'dict-dblclick'</tags>
+        <spec>'dict-dblclick' 'dicd'</spec>
+        <type>boolean</type>
+        <default>false</default>
+        <description>
+          <p>
+		  Use double click to automatic translate.
+          </p>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dice' 'dict-engine'</tags>
+        <spec>'dict-engine' 'dice'</spec>
+        <type>string</type>
+        <default>d</default>
+        <description>
+		  <p>Sites that dict.js supports:  </p>
+        <dl dt="width: 6em;">
+            <dt>d</dt>      <dd><link topic="http://dict.cn/">Dict.cn</link></dd>
+            <dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
+            <dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
+        </dl>
+		<p>dict.js use Dict.cn by default now.</p>
+        </description>
+      </item>
 
       <item>
         <tags>'dich' 'dict-hasaudio'</tags>
@@ -1374,30 +1469,123 @@ var INFO =
         <type>boolean</type>
         <default>true</default>
         <description>
-          <p>
-          Toggle sound on or off.
-          </p>
+          <p>Enable or disable sound support</p>
+		  <warning>Sound support was disabled on Windows Platform by default.</warning>
         </description>
       </item>
 
       <item>
-        <tags>'dica' 'dict-audioplayer'</tags>
-        <spec>'dict-audioplayer' 'dica'</spec>
+        <tags>'dicl' 'dict-langpair'</tags>
+        <spec>'dict-langpair' 'dicl'</spec>
         <type>string</type>
-        <default>mpg321</default>
+        <default>en|zh-CN</default>
         <description>
-        <p>
-          External audio player, may be work not well on Windows.
-          </p>
+		<p>This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|), which escapes as %7C. In order to translate from English to Spanish, specify a value of langpair=en%7Ces.</p>
+
+		<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=%7Ces.</p>
+
+		<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
+		<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
         </description>
       </item>
-</plugin>;
 
+      <item>
+        <tags>'dico' 'dict-show'</tags>
+        <spec>'dict-show' 'dico'</spec>
+        <type>string</type>
+        <default>'s'</default>
+        <description>
+		<p>Methods to show result: </p>
+        <dl dt="width: 6em;">
+            <dt>a</dt>      <dd>Alert</dd>
+            <dt>n</dt>      <dd>Desktop notification</dd>
+            <dt>s</dt>      <dd>Pentadactyl statusline</dd>
+        </dl>
+        </description>
+      </item>
+
+      <item>
+        <tags>'dics' 'dict-simple'</tags>
+        <spec>'dics' 'dics'</spec>
+        <type>boolean</type>
+        <default>true</default>
+        <description>
+		<p>Simple output</p>
+		<note>This option only workable when you "set <o>dico=s</o>".</note>
+        </description>
+      </item>
+
+	  <item>
+	  <spec>:dict [action] ...</spec>
+	  <tags>:dict :di</tags>
+	  <description>
+	  <p>
+	  Get translation for specified word(s)
+	  </p>
+	  </description>
+	  <strut/>
+	  </item>
+
+	  <item>
+	  <tags>:dict! :di!</tags>
+	  <strut/>
+	  <spec>:dict!</spec>
+	  <description>
+	  <p>
+	  Translate words，reverse <o>dics</o> option now.
+	  </p>
+	  </description>
+	  </item>
+
+	  <item>
+	  <tags>:dict-options</tags>
+	  <strut/>
+	  <spec>dict.js commandline options</spec>
+	  <description>
+	  <p>
+	  <ex>:dict</ex> <ex>:dict!</ex> commandline options：
+	  </p>
+        <dl dt="width: 6em;">
+            <dt>-e</dt>      <dd>specified dictionary engine <note><o>dice</o></note></dd>
+            <dt>-l</dt>      <dd>specified langpair <note><o>dicl</o></note></dd>
+            <dt>-o</dt>      <dd>specified method to show result <note><o>dico</o></note></dd>
+        </dl>
+	  </description>
+	  </item>
+
+	  <item>
+	  <tags>:dict-shortcut</tags>
+	  <strut/>
+	  <spec>dict.js shortcuts</spec>
+	  <description>
+	  <p>dict.js use <k name="A-d"/> and <k name="A-S-d"/> to translate word(s) from mouse selection or clipboard.</p>
+	  </description>
+	  </item>
+
+	  <item>
+		  <tags><![CDATA[<A-d>]]></tags>
+		  <spec><![CDATA[<A-d>]]></spec>
+		  <description>
+			  <p>View translation for mouse selection or clipboard.</p>
+		  </description>
+	  </item>
+
+	  <item>
+		  <tags><![CDATA[<A-S-d>]]></tags>
+		  <spec><![CDATA[<A-S-d>]]></spec>
+		  <description>
+			  <p>View details for mouse selection or clipboard, shortcut for <ex>:dict!&lt;Return&gt;</ex>。</p>
+		  </description>
+	  </item>
+
+</plugin>;
 
 }
 
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["full"]
 // 返回查询的页面链接，最好可点击
+// https://developer.mozilla.org/en/XUL/label#s-text-link
+// dactyl.echo(<label class="text-link" xmlns={XUL} href="http://dict.cn/hello" value="hello"/>);
 // * http://dict.cn/ws.php?utf8=true&q=%E4%BD%A0%E5%A5%BD rel tags
 // * FORCE_SINGLELINE | APPEND_MESSAGES
 // * 使用mozilla notification box?
