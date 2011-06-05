@@ -1407,6 +1407,17 @@ var INFO =
 		  </description>
 	  </item>
 
+	  <item>
+		  <tags>dict-show-progress</tags>
+		  <spec>dict-show-progress</spec>
+		  <description>
+		  		<p>当查询很慢，或者你的网络很糟糕时，dict.js会显示查询状态，但你需要用如下代码来显示状态信息：</p>
+				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display { display:block; visibility: visible }</code>
+		  </description>
+		  		<p>将上面的代码添加到你的pentadactyl配置文件中去即可。</p>
+	  </item>
+
+
 </plugin>;
 
 } else {
@@ -1575,6 +1586,15 @@ var INFO =
 		  <spec><![CDATA[<A-S-d>]]></spec>
 		  <description>
 			  <p>View details for mouse selection or clipboard, shortcut for <ex>:dict!&lt;Return&gt;</ex>。</p>
+		  </description>
+	  </item>
+
+	  <item>
+		  <tags>dict-show-progress</tags>
+		  <spec>dict-show-progress</spec>
+		  <description>
+		  		<p>When you have a very long queue, or your network was not that good, dict.js can show a queue progress.Added the code below to your pentadactyl config.</p>
+				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display { display:block; visibility: visible }</code>
 		  </description>
 	  </item>
 
