@@ -53,8 +53,8 @@ const tr = {
 		29: "Desktop notification",
 		30: "Enable double click",
 		31: "Dict lookup",
-		32: "View translation for mouse selection or clipboard",
-		33: "View details for mouse selection or clipboard",
+		32: "View translation for mouse selection or clipboard (*nix only)",
+		33: "View details for mouse selection or clipboard (*nix only)",
 		34: "Google Translate"
 	},
 	"zh-CN": {
@@ -89,8 +89,8 @@ const tr = {
 		29: "桌面通知",
 		30: "双击取词",
 		31: "词典查找",
-		32: "查看选区或者剪贴板的翻译",
-		33: "查看选区或者剪贴板的翻译详情",
+		32: "查看选区或者剪贴板（非视窗平台）的翻译",
+		33: "查看选区或者剪贴板（非视窗平台）的翻译详情",
 		34: "谷歌翻译",
 	}
 };
@@ -786,15 +786,18 @@ let dict = {
 	init: function(args) {
 		dict.args = args;
 		let keyword = args.join(" ") || "";
-		keyword.trim();
+		keyword = keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
-			keyword = dict._selection() || dactyl.clipboardRead() || "";
+			if (dict.isWin())
+				keyword = dict._selection() || "";
+			else
+				keyword = dict._selection() || dactyl.clipboardRead() || "";
 		}
-		keyword.trim();
+		keyword = keyword.trim();
 		if (keyword.length == 0) {
 			commandline.input(T(4), function(keyword) {
-					dict.keyword = keyword;
+					dict.keyword = keyword.trim();
 					dict.engine.init(dict.keyword, args);
 				},
 				{
@@ -1351,6 +1354,7 @@ var INFO =
 	  <p>
 	  翻译单词或者句子，如果输入的翻译内容为空，将会首先尝试翻译当前页面被选中的文字，其次是剪贴板中的内容，如果这些都为空，则会提供一个输入框来输入想要翻译的内容。
 	  </p>
+	  <note><em>只在非视窗平台下支持翻译剪贴板中的内容！下面有提到剪贴板的地方也遵循这个规则。</em></note>
 	  </description>
 	  <strut/>
 	  </item>
@@ -1412,7 +1416,7 @@ var INFO =
 		  <spec>dict-show-progress</spec>
 		  <description>
 		  		<p>当查询很慢，或者你的网络很糟糕时，dict.js会显示查询状态，但你需要用如下代码来显示状态信息：</p>
-				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display { display:block; visibility: visible }</code>
+				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
 		  </description>
 		  		<p>将上面的代码添加到你的pentadactyl配置文件中去即可。</p>
 	  </item>
@@ -1570,6 +1574,7 @@ var INFO =
 	  <spec>dict.js shortcuts</spec>
 	  <description>
 	  <p>dict.js use <k name="A-d"/> and <k name="A-S-d"/> to translate word(s) from mouse selection or clipboard.</p>
+	  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
 	  </description>
 	  </item>
 
@@ -1578,6 +1583,7 @@ var INFO =
 		  <spec><![CDATA[<A-d>]]></spec>
 		  <description>
 			  <p>View translation for mouse selection or clipboard.</p>
+			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
 		  </description>
 	  </item>
 
@@ -1586,6 +1592,7 @@ var INFO =
 		  <spec><![CDATA[<A-S-d>]]></spec>
 		  <description>
 			  <p>View details for mouse selection or clipboard, shortcut for <ex>:dict!&lt;Return&gt;</ex>。</p>
+			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
 		  </description>
 	  </item>
 
@@ -1594,7 +1601,7 @@ var INFO =
 		  <spec>dict-show-progress</spec>
 		  <description>
 		  		<p>When you have a very long queue, or your network was not that good, dict.js can show a queue progress.Added the code below to your pentadactyl config.</p>
-				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display { display:block; visibility: visible }</code>
+				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
 		  </description>
 	  </item>
 
