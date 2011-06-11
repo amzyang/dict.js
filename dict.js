@@ -789,7 +789,7 @@ let dict = {
 		keyword = keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
-			if (dict.isWin())
+			if (util.OS.isWindows)
 				keyword = dict._selection() || "";
 			else
 				keyword = dict._selection() || dactyl.clipboardRead() || "";
@@ -813,11 +813,6 @@ let dict = {
 		}
 	},
 
-	// check whether we are on Windows Platform.
-	isWin: function() {
-		let re = /^Win/;
-		return re.test(window.navigator.platform);
-	},
 	process: function(ret) {
 		// audio
 		if (ret["audio"])
@@ -987,7 +982,7 @@ let dict = {
 	_play: function(uri) {
 		if (!options.get("dict-hasaudio").value)
 			return false;
-		if (dict.isWin()) {
+		if (util.OS.isWindows) {
 			let dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
 				let sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
@@ -1099,7 +1094,7 @@ let dict = {
 	}
 };
 
-if (!dict.isWin()) {
+if (!util.OS.isWindows) {
 	options.add(["dict-audioplayer", "dicp"],
 		T(20),
 		"string",
@@ -1119,7 +1114,7 @@ if (!dict.isWin()) {
 options.add(["dict-hasaudio", "dich"],
 	T(21),
 	"boolean",
-	dict.isWin() ? false : true
+	util.OS.isWindows ? false : true
 );
 
 options.add(["dict-simple", "dics"],
