@@ -1576,5 +1576,6 @@ var INFO =
 // * support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
-// translate.google.cn
+// automatic select proper engine
+// x translate.google.cn -- doesn't workable, need more test.
 // * literal
