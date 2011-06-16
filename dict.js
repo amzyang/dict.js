@@ -314,7 +314,7 @@ let qq = {
 				result_arr.forEach(function(line) {
 						let pair = line.split("\t");
 						let r = {};
-						r["g"] = pair[0].trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
+						r["g"] = pair[0].trim();
 						r["e"] = pair[1].trim();
 						r["url"] = qq.href({"keyword": pair[0].trim()});
 						suggestions.push(r);
@@ -668,7 +668,7 @@ let dict_cn = {
 				result_arr["s"].forEach(function (r) {
 						r["e"] = dict._html_entity_decode(r["e"].trim());
 						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
-						r["g"] = r["g"].trim().replace(/'/g, "\\'").replace(/"/g, '\\"');
+						r["g"] = r["g"].trim();
 						suggestions.push(r); // trim blank chars
 				});
 				context.completions = suggestions;
