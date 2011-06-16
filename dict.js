@@ -16,8 +16,6 @@ span > b { margin-right: 0.4em; }
 ]]>
 </style>;
 
-const DICT_JS_VERSION = "0.9.9";
-const DICT_JS_URL = "https://github.com/grassofhust/dict.js";
 const DICT_LANGUAGE = window.navigator.language;
 
 const tr = {
@@ -1197,20 +1195,32 @@ dactyl.execute("map -modes=n,v -description='"+T(32)+"' -builtin -silent <A-d> :
 dactyl.execute("map -modes=n,v -description='"+T(33)+"' -builtin -silent <A-S-d> :dict!<CR>");
 dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
-if (DICT_LANGUAGE == "zh-CN") {
 var INFO =
-<plugin name="dict.js" version={DICT_JS_VERSION}
-    href={DICT_JS_URL}
-    summary="Dict.js - 在线词典"
+<plugin name="dict.js" version="0.9.9"
+    href="https://github.com/grassofhust/dict.js"
+    summary= "Dict.js - an online dictionary"
     xmlns={NS}>
+	<info lang="zh-CN" summary="Dict.js - 在线词典"/>
     <author email="frederick.zou@gmail.com">Yang Zou</author>
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
-      <p>
-	  Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。
-      </p>
 
-      <item>
+      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
+      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。</p>
+
+      <item lang="en-US">
+        <tags>'dica' 'dict-audioplayer'</tags>
+        <spec>'dict-audioplayer' 'dica'</spec>
+        <type>string</type>
+        <default>mplayer</default>
+        <description>
+			<p>
+			  Dict.js use external player to play sounds, this option only workable when you are on non Microsoft Windows Platform.
+			  </p>
+			  <warning>When you are on Windows Platform, dict.js use Windows Media Player plugin. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
+        </description>
+      </item>
+      <item lang="zh-CN">
         <tags>'dica' 'dict-audioplayer'</tags>
         <spec>'dict-audioplayer' 'dica'</spec>
         <type>string</type>
@@ -1223,315 +1233,244 @@ var INFO =
         </description>
       </item>
 
-      <item>
+      <item lang="en-US">
+        <tags>'dicd' 'dict-dblclick'</tags>
+        <spec>'dict-dblclick' 'dicd'</spec>
+        <type>boolean</type>
+        <default>false</default>
+        <description>
+          <p>Double click to Automatic translate.</p>
+        </description>
+      </item>
+      <item lang="zh-CN">
         <tags>'dicd' 'dict-dblclick'</tags>
         <spec>'dict-dblclick' 'dicd'</spec>
         <type>boolean</type>
         <default>false</default>
         <description>
           <p>
-          使用双击选定单词时，翻译被选定的文字。
+          双击选定单词时，自动翻译被选定的文字。
           </p>
         </description>
       </item>
 
-      <item>
+      <item lang="en-US">
         <tags>'dice' 'dict-engine'</tags>
         <spec>'dict-engine' 'dice'</spec>
         <type>string</type>
         <default>d</default>
         <description>
-		  <p>dict.js 当前支持的网站：</p>
-        <dl dt="width: 6em;">
-            <dt>d</dt>      <dd><link topic="http://dict.cn/">海词</link></dd>
-            <dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
-            <dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
-        </dl>
-		<p>dict.js 默认使用海词。</p>
+			  <p>Sites that dict.js supports:  </p>
+			  <dl dt="width: 6em;">
+					<dt>d</dt>      <dd><link topic="http://dict.cn/">Dict.cn</link></dd>
+					<dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
+					<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
+				</dl>
+			<p>dict.js use Dict.cn by default now.</p>
         </description>
       </item>
-
-      <item>
-        <tags>'dich' 'dict-hasaudio'</tags>
-        <spec>'dict-hasaudio' 'dich'</spec>
-        <type>boolean</type>
-        <default>true</default>
-        <description>
-          <p>开启或者关闭声音。</p>
-		  <warning>在 Windows 平台下，默认关闭声音输出。</warning>
-        </description>
-      </item>
-
-      <item>
-        <tags>'dicl' 'dict-langpair'</tags>
-        <spec>'dict-langpair' 'dicl'</spec>
-        <type>string</type>
-        <default>en|zh-CN</default>
-        <description>
-		<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
-		<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
-		<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
-        </description>
-      </item>
-
-      <item>
-        <tags>'dico' 'dict-show'</tags>
-        <spec>'dict-show' 'dico'</spec>
-        <type>string</type>
-        <default>'s'</default>
-        <description>
-		<p>翻译结果的输出形式：</p>
-        <dl dt="width: 6em;">
-            <dt>a</dt>      <dd>Firefox 通知窗口</dd>
-            <dt>n</dt>      <dd>桌面通知</dd>
-            <dt>s</dt>      <dd>Pentadactyl 状态栏</dd>
-        </dl>
-        </description>
-      </item>
-
-      <item>
-        <tags>'dics' 'dict-simple'</tags>
-        <spec>'dics' 'dics'</spec>
-        <type>boolean</type>
-        <default>true</default>
-        <description>
-		<p>是否输出单词的详细信息，默认为简洁形式。</p>
-		<note>目前只有当翻译结果输出到状态栏时有效。Firefox 通知窗口、桌面通知均以简洁形式输出。</note>
-        </description>
-      </item>
-
-	  <item>
-	  <spec>:dict [action] ...</spec>
-	  <tags>:dict :di</tags>
-	  <description>
-	  <p>
-	  翻译单词或者句子，如果输入的翻译内容为空，将会首先尝试翻译当前页面被选中的文字，其次是剪贴板中的内容，如果这些都为空，则会提供一个输入框来输入想要翻译的内容。
-	  </p>
-	  <note><em>只在非视窗平台下支持翻译剪贴板中的内容！下面有提到剪贴板的地方也遵循这个规则。</em></note>
-	  </description>
-	  <strut/>
-	  </item>
-
-	  <item>
-	  <tags>:dict! :di!</tags>
-	  <strut/>
-	  <spec>:dict!</spec>
-	  <description>
-	  <p>
-	  翻译单词或者句子，此时反转<o>dics</o>的设置。
-	  </p>
-	  </description>
-	  </item>
-
-	  <item>
-	  <tags>:dict-options</tags>
-	  <strut/>
-	  <spec>dict.js 命令行选项</spec>
-	  <description>
-	  <p>
-	  <ex>:dict</ex> <ex>:dict!</ex>支持的命令行选项：
-	  </p>
-        <dl dt="width: 6em;">
-            <dt>-e</dt>      <dd>给定使用的翻译网站 <note><o>dice</o></note></dd>
-            <dt>-l</dt>      <dd>谷歌翻译时的语言设置 <note><o>dicl</o></note></dd>
-            <dt>-o</dt>      <dd>翻译结果的输出设置 <note><o>dico</o></note></dd>
-        </dl>
-	  </description>
-	  </item>
-
-	  <item>
-	  <tags>:dict-shortcut</tags>
-	  <strut/>
-	  <spec>dict.js 快捷键</spec>
-	  <description>
-	  <p>dict.js 默认使用<k name="A-d"/>和<k name="A-S-d"/>来快速翻译当前选区或者是剪贴板中的内容。如果选区和剪贴板都为空，则会提供一个输入框。</p>
-	  </description>
-	  </item>
-
-	  <item>
-		  <tags><![CDATA[<A-d>]]></tags>
-		  <spec><![CDATA[<A-d>]]></spec>
-		  <description>
-			  <p>翻译当前选区或者是剪贴板中的内容。</p>
-		  </description>
-	  </item>
-
-	  <item>
-		  <tags><![CDATA[<A-S-d>]]></tags>
-		  <spec><![CDATA[<A-S-d>]]></spec>
-		  <description>
-			  <p>翻译当前选区或者是剪贴板中的内容，实际效果等同于调用<ex>:dict!&lt;Return&gt;</ex>。</p>
-		  </description>
-	  </item>
-
-	  <item>
-		  <tags>dict-show-progress</tags>
-		  <spec>dict-show-progress</spec>
-		  <description>
-		  		<p>当查询很慢，或者你的网络很糟糕时，dict.js会显示查询状态，但你需要用如下代码来显示状态信息：</p>
-				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
-		  </description>
-		  		<p>将上面的代码添加到你的pentadactyl配置文件中去即可。</p>
-	  </item>
-
-
-</plugin>;
-
-} else {
-var INFO =
-<plugin name="dict.js" version={DICT_JS_VERSION}
-    href="https://github.com/grassofhust/dict.js"
-    summary="Dict.js - an online dictionary"
-    xmlns={NS}>
-    <author email="frederick.zou@gmail.com">Yang Zou</author>
-    <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
-    <project name="Pentadactyl" minVersion="1.0"/>
-      <p>
-	  Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.
-      </p>
-
-      <item>
-        <tags>'dica' 'dict-audioplayer'</tags>
-        <spec>'dict-audioplayer' 'dica'</spec>
-        <type>string</type>
-        <default>mplayer</default>
-        <description>
-        <p>
-          Dict.js use external player to play sounds, this option only workable when you are on non Microsoft Windows Platform.
-          </p>
-		  <warning>When you are on Windows Platform, dict.js use Windows Media Player plugin. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
-        </description>
-      </item>
-
-      <item>
-        <tags>'dicd' 'dict-dblclick'</tags>
-        <spec>'dict-dblclick' 'dicd'</spec>
-        <type>boolean</type>
-        <default>false</default>
-        <description>
-          <p>
-		  Use double click to automatic translate.
-          </p>
-        </description>
-      </item>
-
-      <item>
+      <item lang="zh-CN">
         <tags>'dice' 'dict-engine'</tags>
         <spec>'dict-engine' 'dice'</spec>
         <type>string</type>
         <default>d</default>
         <description>
-		  <p>Sites that dict.js supports:  </p>
-        <dl dt="width: 6em;">
-            <dt>d</dt>      <dd><link topic="http://dict.cn/">Dict.cn</link></dd>
-            <dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
-            <dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
-        </dl>
-		<p>dict.js use Dict.cn by default now.</p>
+			<p>dict.js 当前支持的网站：</p>
+			<dl dt="width: 6em;">
+				<dt>d</dt>      <dd><link topic="http://dict.cn/">海词</link></dd>
+				<dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
+				<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
+			</dl>
+			<p>dict.js 默认使用海词。</p>
         </description>
       </item>
 
-      <item>
+      <item lang="en-US">
         <tags>'dich' 'dict-hasaudio'</tags>
         <spec>'dict-hasaudio' 'dich'</spec>
         <type>boolean</type>
         <default>true</default>
         <description>
-          <p>Enable or disable sound support</p>
-		  <warning>Sound support was disabled on Windows Platform by default.</warning>
+			  <p>Enable or disable sound support</p>
+			  <warning>Sound support was disabled on Windows Platform by default.</warning>
+        </description>
+      </item>
+      <item lang="zh-CN">
+        <tags>'dich' 'dict-hasaudio'</tags>
+        <spec>'dict-hasaudio' 'dich'</spec>
+        <type>boolean</type>
+        <default>true</default>
+        <description>
+			<p>开启或者关闭声音。</p>
+			<warning>在 Windows 平台下，默认关闭声音输出。</warning>
         </description>
       </item>
 
-      <item>
+      <item lang="en-US">
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>string</type>
         <default>en|zh-CN</default>
         <description>
-		<p>This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|), which escapes as %7C. In order to translate from English to Spanish, specify a value of langpair=en%7Ces.</p>
+			<p>This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|) . In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
-		<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=%7Ces.</p>
+			<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=|es.</p>
 
-		<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
-		<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
+			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
+			<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
+        </description>
+      </item>
+      <item lang="zh-CN">
+        <tags>'dicl' 'dict-langpair'</tags>
+        <spec>'dict-langpair' 'dicl'</spec>
+        <type>string</type>
+        <default>en|zh-CN</default>
+        <description>
+			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
+			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
+			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
         </description>
       </item>
 
-      <item>
+      <item lang="en-US">
         <tags>'dico' 'dict-show'</tags>
         <spec>'dict-show' 'dico'</spec>
         <type>string</type>
         <default>'s'</default>
         <description>
-		<p>Methods to show result: </p>
-        <dl dt="width: 6em;">
-            <dt>a</dt>      <dd>Alert</dd>
-            <dt>n</dt>      <dd>Desktop notification</dd>
-            <dt>s</dt>      <dd>Pentadactyl statusline</dd>
-        </dl>
+			<p>Methods to show result: </p>
+			<dl dt="width: 6em;">
+				<dt>a</dt>      <dd>Alert</dd>
+				<dt>n</dt>      <dd>Desktop notification</dd>
+				<dt>s</dt>      <dd>Pentadactyl statusline</dd>
+			</dl>
         </description>
       </item>
-
-      <item>
-        <tags>'dics' 'dict-simple'</tags>
-        <spec>'dics' 'dics'</spec>
-        <type>boolean</type>
-        <default>true</default>
-        <description>
-		<p>Simple output</p>
-		<note>This option only workable when you "set <o>dico=s</o>".</note>
-        </description>
+      <item lang="zh-CN">
+		<tags>'dico' 'dict-show'</tags>
+		<spec>'dict-show' 'dico'</spec>
+		<type>string</type>
+		<default>'s'</default>
+		<description>
+			<p>翻译结果的输出形式：</p>
+			<dl dt="width: 6em;">
+				<dt>a</dt>      <dd>Firefox 通知窗口</dd>
+				<dt>n</dt>      <dd>桌面通知</dd>
+				<dt>s</dt>      <dd>Pentadactyl 状态栏</dd>
+			</dl>
+		</description>
       </item>
 
-	  <item>
-	  <spec>:dict [action] ...</spec>
-	  <tags>:dict :di</tags>
-	  <description>
-	  <p>
-	  Get translation for specified word(s)
-	  </p>
-	  </description>
-	  <strut/>
+      <item lang="en-US">
+		  <tags>'dics' 'dict-simple'</tags>
+		  <spec>'dics' 'dics'</spec>
+		  <type>boolean</type>
+		  <default>true</default>
+		  <description>
+			  <p>Simple output</p>
+			  <note>This option only workable when you "set <o>dico=s</o>".</note>
+		  </description>
+      </item>
+      <item lang="zh-CN">
+		  <tags>'dics' 'dict-simple'</tags>
+		  <spec>'dics' 'dics'</spec>
+		  <type>boolean</type>
+		  <default>true</default>
+		  <description>
+			  <p>是否输出单词的详细信息，默认为简洁形式。</p>
+			  <note>目前只有当翻译结果输出到状态栏时有效。Firefox 通知窗口、桌面通知均以简洁形式输出。</note>
+		  </description>
+      </item>
+
+	  <item lang="en-US">
+		  <spec>:dict [action] ...</spec>
+		  <tags>:dict :di</tags>
+		  <description>
+			  <p>
+			  Get translation for specified word(s)
+			  </p>
+		  </description>
+		  <strut/>
+	  </item>
+	  <item lang="zh-CN">
+		  <spec>:dict [action] ...</spec>
+		  <tags>:dict :di</tags>
+		  <description>
+			  <p>
+			  翻译单词或者句子，如果输入的翻译内容为空，将会首先尝试翻译当前页面被选中的文字，其次是剪贴板中的内容，如果这些都为空，则会提供一个输入框来输入想要翻译的内容。
+			  </p>
+			  <note><em>只在非视窗平台下支持翻译剪贴板中的内容！下面有提到剪贴板的地方也遵循这个规则。</em></note>
+		  </description>
+		  <strut/>
 	  </item>
 
-	  <item>
-	  <tags>:dict! :di!</tags>
-	  <strut/>
-	  <spec>:dict!</spec>
-	  <description>
-	  <p>
-	  Translate words，reverse <o>dics</o> option now.
-	  </p>
-	  </description>
+	  <item lang="en-US">
+		  <tags>:dict! :di!</tags>
+		  <strut/>
+		  <spec>:dict!</spec>
+		  <description>
+			  <p>Translate words，reverse <o>dics</o> option now.</p>
+		  </description>
+	  </item>
+	  <item lang="zh-CN">
+		  <tags>:dict! :di!</tags>
+		  <strut/>
+		  <spec>:dict!</spec>
+		  <description>
+			  <p>翻译单词或者句子，此时反转<o>dics</o>的设置。</p>
+		  </description>
 	  </item>
 
-	  <item>
-	  <tags>:dict-options</tags>
-	  <strut/>
-	  <spec>dict.js commandline options</spec>
-	  <description>
-	  <p>
-	  <ex>:dict</ex> <ex>:dict!</ex> commandline options：
-	  </p>
-        <dl dt="width: 6em;">
-            <dt>-e</dt>      <dd>specified dictionary engine <note><o>dice</o></note></dd>
-            <dt>-l</dt>      <dd>specified langpair <note><o>dicl</o></note></dd>
-            <dt>-o</dt>      <dd>specified method to show result <note><o>dico</o></note></dd>
-        </dl>
-	  </description>
+	  <item lang="en-US">
+		  <tags>:dict-options</tags>
+		  <strut/>
+		  <spec>dict.js commandline options</spec>
+		  <description>
+			  <p>
+			  <ex>:dict</ex> <ex>:dict!</ex> commandline options：
+			  </p>
+			  <dl dt="width: 6em;">
+				  <dt>-e</dt>      <dd>specified dictionary engine <note><o>dice</o></note></dd>
+				  <dt>-l</dt>      <dd>specified langpair <note><o>dicl</o></note></dd>
+				  <dt>-o</dt>      <dd>specified method to show result <note><o>dico</o></note></dd>
+			  </dl>
+		  </description>
+	  </item>
+	  <item lang="zh-CN">
+		  <tags>:dict-options</tags>
+		  <strut/>
+		  <spec>dict.js 命令行选项</spec>
+		  <description>
+			  <p>
+			  <ex>:dict</ex> <ex>:dict!</ex>支持的命令行选项：
+			  </p>
+			  <dl dt="width: 6em;">
+				  <dt>-e</dt>      <dd>给定使用的翻译网站 <note><o>dice</o></note></dd>
+				  <dt>-l</dt>      <dd>谷歌翻译时的语言设置 <note><o>dicl</o></note></dd>
+				  <dt>-o</dt>      <dd>翻译结果的输出设置 <note><o>dico</o></note></dd>
+			  </dl>
+		  </description>
 	  </item>
 
-	  <item>
-	  <tags>:dict-shortcut</tags>
-	  <strut/>
-	  <spec>dict.js shortcuts</spec>
-	  <description>
-	  <p>dict.js use <k name="A-d"/> and <k name="A-S-d"/> to translate word(s) from mouse selection or clipboard.</p>
-	  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
-	  </description>
+	  <item lang="en-US">
+		  <tags>:dict-shortcut</tags>
+		  <strut/>
+		  <spec>dict.js shortcuts</spec>
+		  <description>
+			  <p>dict.js use <k name="A-d"/> and <k name="A-S-d"/> to translate word(s) from mouse selection or clipboard.</p>
+			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
+		  </description>
+	  </item>
+	  <item lang="zh-CN">
+		  <tags>:dict-shortcut</tags>
+		  <strut/>
+		  <spec>dict.js 快捷键</spec>
+		  <description>
+			  <p>dict.js 默认使用<k name="A-d"/>和<k name="A-S-d"/>来快速翻译当前选区或者是剪贴板中的内容。如果选区和剪贴板都为空，则会提供一个输入框。</p>
+		  </description>
 	  </item>
 
-	  <item>
+	  <item lang="en-US">
 		  <tags><![CDATA[<A-d>]]></tags>
 		  <spec><![CDATA[<A-d>]]></spec>
 		  <description>
@@ -1539,8 +1478,15 @@ var INFO =
 			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
 		  </description>
 	  </item>
+	  <item lang="zh-CN">
+		  <tags><![CDATA[<A-d>]]></tags>
+		  <spec><![CDATA[<A-d>]]></spec>
+		  <description>
+			  <p>翻译当前选区或者是剪贴板中的内容。</p>
+		  </description>
+	  </item>
 
-	  <item>
+	  <item lang="en-US">
 		  <tags><![CDATA[<A-S-d>]]></tags>
 		  <spec><![CDATA[<A-S-d>]]></spec>
 		  <description>
@@ -1548,19 +1494,32 @@ var INFO =
 			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
 		  </description>
 	  </item>
-
-	  <item>
-		  <tags>dict-show-progress</tags>
-		  <spec>dict-show-progress</spec>
+	  <item lang="zh-CN">
+		  <tags><![CDATA[<A-S-d>]]></tags>
+		  <spec><![CDATA[<A-S-d>]]></spec>
 		  <description>
-		  		<p>When you have a very long queue, or your network was not that good, dict.js can show a queue progress.Added the code below to your pentadactyl config.</p>
-				<code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
+			  <p>翻译当前选区或者是剪贴板中的内容，实际效果等同于调用<ex>:dict!&lt;Return&gt;</ex>。</p>
 		  </description>
 	  </item>
 
+	  <item lang="en-US">
+		  <tags>dict-show-progress</tags>
+		  <spec>dict-show-progress</spec>
+		  <description>
+			  <p>When you have a very long queue, or your network was not that good, dict.js can show a queue progress.Added the code below to your pentadactyl config.</p>
+			  <code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
+		  </description>
+	  </item>
+	  <item lang="zh-CN">
+		  <tags>dict-show-progress</tags>
+		  <spec>dict-show-progress</spec>
+		  <description>
+			  <p>当查询很慢，或者你的网络很糟糕时，dict.js会显示查询状态，但你需要用如下代码来显示状态信息：</p>
+			  <code>style chrome://browser/content/browser.xul statuspanel#statusbar-display &#123; display:block; visibility: visible }</code>
+			  <p>将上面的代码添加到你的pentadactyl配置文件中去即可。</p>
+		  </description>
+	  </item>
 </plugin>;
-
-}
 
 // dict! dict.cn 的模糊查询　或者是反转google的搜索设定 或者是返回全部的词典信息 ret["full"]
 // 返回查询的页面链接，最好可点击
