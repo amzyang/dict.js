@@ -285,39 +285,18 @@ let qq = {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
-		let guessOffset = function(string, opts) { // This was not so robust, be careful.
-			var pieces = string.split(/\s+/g);
-			if (pieces.length <= 1)
-				return string.length;
-			let start = 1;
-			let finded = start;
-			let idx = pieces[0].length;
-			for (var i = start; i < pieces.length; i++) {
-				if (opts.indexOf(pieces[i]) > -1) {
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-					i++;
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-				} else {
-					break;
-				}
-			}
-			return idx+1;
-		};
 		// context.waitingForTab = true;
 		context.title = [T(14), T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
-		context.quote = ["", util.identity, ""];
-		if (!context.commandline)
-			context.offset=guessOffset(context.value, ["-l", "-e", "-o"]);
 		context.process[1] = url;
-		context.key = encodeURIComponent(args.join("_"));
+		context.key = encodeURIComponent(args[0]);
 		if (args.length == 0) {
 		} else {
 			var req = new XMLHttpRequest();
 			dict.suggestReq = req;
 			req.open("GET",
-				"http://dict.qq.com/sug?" + args.join(" ")
+				"http://dict.qq.com/sug?" + args[0]
 			);
 			req.setRequestHeader("Referer", "http://dict.qq.com/");
 			req.send(null);
@@ -658,33 +637,12 @@ let dict_cn = {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
-		let guessOffset = function(string, opts) { // This was not so robust, be careful.
-			var pieces = string.split(/\s+/g);
-			if (pieces.length <= 1)
-				return string.length;
-			let start = 1;
-			let finded = start;
-			let idx = pieces[0].length;
-			for (var i = start; i < pieces.length; i++) {
-				if (opts.indexOf(pieces[i]) > -1) {
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-					i++;
-					idx = string.indexOf(pieces[i], idx) + pieces[i].length;
-				} else {
-					break;
-				}
-			}
-			return idx+1;
-		};
 		// context.waitingForTab = true;
 		context.title = [T(14),T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
-		context.quote = ["", util.identity, ""];
-		if (!context.commandline)
-			context.offset=guessOffset(context.value, ["-l", "-e", "-o"]);
 		context.process[1] = url;
-		context.key = encodeURIComponent(args.join("_"));
+		context.key = encodeURIComponent(args[0]);
 		if (args.length == 0) {
 		} else {
 			var req = new XMLHttpRequest();
@@ -697,7 +655,7 @@ let dict_cn = {
 			}
 			// req.send(null);
 			var formData = new FormData();
-			formData.append("q", args.join(" "));
+			formData.append("q", args[0]);
 			formData.append("s", "d");
 			req.send(formData);
 			return req;
@@ -785,7 +743,7 @@ let dict = {
 	args: {},
 	init: function(args) {
 		dict.args = args;
-		let keyword = args.join(" ") || "";
+		let keyword = args[0] || "";
 		keyword = keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
@@ -802,7 +760,6 @@ let dict = {
 				},
 				{
 					completer: function (context) {
-						context.commandline = true; // call from commandline.input
 						dict.suggest(context, [commandline.command]); // this != dict
 					}
 				}
@@ -1196,14 +1153,15 @@ group.commands.add(["di[ct]", "dic"],
 	T(31),
 	dict.init,
 	{
-		argCount: "*",
+		argCount: "?", // TODO ?
 		// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
+		bang: true, // TODO
 		completer: function (context, args) {
 			if (args.length >= 1)
 				return dict.suggest(context, args);
 		},
-		bang: true, // TODO
+		literal: 0,
 		options: [
 			{
 				names: ["-e"],
@@ -1618,3 +1576,5 @@ var INFO =
 // * support dblclick?
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
+// translate.google.cn
+// * literal
