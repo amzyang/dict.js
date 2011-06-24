@@ -53,7 +53,12 @@ const tr = {
 		31: "Dict lookup",
 		32: "View translation for mouse selection or clipboard (*nix only)",
 		33: "View details for mouse selection or clipboard (*nix only)",
-		34: "Google Translate"
+		34: "Google Translate",
+		35: "Youdao Dictionary",
+		36: "Chinese ↔ English",
+		37: "Chinese ↔ French",
+		38: "Chinese ↔ Korean",
+		39: "Chinese ↔ Japanese"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -65,7 +70,7 @@ const tr = {
 		7:  "谷歌翻译：",
 		8:  "解释",
 		9:  "相关词组",
-		10: "同义词：",
+		10: "同近义词：",
 		11: "反义词：",
 		12: "同反义词",
 		13: "词形变化",
@@ -90,6 +95,11 @@ const tr = {
 		32: "查看选区或者剪贴板（非视窗平台）的翻译",
 		33: "查看选区或者剪贴板（非视窗平台）的翻译详情",
 		34: "谷歌翻译",
+		35: "有道词典",
+		36: '汉英互译',
+		37: '汉法互译',
+		38: '汉韩互译',
+		39: '汉日互译'
 	}
 };
 
@@ -98,6 +108,210 @@ function T(i) {
 		return tr["zh-CN"][i];
 	return tr["en-US"][i];
 }
+
+if (document.getElementById("youdao-frame")) // workaround for :rehash
+	document.getElementById('main-window').removeChild(document.getElementById('youdao-frame'));
+let youdao = {
+	keyword: "",
+	logo: "http://shared.ydstatic.com/r/1.0/p/dict-logo-s.png",
+	favicon: "http://shared.ydstatic.com/images/favicon.ico",
+	init: function(keyword, args) {
+		youdao.keyword = keyword;
+		var req = new XMLHttpRequest();
+		dict.req = req;
+		req.open("GET", youdao.href({keyword: keyword, le: args["-l"] || "eng"}));
+		dump(youdao.href({keyword: keyword, le: args["-l"] || "eng"}) + "\n");
+		req.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+		req.onreadystatechange = function (ev) {
+			dict.youdao(req);
+		};
+		req.send(null);
+		return req;
+	},
+	href: function (params) {
+		let keyword = encodeURIComponent(decodeURIComponent(params["keyword"]));
+		let le = params["le"] || "eng"; // TODO
+		let uri = "http://dict.youdao.com/search?q=" +
+				  keyword + "&le=" + le + "&tab=chn";
+		return uri;
+	},
+	html: "",
+	process: function(req) {
+		var frame = document.getElementById("youdao-frame");
+		youdao.html = youdao._strip_html_tag(req.responseText);
+		var ret = {
+			notfound: false,
+			ok: true,
+			pron: false,
+			def: false,
+			simple: false,
+			full: false,
+			text: false,
+			audio: false
+		};
+		if (!frame) {
+			// create frame
+			frame = document.createElement("iframe"); // iframe ( or browser on older Firefox)
+			frame.setAttribute("id", "youdao-frame");
+			frame.setAttribute("name", "youdao-frame");
+			frame.setAttribute("collapsed", "true");
+			document.getElementById("main-window").appendChild(frame);
+
+			// set restrictions as needed
+			frame.webNavigation.allowAuth          = false;
+			frame.webNavigation.allowImages        = false;
+			frame.webNavigation.allowJavascript    = false;
+			frame.webNavigation.allowMetaRedirects = true;
+			frame.webNavigation.allowPlugins       = false;
+			frame.webNavigation.allowSubframes     = false;
+
+			// listen for load/domcontentloaded
+			frame.addEventListener("load", function (event) {
+					var doc = event.originalTarget;
+					doc.documentElement.innerHTML = youdao.html;
+					youdao._resolveRelative(doc);
+					var _ret = youdao._simple(doc);
+					ret["keyword"] = _ret["word"];
+					ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
+					ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
+					ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
+					ret["notfound"] = !ret["def"];
+					if (ret["pron"])
+						ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
+					else
+						ret["simple"] = ret["keyword"] + " " + ret["def"];
+					ret["full"] = youdao._full(doc);
+					dict.process(ret);
+					req.onreadystatechange = function () {};
+				},
+				true
+			);
+		}
+		frame.contentDocument.location.href = "about:blank";
+	},
+
+	_full: function (document) {
+		var full = {title: "", sub: {}};
+		var simp = youdao._simple(document);
+		var keyword_url = youdao.href({"keyword": simp["word"]});
+		if (simp["pron"]) {
+			full["title"] = <p class="title">
+			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
+				<span>[{simp["pron"]}]</span>
+			</p>;
+		} else {
+			full["title"] = <p class="title">
+				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
+			</p>;
+		}
+
+		// var results = document.querySelectorAll("#results");
+		// if (results[0])
+			// full["sub"]["Results"] = new XML("<ul>"+youdao._xmlPre(results[0].innerHTML)+"</ul>");
+		// return full;
+
+		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
+		if (def[0])
+			full["sub"][T(8)] = new XML("<ul>"+youdao._xmlPre(def[0].innerHTML)+"</ul>");
+
+		var ph = document.querySelectorAll("#wordGroup");
+		if (ph[0])
+			full["sub"][T(9)] = new XML("<div>"+youdao._xmlPre(ph[0].innerHTML)+"</div>");
+
+		var syn = document.querySelectorAll("#Synonyms");
+		if (syn[0])
+			full["sub"][T(10)] = new XML("<div>"+youdao._xmlPre(syn[0].innerHTML)+"</div>");
+
+
+		var ex = document.querySelectorAll("#examples");
+		if (ex[0])
+			full["sub"][T(18)] = new XML("<div>"+youdao._xmlPre(ex[0].innerHTML)+"</div>");
+
+		var mor = document.querySelectorAll("#etcTrans p");
+		if (mor[0])
+			full["sub"][T(13)] = new XML("<p>"+youdao._xmlPre(mor[0].innerHTML)+"</p>");
+
+		return full;
+	},
+
+	_simple: function (document) {
+		var pron = document.querySelectorAll("#results .phonetic")[0];
+		var simp = {};
+		simp["word"] = decodeURIComponent(youdao.keyword);
+		simp["pron"] = pron ? pron.textContent.trim().replace(/^\[|\]$/g, "") : false;
+		simp["audio"] = false; // FIXME:
+		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle")[0];
+		simp["def"] = def ? def.textContent.trim().replace(/\n\s+/g, " | ") : false;
+		return simp;
+	},
+
+	_strip_html_tag: function(str) {
+		var start = str.indexOf("<head");
+		var end = str.indexOf("</html>");
+		return str.slice(start, end);
+	},
+	_xmlPre: function (str) {
+		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">");
+	},
+	_resolveRelative: function (document) {
+		var pattern = /^https?:\/\//;
+		for (var i = document.links.length - 1; i >= 0; i--) {
+			var link = document.links[i];
+			var href = link.getAttribute("href");
+			if (!pattern.test(href))
+				link.setAttribute("href", "http://dict.youdao.com/"+href);
+			link.setAttribute("target", "_blank");
+		}
+	},
+	makeRequest: function(context, args) {
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+		// context.waitingForTab = true;
+		context.title = [T(14) + " - " + T(35), T(15)];
+		context.keys = {"text":"g", "description":"e"};
+		context.filterFunc = null;
+		context.process[1] = url;
+		context.key = encodeURIComponent(args[0]);
+		context.__args = args;
+		if (args.length == 0) {
+		} else {
+			var req = new XMLHttpRequest();
+			dict.suggestReq = req;
+			req.open("GET",
+				"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
+			);
+			req.send(null);
+			req.onreadystatechange = function () {
+				youdao.suggest(req, context);
+			}
+			return req;
+		}
+	},
+
+	suggest: function(req, context) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				var text = unescape(req.responseText);
+				var result_arr = text.match(/this.txtBox.value=.+?">/g);
+				result_arr = result_arr.map(function(str) {
+						return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
+				});
+				let suggestions = [];
+				result_arr.forEach(function(word) {
+						let r = {};
+						r["g"] = word;
+						r["e"] = word;
+						r["url"] = youdao.href({keyword: word, le: context.__args["-l"] || options["dict-langpair"] || "eng"});
+						suggestions.push(r);
+				});
+				context.completions = suggestions;
+			} else {
+			}
+			req.onreadystatechange = function() {};
+		}
+	},
+};
 
 let qq = {
 	keyword: "",
@@ -284,7 +498,7 @@ let qq = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 		// context.waitingForTab = true;
-		context.title = [T(14), T(15)];
+		context.title = [T(14) + " - " + T(25), T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.process[1] = url;
@@ -334,128 +548,15 @@ let qq = {
 // http://code.google.com/apis/language/translate/v1/getting_started.html
 // http://code.google.com/apis/language/
 let google = {
-	languages: [
-		["af", "Afrikaans"],
-		["sq", "Albanian"],
-		["am", "Amharic"],
-		["ar", "Arabic"],
-		["hy", "Armenian"],
-		["az", "Azerbaijani"],
-		["eu", "Basque"],
-		["be", "Belarusian"],
-		["bn", "Bengali"],
-		["bh", "Bihari"],
-		["br", "Breton"],
-		["bg", "Bulgarian"],
-		["my", "Burmese"],
-		["ca", "Catalan"],
-		["chr", "Cherokee"],
-		["zh", "Chinese"],
-		["zh-CN", "Chinese Simplified"],
-		["zh-TW", "Chinese Traditional"],
-		["co", "Corsican"],
-		["hr", "Croatian"],
-		["cs", "Czech"],
-		["da", "Danish"],
-		["dv", "Dhivehi"],
-		["nl", "Dutch"],
-		["en", "English"],
-		["eo", "Esperanto"],
-		["et", "Estonian"],
-		["fo", "Faroese"],
-		["tl", "Filipino"],
-		["fi", "Finnish"],
-		["fr", "French"],
-		["fy", "Frisian"],
-		["gl", "Galician"],
-		["ka", "Georgian"],
-		["de", "German"],
-		["el", "Greek"],
-		["gu", "Gujarati"],
-		["ht", "Haitian Creole"],
-		["iw", "Hebrew"],
-		["hi", "Hindi"],
-		["hu", "Hungarian"],
-		["is", "Icelandic"],
-		["id", "Indonesian"],
-		["iu", "Inuktitut"],
-		["ga", "Irish"],
-		["it", "Italian"],
-		["ja", "Japanese"],
-		["jw", "Javanese"],
-		["kn", "Kannada"],
-		["kk", "Kazakh"],
-		["km", "Khmer"],
-		["ko", "Korean"],
-		["ku", "Kurdish"],
-		["ky", "Kyrgyz"],
-		["lo", "Lao"],
-		["la", "Latin"],
-		["lv", "Latvian"],
-		["lt", "Lithuanian"],
-		["lb", "Luxembourgish"],
-		["mk", "Macedonian"],
-		["ms", "Malay"],
-		["ml", "Malayalam"],
-		["mt", "Maltese"],
-		["mi", "Maori"],
-		["mr", "Marathi"],
-		["mn", "Mongolian"],
-		["ne", "Nepali"],
-		["no", "Norwegian"],
-		["oc", "Occitan"],
-		["or", "Oriya"],
-		["ps", "Pashto"],
-		["fa", "Persian"],
-		["pl", "Polish"],
-		["pt", "Portuguese"],
-		["pt-PT", "Portuguese Portugal"],
-		["pa", "Ppnjabi"],
-		["qu", "Qpechua"],
-		["ro", "Rpmanian"],
-		["ru", "Rpssian"],
-		["sa", "Sanskrit"],
-		["gd", "Scots Gaelic"],
-		["sr", "Serbian"],
-		["sd", "Sindhi"],
-		["si", "Sinhalese"],
-		["sk", "Slovak"],
-		["sl", "Slovenian"],
-		["es", "Spanish"],
-		["su", "Sundanese"],
-		["sw", "Swahili"],
-		["sv", "Swedish"],
-		["syr", "Syriac"],
-		["tg", "Tajik"],
-		["ta", "Tamil"],
-		["tt", "Tatar"],
-		["te", "Telugu"],
-		["th", "Thai"],
-		["bo", "Tibetan"],
-		["to", "Tonga"],
-		["tr", "Turkish"],
-		["uk", "Ukrainian"],
-		["ur", "Urdu"],
-		["uz", "Uzbek"],
-		["ug", "Uighur"],
-		["vi", "Vietnamese"],
-		["cy", "Welsh"],
-		["yi", "Yiddish"],
-		["yo", "Yoruba"],
-		["", "Unknown"]
-	],
 	favicon: "http://translate.google.com/favicon.ico",
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
-	get langpair() google._langpair || false,
-	set langpair(langpair) {
-		dict._langpair = langpair;
-	},
 	keyword: "",
 	url: "https://ajax.googleapis.com/ajax/services/language/translate",
 	init: function(keyword, args) {
-		let langpair = options.get("dict-langpair").value;
-		if (args["-l"])
-			langpair=args["-l"];
+		// let langpair = options.get("dict-langpair").value;
+		// if (args["-l"])
+			// langpair=args["-l"];
+		let langpair = args["-l"] || options["dict-langpair"];
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
@@ -471,26 +572,6 @@ let google = {
 			dict.google(req);
 		};
 		return req;
-	},
-	optsCompleter: function(context, args) {
-		context.quote = ["", util.identity, ""];
-		context.title = [T(16), T(1)];
-		if (google.langpair) {
-			context.completions = google.langpair;
-			return;
-		}
-		let cpt = [];
-		for (let [, [abbr, lang]] in Iterator(google.languages)) {
-			for (let [, [inabbr, inlang]] in Iterator(google.languages)) {
-				if (inabbr == "")
-					continue;
-				if (abbr == inabbr)
-					continue;
-				cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
-			}
-		}
-		google.langpair = cpt;
-		context.completions = cpt;
 	},
 	opts: function() {
 		return {
@@ -636,7 +717,7 @@ let dict_cn = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 		// context.waitingForTab = true;
-		context.title = [T(14),T(15)];
+		context.title = [T(14) + " - " + T(24),T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.process[1] = url;
@@ -687,7 +768,117 @@ let dict_cn = {
 }
 
 let dict = {
-	engines: {"d" : dict_cn, "q": qq, "g" : google},
+	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao},
+	languages: [
+		["af", "Afrikaans"],
+		["sq", "Albanian"],
+		["am", "Amharic"],
+		["ar", "Arabic"],
+		["hy", "Armenian"],
+		["az", "Azerbaijani"],
+		["eu", "Basque"],
+		["be", "Belarusian"],
+		["bn", "Bengali"],
+		["bh", "Bihari"],
+		["br", "Breton"],
+		["bg", "Bulgarian"],
+		["my", "Burmese"],
+		["ca", "Catalan"],
+		["chr", "Cherokee"],
+		["zh", "Chinese"],
+		["zh-CN", "Chinese Simplified"],
+		["zh-TW", "Chinese Traditional"],
+		["co", "Corsican"],
+		["hr", "Croatian"],
+		["cs", "Czech"],
+		["da", "Danish"],
+		["dv", "Dhivehi"],
+		["nl", "Dutch"],
+		["en", "English"],
+		["eo", "Esperanto"],
+		["et", "Estonian"],
+		["fo", "Faroese"],
+		["tl", "Filipino"],
+		["fi", "Finnish"],
+		["fr", "French"],
+		["fy", "Frisian"],
+		["gl", "Galician"],
+		["ka", "Georgian"],
+		["de", "German"],
+		["el", "Greek"],
+		["gu", "Gujarati"],
+		["ht", "Haitian Creole"],
+		["iw", "Hebrew"],
+		["hi", "Hindi"],
+		["hu", "Hungarian"],
+		["is", "Icelandic"],
+		["id", "Indonesian"],
+		["iu", "Inuktitut"],
+		["ga", "Irish"],
+		["it", "Italian"],
+		["ja", "Japanese"],
+		["jw", "Javanese"],
+		["kn", "Kannada"],
+		["kk", "Kazakh"],
+		["km", "Khmer"],
+		["ko", "Korean"],
+		["ku", "Kurdish"],
+		["ky", "Kyrgyz"],
+		["lo", "Lao"],
+		["la", "Latin"],
+		["lv", "Latvian"],
+		["lt", "Lithuanian"],
+		["lb", "Luxembourgish"],
+		["mk", "Macedonian"],
+		["ms", "Malay"],
+		["ml", "Malayalam"],
+		["mt", "Maltese"],
+		["mi", "Maori"],
+		["mr", "Marathi"],
+		["mn", "Mongolian"],
+		["ne", "Nepali"],
+		["no", "Norwegian"],
+		["oc", "Occitan"],
+		["or", "Oriya"],
+		["ps", "Pashto"],
+		["fa", "Persian"],
+		["pl", "Polish"],
+		["pt", "Portuguese"],
+		["pt-PT", "Portuguese Portugal"],
+		["pa", "Ppnjabi"],
+		["qu", "Qpechua"],
+		["ro", "Rpmanian"],
+		["ru", "Rpssian"],
+		["sa", "Sanskrit"],
+		["gd", "Scots Gaelic"],
+		["sr", "Serbian"],
+		["sd", "Sindhi"],
+		["si", "Sinhalese"],
+		["sk", "Slovak"],
+		["sl", "Slovenian"],
+		["es", "Spanish"],
+		["su", "Sundanese"],
+		["sw", "Swahili"],
+		["sv", "Swedish"],
+		["syr", "Syriac"],
+		["tg", "Tajik"],
+		["ta", "Tamil"],
+		["tt", "Tatar"],
+		["te", "Telugu"],
+		["th", "Thai"],
+		["bo", "Tibetan"],
+		["to", "Tonga"],
+		["tr", "Turkish"],
+		["uk", "Ukrainian"],
+		["ur", "Urdu"],
+		["uz", "Uzbek"],
+		["ug", "Uighur"],
+		["vi", "Vietnamese"],
+		["cy", "Welsh"],
+		["yi", "Yiddish"],
+		["yo", "Yoruba"],
+		["", "Unknown"]
+	],
 	get req() dict._req || null,
 	set req(req) {
 		if (dict.req)
@@ -719,6 +910,10 @@ let dict = {
 			false);
 		});
 	},
+	get langpairs() dict._langpairs || false,
+	set langpairs(langpairs) {
+		dict._langpairs = langpairs;
+	},
 	get suggestReq() dict._suggestReq || null,
 	set suggestReq(req) {
 		if (dict.suggestReq)
@@ -737,7 +932,7 @@ let dict = {
 		dict._timeout = timeout;
 	},
 
-	get engine() dict.engines[dict.args["-e"] || options.get("dict-engine").value],
+	get engine() dict.engines[dict._route(dict.args)],
 	args: {},
 	init: function(args) {
 		dict.args = args;
@@ -774,28 +969,28 @@ let dict = {
 			dict._play(ret["audio"]);
 		else {
 			if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
-				let uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
+				var uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
 				dict._play(uri);
 			}
 		}
 
 		if (ret["notfound"]) {
-			dactyl.echo(T(19) + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE); // TODO: i18n?
+			dactyl.echo(T(19) + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE);
 			dict.timeout = dactyl.timeout(dict._clear, 3000);
 		} else {
-			let show = options.get("dict-show").value;
+			var show = options.get("dict-show").value;
 			if (dict.args["-o"])
 				show = dict.args["-o"];
 			switch ( show ) {
 				case "s" :
-				let invert = options.get("dict-simple").value;
+				var invert = options.get("dict-simple").value;
 				if (dict.args.bang)
 					invert = !invert;
 				if (invert) {
 					dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
 				} else {
-					let list = template.table(ret["full"]["title"], ret["full"]["sub"]);
+					var list = template.table(ret["full"]["title"], ret["full"]["sub"]);
 					dactyl.echo(<>{STYLE}{list}</>, commandline.FORCE_MULTILINE);
 					// dactyl.echomsg(ret["full"]); // commandline.FORCE_MULTILINE
 				}
@@ -832,6 +1027,15 @@ let dict = {
 				ret = qq.process(req.responseText);
 			dict.process(ret);
 			req.onreadystatechange = function() {};
+		}
+	},
+
+	youdao: function (req) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				youdao.process(req);
+			} else
+				dict.error(req.status);
 		}
 	},
 
@@ -893,39 +1097,31 @@ let dict = {
 	},
 
 	suggest: function(context, args) {
-		let e = options.get("dict-engine").value;
-		let engine = dict.engines[e];
-		if (args["-e"]) {
-			e = args["-e"];
-			if (dict.engines[e])
-				engine = dict.engines[e];
-		}
-		/*
-		var keyword = args.join(" ").trim();
-		if (keyword.length < 3)
-			return;
-		var words = content.document.body.textContent.split(/\:|\"|\[|\]|\.|,|\s|\t|\n/).filter(function(i) {
-			return i.length >= 3 && /^[\-\.a-zA-Z]+$/.test(i);
-		}).map(function(i) {
-			return i.toLowerCase().replace(/^\.|\.$/g, "");
-		}).filter(function(i, index, allwords) {
-			return (allwords.indexOf(i) == index) && (i.indexOf(keyword.toLowerCase()) > -1);
-		});
-		var completions = [];
-		words.forEach(function(r) {
-			let w = {};
-			w["e"] = r;
-			w["g"] = r;
-			completions.push(w);
-		});
-		context.keys = {"text":"g", "description":"e"};
-		context.completions = completions;
-		*/
+		let engine = dict.engines[dict._route(args)];
 		if (engine.suggest) {
 			engine.suggest(engine.makeRequest(context, args), context);
 		} else {
 			dict_cn.suggest(dict_cn.makeRequest(context, args), context);
 		}
+		
+		/*context.fork("words_buffer", 0, this, function (context) {
+				 var keyword = args.join(" ").trim();
+				 if (keyword.length < 3)
+					 return;
+				 var words = content.document.body.textContent.split(/\:|\"|\[|\]|\.|,|\s|\t|\n/).filter(function(i) {
+						 return i.length >= 3 && /^[\-\.a-zA-Z]+$/.test(i);
+				 }).map(function(i) {
+						 return i.toLowerCase().replace(/^\.|\.$/g, "");
+				 }).filter(function(i, index, allwords) {
+						 return (allwords.indexOf(i) == index) && (i.indexOf(keyword.toLowerCase()) > -1);
+				 });
+				 var completions = [];
+				 words.forEach(function(r) {
+						 completions.push([r]);
+				 });
+				 context.title = ["Words from current buffer!"];
+				 context.completions = completions;
+		});*/
 	},
 
 	opts: function () {
@@ -934,14 +1130,102 @@ let dict = {
 		return undefined;
 	},
 
+	optsCompleter: function(context, args) {
+		context.quote = ["", util.identity, ""];
+		let youdao_completions = [
+			['eng', T(36)],
+			['fr', T(37)],
+			['ko', T(38)],
+			['jap', T(39)]
+		];
+		if (!dict.langpairs) {
+			let cpt = [];
+			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
+				for (let [, [inabbr, inlang]] in Iterator(dict.languages)) {
+					if (inabbr == "")
+						continue;
+					if (abbr == inabbr)
+						continue;
+					cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
+				}
+			}
+			dict.langpairs = cpt;
+		}
+		if (args["-e"]) {
+			switch (args["-e"]) {
+				case 'y':
+				context.fork("youdao_le", 0, this, function(context) {
+						context.title = [T(16) + " - " + T(35), T(1)];
+						context.completions = youdao_completions;
+						context.compare = null;
+				});
+				break;
+
+				case 'd':
+				case 'q':
+				context.completions = [];
+				break;
+
+				case 'g':
+				context.fork("dict_langpairs", 0, this, function (context) {
+						context.title = [T(16) + " - " + T(34), T(1)];
+						context.compare = null;
+						context.completions = dict.langpairs;
+				});
+				break;
+
+				default :
+				context.completions = [];
+				break;
+			}
+		} else {
+			context.fork("youdao_le", 0, this, function(context) {
+					context.title = [T(16) + " - " + T(35), T(1)];
+					context.completions = youdao_completions;
+					context.compare = null;
+			});
+			context.fork("dict_langpairs", 0, this, function (context) {
+					context.title = [T(16) + " - " + T(34), T(1)];
+					context.compare = null;
+					context.completions = dict.langpairs;
+			});
+		}
+	},
+
+	error: function (code) {
+
+	},
+
+	_route: function (args) {
+		let keyword = args[0] || "";
+		let lang = args["-l"] || "";
+		let engine = args["-e"] || options["dict-engine"];
+		switch (lang) {
+			case "jap":
+			case "eng":
+			case "fr":
+			case "ko":
+			engine = "y"; // youdao
+			break;
+
+			case "":
+			break;
+
+			default:
+			engine = "g";
+			break;
+		}
+		return engine;
+	},
+
 	_play: function(uri) {
-		if (!options.get("dict-hasaudio").value)
+		if (!options["dict-hasaudio"])
 			return false;
 		if (util.OS.isWindows) {
-			let dict_sound = document.getElementById("dict-sound");
+			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
-				let sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
-				let addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
+				var sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
+				var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
 				addonbar.appendChild(sound);
 				dict_sound = document.getElementById("dict-sound");
 				dict_sound.setAttribute("hidden", "false"); // dirty hack, tell me why.
@@ -953,7 +1237,7 @@ let dict = {
 			if (dict_sound.Play)
 				dict_sound.Play();
 		} else {
-			let cmd = ":";
+			var cmd = ":";
 			if (options.get("dict-audioplayer").value)
 				cmd = options.get("dict-audioplayer").value;
 			ex.silent("!" + cmd + " '" + uri + "' &"); // uri 要解析特殊字符
@@ -1086,7 +1370,8 @@ options.add(["dict-engine", "dice"],
 		completer: function(context) [
 			["d", T(24)],
 			["q", T(25)],
-			["g", T(34)]
+			["g", T(34)],
+			["y", T(35)]
 		]
 	}
 );
@@ -1138,12 +1423,12 @@ options.add(["dict-dblclick", "dicd"],
 	}
 );
 
-options.add(["dict-langpair", "dicl"],
+options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"string",
 	"en|zh-CN",
 	{
-		completer: function(context, args) google.optsCompleter(context, args)
+		completer: function(context, args) dict.optsCompleter(context, args)
 	}
 );
 
@@ -1156,7 +1441,7 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		bang: true, // TODO
 		completer: function (context, args) {
-			if (args.length >= 1)
+			if (args.length >= 1 && args[0] !== "-")
 				return dict.suggest(context, args);
 		},
 		literal: 0,
@@ -1168,14 +1453,15 @@ group.commands.add(["di[ct]", "dic"],
 				completer: [
 					["d", T(24)],
 					["q", T(25)],
-					["g", T(34)]
+					["g", T(34)],
+					["y", T(35)]
 				]
 			},
 			{
 				names: ["-l"],
 				description: T(17),
 				type: CommandOption.STRING,
-				completer: function(context, args) google.optsCompleter(context,args)
+				completer: function(context, args) dict.optsCompleter(context,args)
 			},
 			{
 				names: ["-o"],
@@ -1538,3 +1824,7 @@ var INFO =
 // automatic select proper engine
 // x translate.google.cn -- doesn't workable, need more test.
 // * literal
+// 检测命令行参数是否有效，比如 :di -e xxxx
+// Unicode Ranges
+// history and auto completion from history
+// dict-langpair -> stringmap
