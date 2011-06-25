@@ -1491,8 +1491,8 @@ var INFO =
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
 
-      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
-      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。</p>
+      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.youdao.com/">Youdao</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
+      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。</p>
 
       <item lang="en-US">
         <tags>'dica' 'dict-audioplayer'</tags>
@@ -1551,6 +1551,7 @@ var INFO =
 					<dt>d</dt>      <dd><link topic="http://dict.cn/">Dict.cn</link></dd>
 					<dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
 					<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
+					<dt>y</dt>      <dd><link topic="http://dict.youdao.com">Youdao</link></dd>
 				</dl>
 			<p>dict.js use Dict.cn by default now.</p>
         </description>
@@ -1566,6 +1567,7 @@ var INFO =
 				<dt>d</dt>      <dd><link topic="http://dict.cn/">海词</link></dd>
 				<dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
 				<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
+				<dt>y</dt>      <dd><link topic="http://dict.youdao.com">网易有道在线词典</link></dd>
 			</dl>
 			<p>dict.js 默认使用海词。</p>
         </description>
@@ -1604,6 +1606,14 @@ var INFO =
 
 			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
 			<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
+			<dl dt="width: 8em;">
+				<dt>jap</dt>      <dd>Chinese ↔ Japanese&#160;&#160;&#160;&#160;Youdao</dd>
+				<dt>eng</dt>      <dd>Chinese ↔ English&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
+				<dt>ko</dt>      <dd>Chinese ↔ Korean&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
+				<dt>fr</dt>      <dd>Chinese ↔ French&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
+				<dt>en|zh-CN</dt>      <dd>From English to Simplified Chinese&#160;&#160;&#160;&#160;&#160;&#160;Google Translate</dd>
+				<dt>...|...</dt>      <dd>From ... to ...&#160;&#160;&#160;&#160;&#160;&#160;Google Translate</dd>
+			</dl>
         </description>
       </item>
       <item lang="zh-CN">
@@ -1615,6 +1625,14 @@ var INFO =
 			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
 			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
 			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
+			<dl dt="width: 8em;">
+				<dt>jap</dt>      <dd>汉日互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
+				<dt>eng</dt>      <dd>汉英互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
+				<dt>ko</dt>      <dd>汉韩互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
+				<dt>fr</dt>      <dd>汉法互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
+				<dt>en|zh-CN</dt>      <dd>从 英文 到 简体中文&#160;&#160;&#160;&#160;&#160;谷歌翻译</dd>
+				<dt>...|...</dt>      <dd>从 ... 到 ...&#160;&#160;&#160;&#160;&#160;谷歌翻译</dd>
+			</dl>
         </description>
       </item>
 
