@@ -77,7 +77,7 @@ const tr = {
 		14: "原文",
 		15: "翻译",
 		16: "语言对",
-		17: "来源语言和目标语言，用 | 来分隔",
+		17: "来源语言和目标语言",
 		18: "例句",
 		19: "未找到：",
 		20: "外部音频播放程序",
@@ -1599,7 +1599,7 @@ var INFO =
         <type>string</type>
         <default>en|zh-CN</default>
         <description>
-			<p>This argument supplies the optional source language and required destination language, separated by a properly escaped vertical bar (|) . In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
+			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
 			<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=|es.</p>
 
