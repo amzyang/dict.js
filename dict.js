@@ -120,7 +120,6 @@ let youdao = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("GET", youdao.href({keyword: keyword, le: args["-l"] || "eng"}));
-		dump(youdao.href({keyword: keyword, le: args["-l"] || "eng"}) + "\n");
 		req.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 		req.onreadystatechange = function (ev) {
 			dict.youdao(req);
@@ -193,7 +192,7 @@ let youdao = {
 	_full: function (document) {
 		var full = {title: "", sub: {}};
 		var simp = youdao._simple(document);
-		var keyword_url = youdao.href({"keyword": simp["word"]});
+		var keyword_url = youdao.href({"keyword": simp["word"], le: dict.args["-l"] || "eng"});
 		if (simp["pron"]) {
 			full["title"] = <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
