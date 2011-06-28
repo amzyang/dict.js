@@ -58,7 +58,8 @@ const tr = {
 		36: "Chinese ↔ English",
 		37: "Chinese ↔ French",
 		38: "Chinese ↔ Korean",
-		39: "Chinese ↔ Japanese"
+		39: "Chinese ↔ Japanese",
+		40: "Open result in new tab!"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -96,10 +97,11 @@ const tr = {
 		33: "查看选区或者剪贴板（非视窗平台）的翻译详情",
 		34: "谷歌翻译",
 		35: "有道词典",
-		36: '汉英互译',
-		37: '汉法互译',
-		38: '汉韩互译',
-		39: '汉日互译'
+		36: "汉英互译",
+		37: "汉法互译",
+		38: "汉韩互译",
+		39: "汉日互译",
+		40: "在新标签页中打开结果！"
 	}
 };
 
@@ -112,6 +114,7 @@ function T(i) {
 if (document.getElementById("youdao-frame")) // workaround for :rehash
 	document.getElementById('main-window').removeChild(document.getElementById('youdao-frame'));
 let youdao = {
+	name: T(35),
 	keyword: "",
 	logo: "http://shared.ydstatic.com/r/1.0/p/dict-logo-s.png",
 	favicon: "http://shared.ydstatic.com/images/favicon.ico",
@@ -192,7 +195,7 @@ let youdao = {
 	_full: function (document) {
 		var full = {title: "", sub: {}};
 		var simp = youdao._simple(document);
-		var keyword_url = youdao.href({"keyword": simp["word"], le: dict.args["-l"] || "eng"});
+		var keyword_url = youdao.href({keyword: simp["word"], le: dict.args["-l"] || "eng"});
 		if (simp["pron"]) {
 			full["title"] = <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
@@ -313,6 +316,7 @@ let youdao = {
 };
 
 let qq = {
+	name: T(25),
 	keyword: "",
 	logo: "http://im-img.qq.com/inc/images/new_header2/logo.gif",
 	favicon: "http://dict.qq.com/favicon.ico",
@@ -547,6 +551,7 @@ let qq = {
 // http://code.google.com/apis/language/translate/v1/getting_started.html
 // http://code.google.com/apis/language/
 let google = {
+	name: T(34),
 	favicon: "http://translate.google.com/favicon.ico",
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
 	keyword: "",
@@ -591,6 +596,7 @@ let google = {
 
 let dict_cn = {
 	// http://dict.cn/tools.html
+	name: T(24),
 	keyword: "",
 	url: "",
 	template: "",
@@ -949,6 +955,8 @@ let dict = {
 		if (keyword.length == 0) {
 			commandline.input(T(4), function(keyword) {
 					dict.keyword = keyword.trim();
+					if (args["-t"])
+						return dactyl.open(dict.engine.href({keyword:dict.keyword, le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
 					dict.engine.init(dict.keyword, args);
 				},
 				{
@@ -959,6 +967,8 @@ let dict = {
 			);
 		} else {
 			dict.keyword = keyword;
+			if (args["-t"])
+				return dactyl.open(dict.engine.href({keyword:dict.keyword, le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
 			dict.engine.init(dict.keyword, args);
 		}
 	},
@@ -1245,7 +1255,7 @@ let dict = {
 		}
 	},
 
-	_clear: function() {
+	_clear: function() { // TODO: more tests
 		dactyl.echo("", commandline.FORCE_SINGLELINE);
 	},
 
@@ -1473,9 +1483,67 @@ group.commands.add(["di[ct]", "dic"],
 					["n", T(29)]
 				]
 			},
+			{
+				names: ["-t"],
+				description: T(40),
+				type: CommandOption.NOARG
+			}
 		]
 	}
 );
+
+Array.slice("dgqy").forEach(function(char) {
+		let extra_options = [];
+		if (char === "g" || char === "y") {
+			extra_options = [
+				{
+					names: ["-l"],
+					description: T(17),
+					type: CommandOption.STRING,
+					completer: function(context, args) {
+						args["-e"] = char;
+						dict.optsCompleter(context,args);
+					}
+				}
+			];
+		}
+		group.commands.add(["dict"+char, "di"+char],
+			T(31) + " - " + dict.engines[char].name,
+			function (args) {
+				args["-e"] = char;
+				dict.init(args);
+			},
+			{
+				argCount: "?", // TODO ?
+				// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
+				// http://code.google.com/p/dactyl/issues/detail?id=514#c2
+				bang: true, // TODO
+				completer: function (context, args) {
+					args["-e"] = char;
+					if (args.length >= 1 && args[0] !== "-")
+						return dict.suggest(context, args);
+				},
+				literal: 0,
+				options: extra_options.concat([
+					{
+						names: ["-o"],
+						description: T(26),
+						type: CommandOption.STRING,
+						completer: [
+							["s", T(27)],
+							["a", T(28)],
+							["n", T(29)]
+						]
+					},
+					{
+						names: ["-t"],
+						description: T(40),
+						type: CommandOption.NOARG
+					}
+				])
+			}
+		);
+});
 
 dactyl.execute("map -modes=n,v -description='"+T(32)+"' -builtin -silent <A-d> :dict<CR>");
 dactyl.execute("map -modes=n,v -description='"+T(33)+"' -builtin -silent <A-S-d> :dict!<CR>");
@@ -1845,3 +1913,4 @@ var INFO =
 // Unicode Ranges
 // history and auto completion from history
 // dict-langpair -> stringmap
+// use bytes instead of length
