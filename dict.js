@@ -889,8 +889,9 @@ let dict = {
 		var p = document.getElementById('statusbar-display');
 		req.addEventListener('loadstart', function(evt) {
 			self.timeoutid = window.setTimeout(function() {
-					p.label = T(6); delete self.timeoutid;
+					p.label = T(6);
 					self.intervalid = window.setInterval(function() {p.label = T(6);}, 400);
+					delete self.timeoutid;
 				},
 				400);
 		},
@@ -1478,7 +1479,6 @@ group.commands.add(["di[ct]", "dic"],
 
 dactyl.execute("map -modes=n,v -description='"+T(32)+"' -builtin -silent <A-d> :dict<CR>");
 dactyl.execute("map -modes=n,v -description='"+T(33)+"' -builtin -silent <A-S-d> :dict!<CR>");
-dactyl.execute("map -modes=n -builtin -silent <Esc> :<CR><Esc><Esc>");
 
 var INFO =
 <plugin name="dict.js" version="0.9.9"
