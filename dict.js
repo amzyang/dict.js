@@ -241,7 +241,12 @@ let youdao = {
 		var simp = {};
 		simp["word"] = decodeURIComponent(youdao.keyword);
 		simp["pron"] = pron ? pron.textContent.trim().replace(/^\[|\]$/g, "") : false;
-		simp["audio"] = false; // FIXME:
+		var audio = document.querySelectorAll("#results .phonetic+a")[0];
+		simp["audio"] = false;
+		if (audio) {
+			let datarel = audio.getAttribute("data-rel");
+			simp["audio"] = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(datarel);
+		}
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle")[0];
 		simp["def"] = def ? def.textContent.trim().replace(/\n\s+/g, " | ") : false;
 		return simp;
