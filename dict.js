@@ -36,7 +36,7 @@ const tr = {
 		14: "Original Text",
 		15: "Translation",
 		16: "Langpair",
-		17: "Source language and destination language, separated by a properly escaped vertical bar (|)",
+		17: "Source language and destination language",
 		18: "Examples",
 		19: "Not found: ",
 		20: "External audio player",
@@ -245,7 +245,7 @@ let youdao = {
 		simp["audio"] = false;
 		if (audio) {
 			let datarel = audio.getAttribute("data-rel");
-			simp["audio"] = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(datarel);
+			simp["audio"] = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(datarel) + "&le=" + (dict.args["-l"] || "eng");
 		}
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle")[0];
 		simp["def"] = def ? def.textContent.trim().replace(/\n\s+/g, " | ") : false;
