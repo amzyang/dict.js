@@ -4,7 +4,7 @@ XML.prettyPrinting = false;
 
 const STYLE = <style type="text/css">
 <![CDATA[
-body { line-height:22px; }
+body { line-height:22px; white-space:normal; }
 th, dt { font-weight:bolder; }
 dt { list-style-type: disc; }
 dd { margin:0.1em 0 0.2em; }
@@ -13,6 +13,28 @@ dd { margin:0.1em 0 0.2em; }
 p > span, li > a { margin-right: 1em; }
 span > b { margin-right: 0.4em; }
 .basic dt + span { margin-right: 0.4em; }
+p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word;}
+.dict_block>table {width:600px;}
+/* youdao */
+#dict_js_y p > span, #dict_js_y li > a {margin-right: 0;}
+#dict_js_y .example-via a:nth-child(2) {display:none;}
+#dict_js_y .video {
+	position:relative;
+}
+#dict_js_y .video .play {
+	display:inline-block;
+	position:relative;
+}
+#dict_js_y .video .playicon {
+	cursor: pointer;
+	height: 30px;
+	left: 50%;
+	margin-left: -15px;
+	margin-top: -15px;
+	position: absolute;
+	top: 50%;
+	width: 30px;
+}
 ]]>
 </style>;
 
@@ -206,11 +228,6 @@ let youdao = {
 				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
 			</p>;
 		}
-
-		// var results = document.querySelectorAll("#results");
-		// if (results[0])
-			// full["sub"]["Results"] = new XML("<ul>"+youdao._xmlPre(results[0].innerHTML)+"</ul>");
-		// return full;
 
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
 		if (def[0])
@@ -423,7 +440,7 @@ let qq = {
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
 				let phs = new XML(item["phs"]);
-				ph += <><li><a href={href} highlight="URL">{phs}</a><span>{item["phd"]}</span></li></>;
+				ph += <><li><a href={href} highlight="URL">{phs}</a> {item["phd"]}</li></>;
 			});
 			full["sub"][T(9)] = <ol>{ph}</ol>;
 		}
@@ -434,11 +451,11 @@ let qq = {
 				let syn_item = <></>;
 				item.c.forEach(function(single) {
 					let href = qq.href({"keyword": single});
-					syn_item += <><span><a href={href} highlight="URL">{single}</a></span></>;
+					syn_item += <><a href={href} highlight="URL">{single}</a> </>;
 				});
 				syn += <>{syn_item}</>;
 			});
-			full["sub"][T(12)] = <p><span>{T(10)}</span>{syn}</p>;
+			full["sub"][T(12)] = <p>{T(10)}{syn}</p>;
 		}
 		if (t.ant) { // Antonyms
 			let ant = <></>;
@@ -446,14 +463,14 @@ let qq = {
 				let ant_item = <></>;
 				item.c.forEach(function(single) {
 					let href = qq.href({"keyword": single});
-					ant_item += <><span><a href={href} highlight="URL">{single}</a></span></>;
+					ant_item += <><a href={href} highlight="URL">{single}</a> </>;
 				});
 				ant += <>{ant_item}</>;
 			});
 			if (full["sub"][T(12)])
-				full["sub"][T(12)] += <p><span>{T(11)}</span>{ant}</p>;
+				full["sub"][T(12)] += <p>{T(11)}{ant}</p>;
 			else
-				full["sub"][T(12)] = <p><span>{T(11)}</span>{ant}</p>;
+				full["sub"][T(12)] = <p>{T(11)}{ant}</p>;
 		}
 		if (t.mor) { // Inflected
 			let mor = <></>;
@@ -984,7 +1001,9 @@ let dict = {
 			dict._play(ret["audio"]);
 		else {
 			if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
-				var uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
+				// var uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
+				// http://dict.youdao.com/dictvoice?audio=you_are_welcome&le=en
+				var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
 				dict._play(uri);
 			}
 		}
@@ -1006,7 +1025,7 @@ let dict = {
 					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
 				} else {
 					var list = template.table(ret["full"]["title"], ret["full"]["sub"]);
-					dactyl.echo(<>{STYLE}{list}</>, commandline.FORCE_MULTILINE);
+					dactyl.echo(<>{STYLE}<div class="dict_block" id={"dict_js_"+(dict.args["-e"] || options["dict-engine"])}>{list}</div></>, commandline.FORCE_MULTILINE);
 					// dactyl.echomsg(ret["full"]); // commandline.FORCE_MULTILINE
 				}
 				break;
@@ -1062,12 +1081,17 @@ let dict = {
 				let show = options.get("dict-show").value;
 				if (dict.args["-o"])
 					show = dict.args["-o"];
+				// tts
+				if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
+					var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
+					dict._play(uri);
+				}
 				switch (show) {
 					case "s":
 					if (t.length > 1 && !mow.visible)
 						dactyl.echo("\n");
 					for (let [i, v] in  Iterator(t))
-						dactyl.echo(v);
+						dactyl.echo(<p style="margin:0;padding:5px 10px;width:600px;white-space:normal;text-indent:2em;line-height:22px;">{v}</p>);
 					if (!mow.visible)
 						dict.timeout = dactyl.timeout(dict._clear, 15000);
 					break;
@@ -1345,6 +1369,10 @@ let dict = {
 
 	_nl2br: function(str) {
 		return str.replace(/\n/g, "<br/>");
+	},
+
+	_tidy: function(node) { // remove comments, scripts, inline styles, stylesheets, unused properties
+
 	}
 };
 
