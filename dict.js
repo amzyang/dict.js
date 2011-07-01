@@ -1088,10 +1088,13 @@ let dict = {
 				}
 				switch (show) {
 					case "s":
-					if (t.length > 1 && !mow.visible)
-						dactyl.echo("\n");
-					for (let [i, v] in  Iterator(t))
-						dactyl.echo(<p style="margin:0;padding:5px 10px;width:600px;white-space:normal;text-indent:2em;line-height:22px;">{v}</p>);
+					// if (t.length > 1 && !mow.visible)
+						// dactyl.echo("\n");
+					let output = <></>;
+					for (let [i, v] in  Iterator(t)) {
+						output += <><p style="margin:0;padding:5px 10px;width:600px;white-space:normal;text-indent:2em;line-height:22px;">{v}</p></>;
+					}
+					dactyl.echo(output);
 					if (!mow.visible)
 						dict.timeout = dactyl.timeout(dict._clear, 15000);
 					break;
