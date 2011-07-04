@@ -144,7 +144,7 @@ let youdao = {
 		youdao.keyword = keyword;
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", youdao.href({keyword: keyword, le: args["-l"] || "eng"}));
+		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"] || "eng"}));
 		req.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 		req.onreadystatechange = function (ev) {
 			dict.youdao(req);
@@ -153,11 +153,10 @@ let youdao = {
 		return req;
 	},
 	href: function (params) {
-		let keyword = encodeURIComponent(decodeURIComponent(params["keyword"]));
+		let keyword = encodeURIComponent(params["keyword"]);
 		let le = params["le"] || "eng"; // TODO
-		let uri = "http://dict.youdao.com/search?q=" +
-				  keyword + "&le=" + le + "&tab=chn";
-		return uri;
+		return "http://dict.youdao.com/search?q=" +
+				keyword + "&le=" + le + "&tab=chn";
 	},
 	html: "",
 	process: function(req) {
@@ -356,11 +355,8 @@ let qq = {
 
 	href: function (params) {
 		const QQ_PREFIX = "http://dict.qq.com/dict?f=cloudmore&q=";
-		let keyword = params['keyword'];
-		if (decodeURIComponent(keyword) != keyword)
-			return QQ_PREFIX + keyword;
-		else
-			return QQ_PREFIX + encodeURIComponent(keyword);
+		let keyword = encodeURIComponent(params['keyword']);
+		return QQ_PREFIX + keyword;
 	},
 
 	process: function(text) {
@@ -642,11 +638,8 @@ let dict_cn = {
 
 	href: function (params) {
 		const DICT_CN_PREFIX = "http://dict.cn/";
-		let keyword = params["keyword"];
-		if (decodeURIComponent(keyword) != keyword)
-			return DICT_CN_PREFIX + keyword;
-		else
-			return DICT_CN_PREFIX + encodeURIComponent(keyword);
+		let keyword = encodeURIComponent(params["keyword"]);
+		return DICT_CN_PREFIX + keyword;
 	},
 
 	process: function(text) { // FIXME: kiss
@@ -978,7 +971,7 @@ let dict = {
 			commandline.input(T(4), function(keyword) {
 					dict.keyword = keyword.trim();
 					if (args["-t"])
-						return dactyl.open(dict.engine.href({keyword:dict.keyword, le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
 					dict.engine.init(dict.keyword, args);
 				},
 				{
@@ -990,7 +983,7 @@ let dict = {
 		} else {
 			dict.keyword = keyword;
 			if (args["-t"])
-				return dactyl.open(dict.engine.href({keyword:dict.keyword, le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
 			dict.engine.init(dict.keyword, args);
 		}
 	},
@@ -1000,7 +993,7 @@ let dict = {
 		if (ret["audio"])
 			dict._play(ret["audio"]);
 		else {
-			if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
+			if (/^[\u0001-\u00ff']+$/.test(decodeURIComponent(dict.keyword))) { // 0-255, 全半角标点?
 				// var uri = "http://translate.google.com/translate_tts?q=" + dict.keyword; // FIXME: 当keyword过长时，应该分词
 				// http://dict.youdao.com/dictvoice?audio=you_are_welcome&le=en
 				var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
@@ -1082,7 +1075,7 @@ let dict = {
 				if (dict.args["-o"])
 					show = dict.args["-o"];
 				// tts
-				if (/^[\u0001-\u00ff]+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
+				if (/^[\u0001-\u00ff']+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
 					var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
 					dict._play(uri);
 				}
@@ -1094,7 +1087,10 @@ let dict = {
 					for (let [i, v] in  Iterator(t)) {
 						output += <><p style="margin:0;padding:5px 10px;width:600px;white-space:normal;text-indent:2em;line-height:22px;">{v}</p></>;
 					}
-					dactyl.echo(output);
+					if (t.length == 1 && t[0].length <= 40)
+						dactyl.echo(output, commandline.FORCE_SINGLELINE);
+					else
+						dactyl.echo(output);
 					if (!mow.visible)
 						dict.timeout = dactyl.timeout(dict._clear, 15000);
 					break;
@@ -1282,7 +1278,7 @@ let dict = {
 			var cmd = ":";
 			if (options.get("dict-audioplayer").value)
 				cmd = options.get("dict-audioplayer").value;
-			ex.silent("!" + cmd + " '" + uri + "' &"); // uri 要解析特殊字符
+			ex.silent("!" + cmd + " \"" + uri.replace(/"/g, "\\\"") + "\" &"); // uri 要解析特殊字符
 			// ex.silent("!" + cmd + " " + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
 		}
 	},
