@@ -1796,6 +1796,7 @@ var INFO =
 				  <dt>-e</dt>      <dd>specified dictionary engine <note><o>dice</o></note></dd>
 				  <dt>-l</dt>      <dd>specified langpair <note><o>dicl</o></note></dd>
 				  <dt>-o</dt>      <dd>specified method to show result <note><o>dico</o></note></dd>
+				  <dt>-t</dt>      <dd>open result on new tab</dd>
 			  </dl>
 		  </description>
 	  </item>
@@ -1811,6 +1812,7 @@ var INFO =
 				  <dt>-e</dt>      <dd>给定使用的翻译网站 <note><o>dice</o></note></dd>
 				  <dt>-l</dt>      <dd>谷歌翻译时的语言设置 <note><o>dicl</o></note></dd>
 				  <dt>-o</dt>      <dd>翻译结果的输出设置 <note><o>dico</o></note></dd>
+				  <dt>-t</dt>      <dd>在新标签页打开翻译页面</dd>
 			  </dl>
 		  </description>
 	  </item>
