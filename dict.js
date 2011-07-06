@@ -61,7 +61,6 @@ const tr = {
 		17: "Source language and destination language",
 		18: "Examples",
 		19: "Not found: ",
-		20: "External audio player",
 		21: "Audio support",
 		22: "Simple output",
 		23: "Dictionary engine",
@@ -103,7 +102,6 @@ const tr = {
 		17: "来源语言和目标语言",
 		18: "例句",
 		19: "未找到：",
-		20: "外部音频播放程序",
 		21: "支持声音",
 		22: "简洁输出",
 		23: "词典引擎",
@@ -1275,11 +1273,15 @@ let dict = {
 			if (dict_sound.Play)
 				dict_sound.Play();
 		} else {
-			var cmd = ":";
-			if (options.get("dict-audioplayer").value)
-				cmd = options.get("dict-audioplayer").value;
-			ex.silent("!" + cmd + " \"" + uri.replace(/"/g, "\\\"") + "\" &"); // uri 要解析特殊字符
-			// ex.silent("!" + cmd + " " + uri + " 0>&1 2>&1 1>/dev/null"); // uri 要解析特殊字符
+			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop"
+			var dict_sound = document.getElementById("dict-sound");
+			if (!dict_sound) {
+				var sound = util.xmlToDom(<embed id="dict-sound" src={value} quality="high" wmode="transparent" width="0" height="0" align="" hidden="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" xmlns={XHTML}/>, document);
+				var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
+				addonbar.appendChild(sound);
+			} else {
+				dict_sound.setAttribute("src", value);
+			}
 		}
 	},
 
@@ -1371,31 +1373,14 @@ let dict = {
 	},
 
 	_tidy: function(node) { // remove comments, scripts, inline styles, stylesheets, unused properties
-
 	}
 };
-
-if (!util.OS.isWindows) {
-	options.add(["dict-audioplayer", "dicp"],
-		T(20),
-		"string",
-		"mplayer",
-		{
-			validator: function() true,
-			completer: function(context) [
-				["mplayer", "mplayer"],
-				["mpg321 -o alsa", "mpg321"],
-				["mpg123", "mpg123"]
-			]
-		}
-	);
-}
 
 // check whether windows media player plugin exists.
 options.add(["dict-hasaudio", "dich"],
 	T(21),
 	"boolean",
-	util.OS.isWindows ? false : true
+	false
 );
 
 options.add(["dict-simple", "dics"],
@@ -1594,31 +1579,6 @@ var INFO =
       <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。</p>
 
       <item lang="en-US">
-        <tags>'dica' 'dict-audioplayer'</tags>
-        <spec>'dict-audioplayer' 'dica'</spec>
-        <type>string</type>
-        <default>mplayer</default>
-        <description>
-			<p>
-			  Dict.js use external player to play sounds, this option only workable when you are on non Microsoft Windows Platform.
-			  </p>
-			  <warning>When you are on Windows Platform, dict.js use Windows Media Player plugin. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
-        </description>
-      </item>
-      <item lang="zh-CN">
-        <tags>'dica' 'dict-audioplayer'</tags>
-        <spec>'dict-audioplayer' 'dica'</spec>
-        <type>string</type>
-        <default>mplayer</default>
-        <description>
-        <p>
-          dict.js 朗读单词或者句子时调用的外部音频播放器，该选项在非微软视窗平台下有效。
-          </p>
-		  <warning>在 Windows 平台下，dict.js 使用 Windows Media Player 插件来进行声音输出。如果出现了声音方面的问题，请参考：<link topic="http://support.mozilla.com/zh-CN/kb/%E5%9C%A8%20Firefox%20%E4%B8%AD%E4%BD%BF%E7%94%A8%20Windows%20Media%20Player%20%E6%8F%92%E4%BB%B6">在 Firefox 中使用 Windows Media Player 插件</link></warning>
-        </description>
-      </item>
-
-      <item lang="en-US">
         <tags>'dicd' 'dict-dblclick'</tags>
         <spec>'dict-dblclick' 'dicd'</spec>
         <type>boolean</type>
@@ -1676,20 +1636,20 @@ var INFO =
         <tags>'dich' 'dict-hasaudio'</tags>
         <spec>'dict-hasaudio' 'dich'</spec>
         <type>boolean</type>
-        <default>true</default>
+        <default>false</default>
         <description>
-			  <p>Enable or disable sound support</p>
-			  <warning>Sound support was disabled on Windows Platform by default.</warning>
+			  <p>Enable or disable sound support.</p>
+			  <warning>dict.js use Windows Media Player plugin on Microsoft Windows platform and Adobe Flash Player for others. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
         </description>
       </item>
       <item lang="zh-CN">
         <tags>'dich' 'dict-hasaudio'</tags>
         <spec>'dict-hasaudio' 'dich'</spec>
         <type>boolean</type>
-        <default>true</default>
+        <default>false</default>
         <description>
 			<p>开启或者关闭声音。</p>
-			<warning>在 Windows 平台下，默认关闭声音输出。</warning>
+			<warning>在 Windows 平台下，dict.js 使用 Windows Media Player 插件来进行声音输出,其它平台使用 Adobe Flash Player。如果出现了声音方面的问题，请参考：<link topic="http://support.mozilla.com/zh-CN/kb/%E5%9C%A8%20Firefox%20%E4%B8%AD%E4%BD%BF%E7%94%A8%20Windows%20Media%20Player%20%E6%8F%92%E4%BB%B6">在 Firefox 中使用 Windows Media Player 插件</link></warning>
         </description>
       </item>
 
@@ -1861,7 +1821,7 @@ var INFO =
 		  <spec>dict.js shortcuts</spec>
 		  <description>
 			  <p>dict.js use <k name="A-d"/> and <k name="A-S-d"/> to translate word(s) from mouse selection or clipboard.</p>
-			  <note>Translate word(s) from clipboard does not support on Microsoft Windows.</note>
+			  <note>Translate word(s) from clipboard does not support Microsoft Windows.</note>
 		  </description>
 	  </item>
 	  <item lang="zh-CN">
@@ -1946,3 +1906,4 @@ var INFO =
 // history and auto completion from history
 // dict-langpair -> stringmap
 // use bytes instead of length
+// use soundManager and xul iframe?
