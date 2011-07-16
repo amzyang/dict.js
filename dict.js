@@ -323,7 +323,7 @@ let youdao = {
 						let r = {};
 						r["g"] = word;
 						r["e"] = word;
-						r["url"] = youdao.href({keyword: word, le: context.__args["-l"] || options["dict-langpair"] || "eng"});
+						r["url"] = youdao.href({keyword: word, le: context.__args["-l"] || options["dict-langpair"]["y"] || "eng"});
 						suggestions.push(r);
 				});
 				context.completions = suggestions;
@@ -576,7 +576,7 @@ let google = {
 		// let langpair = options.get("dict-langpair").value;
 		// if (args["-l"])
 			// langpair=args["-l"];
-		let langpair = args["-l"] || options["dict-langpair"];
+		let langpair = args["-l"] || options["dict-langpair"]["g"] || "en|zh-CN";
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
@@ -1166,7 +1166,7 @@ let dict = {
 		return undefined;
 	},
 
-	optsCompleter: function(context, args) {
+	optsCompleter: function(context, extra) {
 		context.quote = ["", util.identity, ""];
 		let youdao_completions = [
 			['eng', T(36)],
@@ -1187,44 +1187,31 @@ let dict = {
 			}
 			dict.langpairs = cpt;
 		}
-		if (args["-e"]) {
-			switch (args["-e"]) {
-				case 'y':
-				context.fork("youdao_le", 0, this, function(context) {
-						context.title = [T(16) + " - " + T(35), T(1)];
-						context.completions = youdao_completions;
-						context.compare = null;
-				});
-				break;
-
-				case 'd':
-				case 'q':
-				context.completions = [];
-				break;
-
-				case 'g':
-				context.fork("dict_langpairs", 0, this, function (context) {
-						context.title = [T(16) + " - " + T(34), T(1)];
-						context.compare = null;
-						context.completions = dict.langpairs;
-				});
-				break;
-
-				default :
-				context.completions = [];
-				break;
-			}
-		} else {
+		switch (extra.key) {
+			case 'y':
 			context.fork("youdao_le", 0, this, function(context) {
 					context.title = [T(16) + " - " + T(35), T(1)];
 					context.completions = youdao_completions;
 					context.compare = null;
 			});
+			break;
+
+			case 'd':
+			case 'q':
+			context.completions = [];
+			break;
+
+			case 'g':
 			context.fork("dict_langpairs", 0, this, function (context) {
 					context.title = [T(16) + " - " + T(34), T(1)];
 					context.compare = null;
 					context.completions = dict.langpairs;
 			});
+			break;
+
+			default :
+			context.completions = [];
+			break;
 		}
 	},
 
@@ -1452,10 +1439,22 @@ options.add(["dict-dblclick", "dicd"],
 
 options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
-	"string",
-	"en|zh-CN",
+	"stringmap",
+	"g:en|zh-CN,y:eng",
 	{
-		completer: function(context, args) dict.optsCompleter(context, args)
+		completer: function(context, extra) {
+
+			if (extra.value == null)
+				return [
+					["y", T(35)],
+					["g", T(34)]
+				].filter(function (e) !set.has(extra.values, e[0]));
+			else
+				dict.optsCompleter(context, extra);
+		},
+		validator: function(value) {
+			return true;
+		}
 	}
 );
 
@@ -1488,7 +1487,7 @@ group.commands.add(["di[ct]", "dic"],
 				names: ["-l"],
 				description: T(17),
 				type: CommandOption.STRING,
-				completer: function(context, args) dict.optsCompleter(context,args)
+				completer: function(context, args) dict.optsCompleter(context,{key:args["-e"] || ""})
 			},
 			{
 				names: ["-o"],
@@ -1519,7 +1518,7 @@ Array.slice("dgqy").forEach(function(char) {
 					type: CommandOption.STRING,
 					completer: function(context, args) {
 						args["-e"] = char;
-						dict.optsCompleter(context,args);
+						dict.optsCompleter(context,{key:char});
 					}
 				}
 			];
@@ -1656,8 +1655,8 @@ var INFO =
       <item lang="en-US">
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
-        <type>string</type>
-        <default>en|zh-CN</default>
+        <type>stringmap</type>
+        <default>g:en|zh-CN,y:eng</default>
         <description>
 			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
@@ -1678,8 +1677,8 @@ var INFO =
       <item lang="zh-CN">
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
-        <type>string</type>
-        <default>en|zh-CN</default>
+        <type>stringmap</type>
+        <default>g:en|zh-CN,y:eng</default>
         <description>
 			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
 			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
