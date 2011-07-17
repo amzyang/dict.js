@@ -80,7 +80,8 @@ const tr = {
 		37: "Chinese ↔ French",
 		38: "Chinese ↔ Korean",
 		39: "Chinese ↔ Japanese",
-		40: "Open result in new tab!"
+		40: "Open result in new tab!",
+		41: "Han Dian"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -121,7 +122,8 @@ const tr = {
 		37: "汉法互译",
 		38: "汉韩互译",
 		39: "汉日互译",
-		40: "在新标签页中打开结果！"
+		40: "在新标签页中打开结果！",
+		41: " 汉典"
 	}
 };
 
@@ -133,6 +135,26 @@ function T(i) {
 
 if (document.getElementById("youdao-frame")) // workaround for :rehash
 	document.getElementById('main-window').removeChild(document.getElementById('youdao-frame'));
+
+let zdic = {
+	name: T(41),
+	keyword: "",
+	logo: "",
+	favicon: "",
+	init: function(keyword, args) {
+
+	},
+
+	href: function (params) {
+
+	},
+
+	process: function(text) {
+
+	}
+
+};
+
 let youdao = {
 	name: T(35),
 	keyword: "",
@@ -1448,7 +1470,7 @@ options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 				return [
 					["y", T(35)],
 					["g", T(34)]
-				].filter(function (e) !set.has(extra.values, e[0]));
+				].filter(function (e) !Set.has(extra.values, e[0]));
 			else
 				dict.optsCompleter(context, extra);
 		},
