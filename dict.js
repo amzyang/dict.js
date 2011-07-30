@@ -2,7 +2,7 @@
 XML.ignoreWhitespace = false;
 XML.prettyPrinting = false;
 
-const STYLE = <style type="text/css">
+var STYLE = <style type="text/css">
 <![CDATA[
 body { line-height:22px; white-space:normal; }
 th, dt { font-weight:bolder; }
@@ -35,12 +35,32 @@ p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word
 	top: 50%;
 	width: 30px;
 }
+
+#dict_js_z .dicpy {font-weight: bolder;}
+#dict_js_z .diczy {color: #000099;}
+#dict_js_z .info{color:#999;font-size:14px;margin-right:5px;padding-left:10px;}
+#dict_js_z .mut_jies{padding:10px 20px 20px 20px;font-size:14px;}
+#dict_js_z .yf_all{padding:3px 4px 4px 4px;}
+#dict_js_z .if_all{font-weight:bolder;padding:3px 4px 4px 6px;}
+#dict_js_z .mut_lvs{font-weight:bolder;font-weight:bolder;}
+#dict_js_z .mut_ol{margin:10px 6px 10px 35px;}
+#dict_js_z .mut_ol li{list-style-position:outside;list-style-type:decimal;}
+#dict_js_z .mut_ol .ty{font-weight:bolder;}
+#dict_js_z .mut_ol .ty a{font-weight:bolder;}
+#dict_js_z .mut_h3s{font-weight:bolder;font-weight:bolder;padding:10px 20px 0 15px;}
+#dict_js_z .jiaru_s{margin:10px 0;text-align:center;}
+#dict_js_z .more{margin:10px 10px 10px 15px;font-size:13px;}
+#dict_js_z .mutti_pp{padding:10px;}
+#dict_js_z .diczx1{font-weight:bolder;}
+#dict_js_z .diczx2{font-weight:bolder;}
+#dict_js_z .diczx3{font-weight:bolder;}
+#dict_js_z .diczx4{font-weight:bolder;}
 ]]>
 </style>;
 
-const DICT_LANGUAGE = window.navigator.language;
+var DICT_LANGUAGE = window.navigator.language;
 
-const tr = {
+var tr = {
 	"en-US": {
 		1:  "Description",
 		2:  "From ",
@@ -133,23 +153,111 @@ function T(i) {
 	return tr["en-US"][i];
 }
 
-if (document.getElementById("youdao-frame")) // workaround for :rehash
-	document.getElementById('main-window').removeChild(document.getElementById('youdao-frame'));
+if (document.getElementById("dict-frame")) // workaround for :rehash
+	document.getElementById('main-window').removeChild(document.getElementById('dict-frame'));
 
 let zdic = {
 	name: T(41),
 	keyword: "",
-	logo: "",
-	favicon: "",
+	logo: "http://www.zdic.net/images/logo.gif",
+	favicon: "http://www.zdic.net/favicon.ico",
 	init: function(keyword, args) {
-
+		zdic.keyword = keyword;
+		var req = new XMLHttpRequest();
+		dict.req = req;
+		req.open("GET", zdic.href({keyword: decodeURIComponent(keyword)}));
+		req.onreadystatechange = function (ev) {
+			dict.zdic(req);
+		}
+		req.send(null);
+		return req;
 	},
 
 	href: function (params) {
-
+		return "http://zdic.net/search?c=3&q=" + encodeURIComponent(params["keyword"]);
 	},
 
 	process: function(text) {
+		let ret = {
+			notfound: false,
+			ok: true,
+			pron: false,
+			def: false,
+			simple: false,
+			full: false,
+			audio: false
+		};
+		
+		// 移除隐藏的网站宣传
+		let style_pattern = /<style type="text\/css">[\s\S]*(zdct[0-9]+)[\s\S]*<\/style>/i;
+		let classname = text.match(style_pattern)[1];
+		let clearpattern = RegExp("<p class=\""+classname+"\">.*?<\\\/p>", "ig");
+
+		let html = text.replace(clearpattern, "");
+		html = zdic._strip_html_tag(html);
+
+		let document = dict.htmlToDom(html);
+		let body = document.body;
+		dict.resolveRelative(body, "http://www.zdic.net/");
+		// 移除页脚
+		let footers = body.getElementsByClassName("footer");
+		for ( var i = 0; i < footers.length; i++ ) {
+			body.removeChild(footers[i]);
+		}
+		// TODO: 移除 comments, stylesheets, objects, javascripts
+
+		var _ret = zdic._simple(body);
+		ret["keyword"] = _ret["word"];
+		ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
+		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
+		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
+		ret["notfound"] = !ret["def"];
+		ret["simple"] = ret["def"];
+		ret["full"] = zdic._full(body);
+		return ret;
+	},
+
+	_full: function(body) {
+		var full = {title: "", sub: {}};
+		var simp = zdic._simple(body);
+		var keyword_url = zdic.href({keyword: simp["word"]});
+		if (simp["pron"]) {
+			full["title"] = <p class="title">
+			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
+				<span>[{simp["pron"]}]</span>
+			</p>;
+		} else {
+			full["title"] = <p class="title">
+				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
+			</p>;
+		}
+		let text = body.innerHTML;
+		full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+zdic._htmlPre(text)+"</div>");
+		return full;
+	},
+
+	_simple: function(body) {
+		var simp = {};
+		simp["word"] = decodeURIComponent(zdic.keyword);
+		simp["pron"] = false; // TODO
+		simp["audio"] = false; // TODO
+		simp["def"] = body.textContent;
+		return simp;
+	},
+
+	_strip_html_tag: function(str) {
+		return youdao._strip_html_tag(str).replace("&eacute;", "&#233;"); // TODO
+	},
+
+	_htmlPre: function(str) {
+		return youdao._htmlPre(str);
+	},
+
+	makeRequest: function(context, args) {
+
+	},
+
+	suggest: function(req, context) {
 
 	}
 
@@ -179,9 +287,8 @@ let youdao = {
 				keyword + "&le=" + le + "&tab=chn";
 	},
 	html: "",
-	process: function(req) {
-		var frame = document.getElementById("youdao-frame");
-		youdao.html = youdao._strip_html_tag(req.responseText);
+	process: function(text) {
+		var html = youdao._strip_html_tag(text);
 		var ret = {
 			notfound: false,
 			ok: true,
@@ -192,45 +299,20 @@ let youdao = {
 			text: false,
 			audio: false
 		};
-		if (!frame) {
-			// create frame
-			frame = document.createElement("iframe"); // iframe ( or browser on older Firefox)
-			frame.setAttribute("id", "youdao-frame");
-			frame.setAttribute("name", "youdao-frame");
-			frame.setAttribute("collapsed", "true");
-			document.getElementById("main-window").appendChild(frame);
-
-			// set restrictions as needed
-			frame.webNavigation.allowAuth          = false;
-			frame.webNavigation.allowImages        = false;
-			frame.webNavigation.allowJavascript    = false;
-			frame.webNavigation.allowMetaRedirects = true;
-			frame.webNavigation.allowPlugins       = false;
-			frame.webNavigation.allowSubframes     = false;
-
-			// listen for load/domcontentloaded
-			frame.addEventListener("load", function (event) {
-					var doc = event.originalTarget;
-					doc.documentElement.innerHTML = youdao.html;
-					youdao._resolveRelative(doc);
-					var _ret = youdao._simple(doc);
-					ret["keyword"] = _ret["word"];
-					ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
-					ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
-					ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
-					ret["notfound"] = !ret["def"];
-					if (ret["pron"])
-						ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
-					else
-						ret["simple"] = ret["keyword"] + " " + ret["def"];
-					ret["full"] = youdao._full(doc);
-					dict.process(ret);
-					req.onreadystatechange = function () {};
-				},
-				true
-			);
-		}
-		frame.contentDocument.location.href = "about:blank";
+		var doc = dict.htmlToDom(html);
+		dict.resolveRelative(doc, "http://dict.youdao.com/");
+		var _ret = youdao._simple(doc);
+		ret["keyword"] = _ret["word"];
+		ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
+		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
+		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
+		ret["notfound"] = !ret["def"];
+		if (ret["pron"])
+			ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
+		else
+			ret["simple"] = ret["keyword"] + " " + ret["def"];
+		ret["full"] = youdao._full(doc);
+		return ret;
 	},
 
 	_full: function (document) {
@@ -250,24 +332,24 @@ let youdao = {
 
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
 		if (def[0])
-			full["sub"][T(8)] = new XML("<ul>"+youdao._xmlPre(def[0].innerHTML)+"</ul>");
+			full["sub"][T(8)] = new XML("<ul>"+youdao._htmlPre(def[0].innerHTML)+"</ul>");
 
 		var ph = document.querySelectorAll("#wordGroup");
 		if (ph[0])
-			full["sub"][T(9)] = new XML("<div>"+youdao._xmlPre(ph[0].innerHTML)+"</div>");
+			full["sub"][T(9)] = new XML("<div>"+youdao._htmlPre(ph[0].innerHTML)+"</div>");
 
 		var syn = document.querySelectorAll("#Synonyms");
 		if (syn[0])
-			full["sub"][T(10)] = new XML("<div>"+youdao._xmlPre(syn[0].innerHTML)+"</div>");
+			full["sub"][T(10)] = new XML("<div>"+youdao._htmlPre(syn[0].innerHTML)+"</div>");
 
 
 		var ex = document.querySelectorAll("#examples");
 		if (ex[0])
-			full["sub"][T(18)] = new XML("<div>"+youdao._xmlPre(ex[0].innerHTML)+"</div>");
+			full["sub"][T(18)] = new XML("<div>"+youdao._htmlPre(ex[0].innerHTML)+"</div>");
 
 		var mor = document.querySelectorAll("#etcTrans p");
 		if (mor[0])
-			full["sub"][T(13)] = new XML("<p>"+youdao._xmlPre(mor[0].innerHTML)+"</p>");
+			full["sub"][T(13)] = new XML("<p>"+youdao._htmlPre(mor[0].innerHTML)+"</p>");
 
 		return full;
 	},
@@ -290,21 +372,15 @@ let youdao = {
 
 	_strip_html_tag: function(str) {
 		var start = str.indexOf("<head");
+		if (start == -1)
+			start = str.indexOf("<HEAD");
 		var end = str.indexOf("</html>");
+		if (end == -1)
+			end = str.indexOf("</HTML>");
 		return str.slice(start, end);
 	},
-	_xmlPre: function (str) {
+	_htmlPre: function (str) {
 		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">");
-	},
-	_resolveRelative: function (document) {
-		var pattern = /^https?:\/\//;
-		for (var i = document.links.length - 1; i >= 0; i--) {
-			var link = document.links[i];
-			var href = link.getAttribute("href");
-			if (!pattern.test(href))
-				link.setAttribute("href", "http://dict.youdao.com/"+href);
-			link.setAttribute("target", "_blank");
-		}
 	},
 	makeRequest: function(context, args) {
 		var url = function(item, text)
@@ -808,7 +884,7 @@ let dict_cn = {
 }
 
 let dict = {
-	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao},
+	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao, "z": zdic},
 	languages: [
 		["af", "Afrikaans"],
 		["sq", "Albanian"],
@@ -1060,9 +1136,11 @@ let dict = {
 	dict_cn: function(req) {
 		if (req.readyState == 4) {
 			let ret = {};
-			if (req.status == 200)
+			if (req.status == 200) {
 				ret = dict_cn.process(req.responseText);
-			dict.process(ret);
+				dict.process(ret);
+			} else
+				dict.error(req.status);
 			req.onreadystatechange = function() {};
 		}
 	},
@@ -1070,19 +1148,24 @@ let dict = {
 	qq: function(req) {
 		if (req.readyState == 4) {
 			let ret = {};
-			if (req.status == 200)
+			if (req.status == 200) {
 				ret = qq.process(req.responseText);
-			dict.process(ret);
+				dict.process(ret);
+			} else
+				dict.error(req.status);
 			req.onreadystatechange = function() {};
 		}
 	},
 
 	youdao: function (req) {
 		if (req.readyState == 4) {
+			let ret = {};
 			if (req.status == 200) {
-				youdao.process(req);
+				ret = youdao.process(req.responseText);
+				dict.process(ret);
 			} else
 				dict.error(req.status);
+			req.onreadystatechange = function() {};
 		}
 	},
 
@@ -1131,7 +1214,7 @@ let dict = {
 							timeout: Date.now() + 15000
 						}
 					);
-					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left 50%;}');
+					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left top;background-size:contain contain;}');
 					break;
 
 					case "n":
@@ -1149,7 +1232,20 @@ let dict = {
 					default:
 					break;
 				}
-			}
+			} else
+				dict.error(req.status);
+			req.onreadystatechange = function() {};
+		}
+	},
+
+	zdic: function(req) {
+		if (req.readyState == 4) {
+			let ret = {};
+			if (req.status == 200) {
+				ret = zdic.process(req.responseText);
+				dict.process(ret);
+			} else
+				dict.error(req.status);
 			req.onreadystatechange = function() {};
 		}
 	},
@@ -1220,6 +1316,7 @@ let dict = {
 
 			case 'd':
 			case 'q':
+			case 'z':
 			context.completions = [];
 			break;
 
@@ -1382,6 +1479,47 @@ let dict = {
 	},
 
 	_tidy: function(node) { // remove comments, scripts, inline styles, stylesheets, unused properties
+	},
+
+	htmlToDom: function(html) {
+		var frame = document.getElementById("dict-frame");
+		if (!frame) {
+			// create frame
+			frame = document.createElement("iframe"); // iframe ( or browser on older Firefox)
+			frame.setAttribute("id", "dict-frame");
+			frame.setAttribute("name", "dict-frame");
+			frame.setAttribute("collapsed", "true");
+			document.getElementById("main-window").appendChild(frame);
+
+			// set restrictions as needed
+			frame.webNavigation.allowAuth          = false;
+			frame.webNavigation.allowImages        = false;
+			frame.webNavigation.allowJavascript    = false;
+			frame.webNavigation.allowMetaRedirects = true;
+			frame.webNavigation.allowPlugins       = false;
+			frame.webNavigation.allowSubframes     = false;
+		}
+		frame.contentDocument.documentElement.innerHTML = html;
+		return frame.contentDocument;
+	},
+
+	resolveRelative: function(node, prefix) {
+		var pattern = /^(https?|ftps?|file):\/\//;
+		var links = node.getElementsByTagName("a");
+		for (var i = links.length - 1; i >= 0; i--) {
+			var link = links[i];
+			var href = link.getAttribute("href");
+			if (!pattern.test(href))
+				link.setAttribute("href", prefix+href);
+			link.setAttribute("target", "_blank");
+		}
+		var imgs = node.getElementsByTagName("img");
+		for (var i = imgs.length - 1; i >= 0; i--) {
+			var img = imgs[i];
+			var src = img.getAttribute("src");
+			if (!pattern.test(src))
+				img.setAttribute("src", prefix+src);
+		}
 	}
 };
 
@@ -1407,7 +1545,8 @@ options.add(["dict-engine", "dice"],
 			["d", T(24)],
 			["q", T(25)],
 			["g", T(34)],
-			["y", T(35)]
+			["y", T(35)],
+			["z", T(41)]
 		]
 	}
 );
@@ -1502,7 +1641,8 @@ group.commands.add(["di[ct]", "dic"],
 					["d", T(24)],
 					["q", T(25)],
 					["g", T(34)],
-					["y", T(35)]
+					["y", T(35)],
+					["z", T(41)]
 				]
 			},
 			{
@@ -1527,10 +1667,11 @@ group.commands.add(["di[ct]", "dic"],
 				type: CommandOption.NOARG
 			}
 		]
-	}
+	},
+	true
 );
 
-Array.slice("dgqy").forEach(function(char) {
+Array.slice("dgqyz").forEach(function(char) {
 		let extra_options = [];
 		if (char === "g" || char === "y") {
 			extra_options = [
@@ -1579,7 +1720,8 @@ Array.slice("dgqy").forEach(function(char) {
 						type: CommandOption.NOARG
 					}
 				])
-			}
+			},
+			true
 		);
 });
 
@@ -1596,8 +1738,8 @@ var INFO =
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
 
-      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.youdao.com/">Youdao</link>, <link topic="http://dict.cn/">Dict.cn</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
-      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>，<link topic="http://translate.google.com/">谷歌翻译</link>。</p>
+      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.youdao.com/">Youdao</link>, <link topic="http://dict.cn/">Dict.cn</link>, <link topic="http://www.zdic.net/">Han Dian</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
+      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>, <link topic="http://www.zdic.net/">汉典</link> 和 <link topic="http://translate.google.com/">谷歌翻译</link>。</p>
 
       <item lang="en-US">
         <tags>'dicd' 'dict-dblclick'</tags>
@@ -1632,6 +1774,7 @@ var INFO =
 					<dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
 					<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
 					<dt>y</dt>      <dd><link topic="http://dict.youdao.com">Youdao</link></dd>
+					<dt>z</dt>      <dd><link topic="http://www.zdic.net">Han Dian</link></dd>
 				</dl>
 			<p>dict.js use Dict.cn by default now.</p>
         </description>
@@ -1648,6 +1791,7 @@ var INFO =
 				<dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
 				<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
 				<dt>y</dt>      <dd><link topic="http://dict.youdao.com">网易有道在线词典</link></dd>
+				<dt>z</dt>      <dd><link topic="http://www.zdic.net">汉典</link></dd>
 			</dl>
 			<p>dict.js 默认使用海词。</p>
         </description>
@@ -1916,7 +2060,7 @@ var INFO =
 // * 使用mozilla notification box?
 // * clear previous active request
 // cache or history
-// - sound is broken out? linux/winxp/win7 okay
+// - sound is broken out? linux/winxp/win7 are okay
 // * auto completion doesn't work when you've never open dict.cn web page. --cookie
 // * support dblclick?
 // www.zdic.net support?
@@ -1927,6 +2071,6 @@ var INFO =
 // 检测命令行参数是否有效，比如 :di -e xxxx
 // Unicode Ranges
 // history and auto completion from history
-// dict-langpair -> stringmap
+// * dict-langpair -> stringmap
 // use bytes instead of length
 // use soundManager and xul iframe?
