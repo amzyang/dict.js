@@ -548,14 +548,11 @@ let zdic = {
 		let document = dict.htmlToDom(html);
 		let body = document.body;
 		dict.resolveRelative(body, "http://www.zdic.net/");
-		// 移除网友讨论
-		var wy = document.getElementById("wy");
-		if (wy)
-			wy.parentNode.removeChild(wy);
-		// 移除添加到备忘录
-		var bwladd = body.querySelectorAll(".bwladd");
-		if (bwladd) {
-			Array.slice(bwladd).forEach(function (i) {
+
+		// 移除添加到备忘录, 网友讨论
+		var rems = body.querySelectorAll(".bwladd,#wy");
+		if (rems) {
+			Array.slice(rems).forEach(function (i) {
 				i.parentNode.removeChild(i);
 			});
 		}
