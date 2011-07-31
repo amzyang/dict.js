@@ -556,11 +556,13 @@ let zdic = {
 		};
 		
 		// 移除隐藏的网站宣传
+		let html = text;
 		let style_pattern = /<style type="text\/css">[\s\S]*(zdct[0-9]+)[\s\S]*<\/style>/i;
-		let classname = text.match(style_pattern)[1];
-		let clearpattern = RegExp("<p class=\""+classname+"\">.*?<\\\/p>", "ig");
-
-		let html = text.replace(clearpattern, "");
+		let classname = (style_pattern.test(text) && text.match(style_pattern)[1]) || false;
+		if (classname) {
+			let clearpattern = RegExp("<p class=\""+classname+"\">.*?<\\\/p>", "ig");
+			html = text.replace(clearpattern, "");
+		}
 		html = zdic._strip_html_tag(html);
 
 		let document = dict.htmlToDom(html);
@@ -588,7 +590,7 @@ let zdic = {
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
-		ret["simple"] = ret["def"].replace(/\n|\r/g, " ");
+		ret["simple"] = ret["def"].replace(/\n|\r/g, " ").replace(/\s\s+/g, " ");
 		ret["full"] = zdic._full(body);
 		return ret;
 	},
