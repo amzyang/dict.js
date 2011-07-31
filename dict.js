@@ -2,6 +2,317 @@
 XML.ignoreWhitespace = false;
 XML.prettyPrinting = false;
 
+/*
+ * HTML Parser By John Resig (ejohn.org)
+ * Original code by Erik Arvidsson, Mozilla Public License
+ * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
+ *
+ * // Use like so:
+ * HTMLParser(htmlString, {
+ *     start: function(tag, attrs, unary) {},
+ *     end: function(tag) {},
+ *     chars: function(text) {},
+ *     comment: function(text) {}
+ * });
+ *
+ * // or to get an XML string:
+ * HTMLtoXML(htmlString);
+ *
+ * // or to get an XML DOM Document
+ * HTMLtoDOM(htmlString);
+ *
+ * // or to inject into an existing document/DOM node
+ * HTMLtoDOM(htmlString, document);
+ * HTMLtoDOM(htmlString, document.body);
+ *
+ */
+
+function PARSER(){
+
+	// Regular Expressions for parsing tags and attributes
+	var startTag = /^<(\w+)((?:\s+\w+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
+		endTag = /^<\/(\w+)[^>]*>/,
+		attr = /(\w+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g;
+		
+	// Empty Elements - HTML 4.01
+	var empty = makeMap("area,base,basefont,br,col,frame,hr,img,input,isindex,link,meta,param,embed");
+
+	// Block Elements - HTML 4.01
+	var block = makeMap("address,applet,blockquote,button,center,dd,del,dir,div,dl,dt,fieldset,form,frameset,hr,iframe,ins,isindex,li,map,menu,noframes,noscript,object,ol,p,pre,script,table,tbody,td,tfoot,th,thead,tr,ul");
+
+	// Inline Elements - HTML 4.01
+	var inline = makeMap("a,abbr,acronym,applet,b,basefont,bdo,big,br,button,cite,code,del,dfn,em,font,i,iframe,img,input,ins,kbd,label,map,object,q,s,samp,script,select,small,span,strike,strong,sub,sup,textarea,tt,u,var");
+
+	// Elements that you can, intentionally, leave open
+	// (and which close themselves)
+	var closeSelf = makeMap("colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr");
+
+	// Attributes that have their values filled in disabled="disabled"
+	var fillAttrs = makeMap("checked,compact,declare,defer,disabled,ismap,multiple,nohref,noresize,noshade,nowrap,readonly,selected");
+
+	// Special Elements (can contain anything)
+	var special = makeMap("script,style");
+
+	var HTMLParser = PARSER.HTMLParser = function( html, handler ) {
+		var index, chars, match, stack = [], last = html;
+		stack.last = function(){
+			return PARSER[ PARSER.length - 1 ];
+		};
+
+		while ( html ) {
+			chars = true;
+
+			// Make sure we're not in a script or style element
+			if ( !stack.last() || !special[ stack.last() ] ) {
+
+				// Comment
+				if ( html.indexOf("<!--") == 0 ) {
+					index = html.indexOf("-->");
+	
+					if ( index >= 0 ) {
+						if ( handler.comment )
+							handler.comment( html.substring( 4, index ) );
+						html = html.substring( index + 3 );
+						chars = false;
+					}
+	
+				// end tag
+				} else if ( html.indexOf("</") == 0 ) {
+					match = html.match( endTag );
+	
+					if ( match ) {
+						html = html.substring( match[0].length );
+						match[0].replace( endTag, parseEndTag );
+						chars = false;
+					}
+	
+				// start tag
+				} else if ( html.indexOf("<") == 0 ) {
+					match = html.match( startTag );
+	
+					if ( match ) {
+						html = html.substring( match[0].length );
+						match[0].replace( startTag, parseStartTag );
+						chars = false;
+					}
+				}
+
+				if ( chars ) {
+					index = html.indexOf("<");
+					
+					var text = index < 0 ? html : html.substring( 0, index );
+					html = index < 0 ? "" : html.substring( index );
+					
+					if ( handler.chars )
+						handler.chars( text );
+				}
+
+			} else {
+				html = html.replace(new RegExp("(.*)<\/" + stack.last() + "[^>]*>"), function(all, text){
+					text = text.replace(/<!--(.*?)-->/g, "$1")
+						.replace(/<!\[CDATA\[(.*?)]]>/g, "$1");
+
+					if ( handler.chars )
+						handler.chars( text );
+
+					return "";
+				});
+
+				parseEndTag( "", stack.last() );
+			}
+
+			if ( html == last )
+				throw "Parse Error: " + html;
+			last = html;
+		}
+		
+		// Clean up any remaining tags
+		parseEndTag();
+
+		function parseStartTag( tag, tagName, rest, unary ) {
+			if ( block[ tagName ] ) {
+				while ( stack.last() && inline[ stack.last() ] ) {
+					parseEndTag( "", stack.last() );
+				}
+			}
+
+			if ( closeSelf[ tagName ] && stack.last() == tagName ) {
+				parseEndTag( "", tagName );
+			}
+
+			unary = empty[ tagName ] || !!unary;
+
+			if ( !unary )
+				stack.push( tagName );
+			
+			if ( handler.start ) {
+				var attrs = [];
+	
+				rest.replace(attr, function(match, name) {
+					var value = arguments[2] ? arguments[2] :
+						arguments[3] ? arguments[3] :
+						arguments[4] ? arguments[4] :
+						fillAttrs[name] ? name : "";
+					
+					attrs.push({
+						name: name,
+						value: value,
+						escaped: value.replace(/(^|[^\\])"/g, '$1\\\"') //"
+					});
+				});
+	
+				if ( handler.start )
+					handler.start( tagName, attrs, unary );
+			}
+		}
+
+		function parseEndTag( tag, tagName ) {
+			// If no tag name is provided, clean shop
+			if ( !tagName )
+				var pos = 0;
+				
+			// Find the closest opened tag of the same type
+			else
+				for ( var pos = stack.length - 1; pos >= 0; pos-- )
+					if ( stack[ pos ] == tagName )
+						break;
+			
+			if ( pos >= 0 ) {
+				// Close all the open elements, up the stack
+				for ( var i = stack.length - 1; i >= pos; i-- )
+					if ( handler.end )
+						handler.end( stack[ i ] );
+				
+				// Remove the open elements from the stack
+				stack.length = pos;
+			}
+		}
+	};
+	
+	PARSER.HTMLtoXML = function( html ) {
+		var results = "";
+		
+		HTMLParser(html, {
+			start: function( tag, attrs, unary ) {
+				results += "<" + tag;
+		
+				for ( var i = 0; i < attrs.length; i++ )
+					results += " " + attrs[i].name + '="' + attrs[i].escaped + '"';
+		
+				results += (unary ? "/" : "") + ">";
+			},
+			end: function( tag ) {
+				results += "</" + tag + ">";
+			},
+			chars: function( text ) {
+				results += text;
+			},
+			comment: function( text ) {
+				results += "<!--" + text + "-->";
+			}
+		});
+		
+		return results;
+	};
+	
+	PARSER.HTMLtoDOM = function( html, doc ) {
+		// There can be only one of these elements
+		var one = makeMap("html,head,body,title");
+		
+		// Enforce a structure for the document
+		var structure = {
+			link: "head",
+			base: "head"
+		};
+	
+		if ( !doc ) {
+			if ( typeof DOMDocument != "undefined" )
+				doc = new DOMDocument();
+			else if ( typeof document != "undefined" && document.implementation && document.implementation.createDocument )
+				doc = document.implementation.createDocument("", "", null);
+			else if ( typeof ActiveX != "undefined" )
+				doc = new ActiveXObject("Msxml.DOMDocument");
+			
+		} else
+			doc = doc.ownerDocument ||
+				doc.getOwnerDocument && doc.getOwnerDocument() ||
+				doc;
+		
+		var elems = [],
+			documentElement = doc.documentElement ||
+				doc.getDocumentElement && doc.getDocumentElement();
+				
+		// If we're dealing with an empty document then we
+		// need to pre-populate it with the HTML document structure
+		if ( !documentElement && doc.createElement ) (function(){
+			var html = doc.createElement("html");
+			var head = doc.createElement("head");
+			head.appendChild( doc.createElement("title") );
+			html.appendChild( head );
+			html.appendChild( doc.createElement("body") );
+			doc.appendChild( html );
+		})();
+		
+		// Find all the unique elements
+		if ( doc.getElementsByTagName )
+			for ( var i in one )
+				one[ i ] = doc.getElementsByTagName( i )[0];
+		
+		// If we're working with a document, inject contents into
+		// the body element
+		var curParentNode = one.body;
+		
+		HTMLParser( html, {
+			start: function( tagName, attrs, unary ) {
+				// If it's a pre-built element, then we can ignore
+				// its construction
+				if ( one[ tagName ] ) {
+					curParentNode = one[ tagName ];
+					return;
+				}
+			
+				var elem = doc.createElement( tagName );
+				
+				for ( var attr in attrs )
+					elem.setAttribute( attrs[ attr ].name, attrs[ attr ].value );
+				
+				if ( structure[ tagName ] && typeof one[ structure[ tagName ] ] != "boolean" )
+					one[ structure[ tagName ] ].appendChild( elem );
+				
+				else if ( curParentNode && curParentNode.appendChild )
+					curParentNode.appendChild( elem );
+					
+				if ( !unary ) {
+					elems.push( elem );
+					curParentNode = elem;
+				}
+			},
+			end: function( tag ) {
+				elems.length -= 1;
+				
+				// Init the new parentNode
+				curParentNode = elems[ elems.length - 1 ];
+			},
+			chars: function( text ) {
+				curParentNode.appendChild( doc.createTextNode( text ) );
+			},
+			comment: function( text ) {
+				// create comment node
+			}
+		});
+		
+		return doc;
+	};
+
+	function makeMap(str){
+		var obj = {}, items = str.split(",");
+		for ( var i = 0; i < items.length; i++ )
+			obj[ items[i] ] = true;
+		return obj;
+	}
+}
+PARSER();
+
 var STYLE = <style type="text/css">
 <![CDATA[
 body { line-height:22px; white-space:normal; }
@@ -143,7 +454,7 @@ var tr = {
 		38: "汉韩互译",
 		39: "汉日互译",
 		40: "在新标签页中打开结果！",
-		41: " 汉典"
+		41: "汉典"
 	}
 };
 
@@ -163,18 +474,56 @@ let zdic = {
 	favicon: "http://www.zdic.net/favicon.ico",
 	init: function(keyword, args) {
 		zdic.keyword = keyword;
+		let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
+		let pairs = [
+			["lb_a", "hp"],
+			["lb_b", "mh"],
+			["lb_c", "mh"],
+			["tp", "tp1"],
+			["q", keyword]
+		];
+		let tp = type.slice(0, 1);
+		let lb = type.slice(1);
+		if (tp >=2)
+			pairs[tp - 2] = [pairs[tp - 2][0], lb];
+		pairs[3] = ["tp", "tp" + tp];
+		let pieces = [];
+		pairs.forEach(function (pair) {
+			pieces.push(pair.join("="));
+		});
+
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", zdic.href({keyword: decodeURIComponent(keyword)}));
+		req.open("POST", "http://www.zdic.net/sousuo/", true);
+		req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		req.onreadystatechange = function (ev) {
 			dict.zdic(req);
-		}
-		req.send(null);
+		};
+		req.send(pieces.join("&"));
 		return req;
 	},
 
 	href: function (params) {
-		return "http://zdic.net/search?c=3&q=" + encodeURIComponent(params["keyword"]);
+		// return "http://zdic.net/search?c=3&q=" + encodeURIComponent(params["keyword"]);
+		let keyword = encodeURIComponent(params["keyword"]);
+		let type = params["type"] || "1hp";
+		let pairs = [
+			["lb_a", "hp"],
+			["lb_b", "mh"],
+			["lb_c", "mh"],
+			["tp", "tp1"],
+			["q", keyword]
+		];
+		let tp = type.slice(0, 1);
+		let lb = type.slice(1);
+		if (tp >=2)
+			pairs[tp - 2] = [pairs[tp - 2][0], lb];
+		pairs[3] = ["tp", "tp" + tp];
+		let pieces = [];
+		pairs.forEach(function (pair) {
+			pieces.push(pair.join("="));
+		});
+		return "http://www.zdic.net/sousuo/?"+pieces.join("&");
 	},
 
 	process: function(text) {
@@ -199,12 +548,17 @@ let zdic = {
 		let document = dict.htmlToDom(html);
 		let body = document.body;
 		dict.resolveRelative(body, "http://www.zdic.net/");
-		// 移除页脚
-		let footers = body.getElementsByClassName("footer");
-		for ( var i = 0; i < footers.length; i++ ) {
-			body.removeChild(footers[i]);
-		}
+		// 移除网友讨论
+		// var wy = body.getElementById("wy");
+		// if (wy)
+			// body.removeChild(wy);
 		// TODO: 移除 comments, stylesheets, objects, javascripts
+		var nodes = body.getElementsByTagName("*");
+		Array.slice(nodes).forEach(function(node) {
+			if (node && node.nodeType == Node.COMMENT_NODE || node.nodeName == "SCRIPT" || node.nodeName == "STYLE" || node.nodeName == "LINK" || node.nodeName == "IFRAME") {
+				node.parentNode.removeChild(node);
+			}
+		});
 
 		var _ret = zdic._simple(body);
 		ret["keyword"] = _ret["word"];
@@ -231,8 +585,18 @@ let zdic = {
 				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
 			</p>;
 		}
-		let text = body.innerHTML;
-		full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+zdic._htmlPre(text)+"</div>");
+
+		var notice = body.querySelectorAll("div#wrapper div#container div#content div.notice");
+		if (notice) {
+			let inner = "";
+			Array.slice(notice).forEach(function (n) {
+				inner += zdic._htmlPre(n.innerHTML);
+			});
+			full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(inner)+"</div>");
+		}
+		var explain = body.querySelectorAll("div#wrapper div#container div#content div.tab-pane");
+		if (explain[0])
+			full["sub"][T(5)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(zdic._htmlPre(explain[0].innerHTML))+"</div>");
 		return full;
 	},
 
@@ -253,11 +617,69 @@ let zdic = {
 		return youdao._htmlPre(str);
 	},
 
-	makeRequest: function(context, args) {
+	suggest: function(context, args) { // TODO 检查"日"字, <li><a href="/zd/zi3/ZdicF0ZdicA8Zdic96ZdicB9.htm" class="usual">　<img src="http://www.zdic.net/zd/3s/285B9.gif" width="20"  height="20"> <span class='ef'>rì</span></a></li>
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+		// context.waitingForTab = true;
+		context.title = [T(14) + " - " + T(41),T(15)];
+		context.keys = {"text":"g", "description":"e"};
+		context.filterFunc = null;
+		context.process[1] = url;
+		context.key = encodeURIComponent(args[0]);
+		context.generate = function () {
+			let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
+			let pairs = [
+				["lb", "hp"],
+				["tp", "tp1"],
+				["q", context.key]
+			];
+			let tp = type.slice(0, 1);
+			let lb = type.slice(1);
+			if (tp >=2)
+				pairs[0] = [pairs[0][0], lb];
+			pairs[1] = ["tp", "tp" + tp];
+			let pieces = [];
+			pairs.forEach(function (pair) {
+					pieces.push(pair.join("="));
+			});
 
-	},
-
-	suggest: function(req, context) {
+			var req = new XMLHttpRequest();
+			dict.suggestReq = req;
+			req.open("GET",
+				"http://www.zdic.net/sousuo/ac/?"+pieces.join("&")
+			);
+			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			req.setRequestHeader("Referer", "http://www.zdic.net/cy/ch/ZdicE9Zdic94ZdicA610728.htm");
+			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			req.setRequestHeader("X-Prototype-Version", "1.5.0");
+			req.onreadystatechange = function () {
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						var body = dict.htmlToDom("<head></head><body>"+req.responseText+"</body>").body;
+						var lis = body.querySelectorAll(".accy li");
+						if (lis) {
+							var suggestions = [];
+							Array.slice(lis).forEach(function (li) {
+									var r = {};
+									var href = li.getElementsByTagName("a")[0];
+									var span = href.getElementsByTagName("span")[0];
+									if (span) {
+										r["e"] = span.textContent.trim();
+										href.removeChild(span);
+									}
+									r["url"] = href.getAttribute("href");
+									r["g"] = href.textContent.trim();
+									r["e"] = r["e"] || r["g"];
+									suggestions.push(r); // trim blank chars
+							});
+							context.completions = suggestions;
+						}
+					}
+				}
+			};
+			req.send(null);
+		}
 
 	}
 
@@ -273,7 +695,6 @@ let youdao = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"] || "eng"}));
-		req.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 		req.onreadystatechange = function (ev) {
 			dict.youdao(req);
 		};
@@ -382,7 +803,8 @@ let youdao = {
 	_htmlPre: function (str) {
 		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">");
 	},
-	makeRequest: function(context, args) {
+
+	suggest: function(context, args) {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
@@ -392,42 +814,34 @@ let youdao = {
 		context.filterFunc = null;
 		context.process[1] = url;
 		context.key = encodeURIComponent(args[0]);
-		context.__args = args;
-		if (args.length == 0) {
-		} else {
+		context.generate = function () {
 			var req = new XMLHttpRequest();
 			dict.suggestReq = req;
 			req.open("GET",
 				"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
 			);
-			req.send(null);
 			req.onreadystatechange = function () {
-				youdao.suggest(req, context);
-			}
-			return req;
-		}
-	},
-
-	suggest: function(req, context) {
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				var text = unescape(req.responseText);
-				var result_arr = text.match(/this.txtBox.value=.+?">/g);
-				result_arr = result_arr.map(function(str) {
-						return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
-				});
-				let suggestions = [];
-				result_arr.forEach(function(word) {
-						let r = {};
-						r["g"] = word;
-						r["e"] = word;
-						r["url"] = youdao.href({keyword: word, le: context.__args["-l"] || options["dict-langpair"]["y"] || "eng"});
-						suggestions.push(r);
-				});
-				context.completions = suggestions;
-			} else {
-			}
-			req.onreadystatechange = function() {};
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						var text = unescape(req.responseText);
+						var result_arr = text.match(/this.txtBox.value=.+?">/g);
+						result_arr = result_arr.map(function(str) {
+								return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
+						});
+						let suggestions = [];
+						result_arr.forEach(function(word) {
+								let r = {};
+								r["g"] = word;
+								r["e"] = word;
+								r["url"] = youdao.href({keyword: word, le: args["-l"] || options["dict-langpair"]["y"] || "eng"});
+								suggestions.push(r);
+						});
+						context.completions = suggestions;
+					} else {
+					}
+				}
+			};
+			req.send(null);
 		}
 	},
 };
@@ -610,7 +1024,7 @@ let qq = {
 		return false;
 	},
 
-	makeRequest: function(context, args) {
+	suggest: function(context, args) {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
@@ -620,40 +1034,33 @@ let qq = {
 		context.filterFunc = null;
 		context.process[1] = url;
 		context.key = encodeURIComponent(args[0]);
-		if (args.length == 0) {
-		} else {
+		context.generate = function () {
 			var req = new XMLHttpRequest();
 			dict.suggestReq = req;
 			req.open("GET",
 				"http://dict.qq.com/sug?" + args[0]
 			);
 			req.setRequestHeader("Referer", "http://dict.qq.com/");
-			req.send(null);
 			req.onreadystatechange = function () {
-				qq.suggest(req, context);
-			}
-			return req;
-		}
-	},
-
-	suggest: function(req, context) {
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				var text = req.responseText.trim();
-				var result_arr = text.split("\n");
-				let suggestions = [];
-				result_arr.forEach(function(line) {
-						let pair = line.split("\t");
-						let r = {};
-						r["g"] = pair[0].trim();
-						r["e"] = pair[1].trim();
-						r["url"] = qq.href({"keyword": pair[0].trim()});
-						suggestions.push(r);
-				});
-				context.completions = suggestions;
-			} else {
-			}
-			req.onreadystatechange = function() {};
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						var text = req.responseText.trim();
+						var result_arr = text.split("\n");
+						let suggestions = [];
+						result_arr.forEach(function(line) {
+								let pair = line.split("\t");
+								let r = {};
+								r["g"] = pair[0].trim();
+								r["e"] = pair[1].trim();
+								r["url"] = qq.href({"keyword": pair[0].trim()});
+								suggestions.push(r);
+						});
+						context.completions = suggestions;
+					} else {
+					}
+				}
+			};
+			req.send(null);
 		}
 	},
 
@@ -685,10 +1092,10 @@ let google = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("POST", google.url, true);
-		req.send(formData);
 		req.onreadystatechange = function(ev) {
 			dict.google(req);
 		};
+		req.send(formData);
 		return req;
 	},
 	opts: function() {
@@ -828,7 +1235,7 @@ let dict_cn = {
 		return ret;
 	},
 
-	makeRequest:  function (context, args) {
+	suggest: function(context, args) {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
@@ -838,49 +1245,40 @@ let dict_cn = {
 		context.filterFunc = null;
 		context.process[1] = url;
 		context.key = encodeURIComponent(args[0]);
-		if (args.length == 0) {
-		} else {
+		context.generate = function () {
 			var req = new XMLHttpRequest();
 			dict.suggestReq = req;
 			req.open("POST",
 				"http://dict.cn/ajax/suggestion.php"
 			);
 			req.onreadystatechange = function () {
-				dict_cn.suggest(req, context);
-			}
-			// req.send(null);
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						var result_arr = JSON.parse(req.responseText);
+						var suggestions = [];
+						result_arr["s"].forEach(function (r) {
+								r["e"] = dict._html_entity_decode(r["e"].trim());
+								r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
+								r["g"] = r["g"].trim();
+								suggestions.push(r); // trim blank chars
+						});
+						context.completions = suggestions;
+					} else if (req.status == 404) {
+						// 辞海的自动补全需要 cookie
+						// 因此我们对dict.cn请求一次
+						var xhr = new XMLHttpRequest();
+						xhr.open("GET", "http://dict.cn");
+						xhr.send(null);
+					} else {
+					}
+				}
+			};
 			var formData = new FormData();
 			formData.append("q", args[0]);
 			formData.append("s", "d");
 			req.send(formData);
-			return req;
 		}
 	},
-
-	suggest: function(req, context) {
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				var result_arr = JSON.parse(req.responseText);
-				var suggestions = [];
-				result_arr["s"].forEach(function (r) {
-						r["e"] = dict._html_entity_decode(r["e"].trim());
-						r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
-						r["g"] = r["g"].trim();
-						suggestions.push(r); // trim blank chars
-				});
-				context.completions = suggestions;
-			} else if (req.status == 404) {
-				// 辞海的自动补全需要 cookie
-				// 因此我们对dict.cn请求一次
-				var xhr = new XMLHttpRequest();
-				xhr.open("GET", "http://dict.cn");
-				xhr.send(null);
-			} else {
-			}
-			req.onreadystatechange = function() {};
-		}
-	},
-
 }
 
 let dict = {
@@ -1253,9 +1651,9 @@ let dict = {
 	suggest: function(context, args) {
 		let engine = dict.engines[dict._route(args)];
 		if (engine.suggest) {
-			engine.suggest(engine.makeRequest(context, args), context);
+			engine.suggest(context, args);
 		} else {
-			dict_cn.suggest(dict_cn.makeRequest(context, args), context);
+			dict_cn.suggest(context, args);
 		}
 		
 		/*context.fork("words_buffer", 0, this, function (context) {
@@ -1292,6 +1690,19 @@ let dict = {
 			['ko', T(38)],
 			['jap', T(39)]
 		];
+		let zdic_completions = [
+			["1hp", '条目 - 请直接输入汉字或词语进行查询，支持拼音查询，例：“han”;“han4”;“han yu”;“han4 yu3”'],
+			["2hp", "字典 - 汉字或拼音 - 康 => 康 | xing => 星,形,醒幸"],
+			["2bis", "字典 - 笔顺    - 12345 =>李,札,权,杨"],
+			["2wb86", "字典 - 五笔86编码 - iwz => 举,兴"],
+			["2cj", "字典 - 仓颉编码 - aa => 昌,晶"],
+			["2fc", "字典 - 四角号码 - 1010 => 三,丕,二,互"],
+			["2uno", "字典 - unicode - 4e0 => 一,丁,七"],
+			["3mh", "词典 - 模糊搜索 中? => 中文,中秋节,中华人民共和国"],
+			["3jq", "词典 - 精确搜索 中? => 中庸,中学,中央"],
+			["4mh", "成语 - 模糊搜索 ?月 => 月朗星稀 月下老人"],
+			["4jq", "成语 - 精确搜索 ?一?二 => 一石二鸟 独一无二"]
+		];
 		if (!dict.langpairs) {
 			let cpt = [];
 			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
@@ -1316,7 +1727,6 @@ let dict = {
 
 			case 'd':
 			case 'q':
-			case 'z':
 			context.completions = [];
 			break;
 
@@ -1325,6 +1735,14 @@ let dict = {
 					context.title = [T(16) + " - " + T(34), T(1)];
 					context.compare = null;
 					context.completions = dict.langpairs;
+			});
+			break;
+
+			case 'z':
+			context.fork("zdic_type", 0, this, function (context) {
+					context.title = [T(16) + " - " + T(41), T(1)];
+					context.compare = null;
+					context.completions = zdic_completions;
 			});
 			break;
 
@@ -1348,6 +1766,20 @@ let dict = {
 			case "fr":
 			case "ko":
 			engine = "y"; // youdao
+			break;
+
+			case "1hp":
+			case "2hp":
+			case "2bis":
+			case "2wb86":
+			case "2cj":
+			case "2fc":
+			case "2uno":
+			case "3mh":
+			case "3jq":
+			case "4mh":
+			case "4jq":
+			engine = "z";
 			break;
 
 			case "":
@@ -1601,14 +2033,15 @@ options.add(["dict-dblclick", "dicd"],
 options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"stringmap",
-	"g:en|zh-CN,y:eng",
+	"g:en|zh-CN,y:eng,z:1hp",
 	{
 		completer: function(context, extra) {
 
 			if (extra.value == null)
 				return [
 					["y", T(35)],
-					["g", T(34)]
+					["g", T(34)],
+					["z", T(41)]
 				].filter(function (e) !Set.has(extra.values, e[0]));
 			else
 				dict.optsCompleter(context, extra);
@@ -1673,7 +2106,7 @@ group.commands.add(["di[ct]", "dic"],
 
 Array.slice("dgqyz").forEach(function(char) {
 		let extra_options = [];
-		if (char === "g" || char === "y") {
+		if ("gyz".indexOf(char) + 1) {
 			extra_options = [
 				{
 					names: ["-l"],
@@ -1822,7 +2255,7 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng</default>
+        <default>g:en|zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
@@ -1844,7 +2277,7 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng</default>
+        <default>g:en|zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
 			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
