@@ -660,13 +660,13 @@ let zdic = {
 		req.setRequestHeader("Referer", "http://www.zdic.net/cy/ch/ZdicE9Zdic94ZdicA610728.htm");
 		req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 		req.setRequestHeader("X-Prototype-Version", "1.5.0");
+		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
 					var body = dict.htmlToDom("<head></head><body>"+req.responseText+"</body>").body;
 					var lis = body.querySelectorAll(".accy li");
 					if (lis) {
-						var suggestions = [];
 						Array.slice(lis).forEach(function (li) {
 								var r = {};
 								var href = li.getElementsByTagName("a")[0];
@@ -680,8 +680,11 @@ let zdic = {
 								r["e"] = r["e"] || r["g"];
 								suggestions.push(r); // trim blank chars
 						});
-						context.completions = suggestions;
 					}
+					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
+						context.completions = [{url:"http://www.zdic.net/", g:args[0], e:"自动补全查询结束, 无返回结果"}];
+					else
+						context.completions = suggestions;
 				}
 			}
 		};
@@ -1640,6 +1643,8 @@ let dict = {
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
 		if (!engine.generate)
 			engine = dict_cn;
+		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
+			context.regenerate = true;
 		context.generate = function () engine.generate(context, args);
 		
 		/*context.fork("words_buffer", 0, this, function (context) {
