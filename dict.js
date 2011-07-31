@@ -617,69 +617,58 @@ let zdic = {
 		return youdao._htmlPre(str);
 	},
 
-	suggest: function(context, args) { // TODO 检查"日"字, <li><a href="/zd/zi3/ZdicF0ZdicA8Zdic96ZdicB9.htm" class="usual">　<img src="http://www.zdic.net/zd/3s/285B9.gif" width="20"  height="20"> <span class='ef'>rì</span></a></li>
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
-		// context.waitingForTab = true;
-		context.title = [T(14) + " - " + T(41),T(15)];
-		context.keys = {"text":"g", "description":"e"};
-		context.filterFunc = null;
-		context.process[1] = url;
-		context.key = encodeURIComponent(args[0]);
-		context.generate = function () {
-			let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
-			let pairs = [
-				["lb", "hp"],
-				["tp", "tp1"],
-				["q", context.key]
-			];
-			let tp = type.slice(0, 1);
-			let lb = type.slice(1);
-			if (tp >=2)
-				pairs[0] = [pairs[0][0], lb];
-			pairs[1] = ["tp", "tp" + tp];
-			let pieces = [];
-			pairs.forEach(function (pair) {
-					pieces.push(pair.join("="));
-			});
+	generate: function(context, args) { // TODO 检查"日"字, <li><a href="/zd/zi3/ZdicF0ZdicA8Zdic96ZdicB9.htm" class="usual">　<img src="http://www.zdic.net/zd/3s/285B9.gif" width="20"  height="20"> <span class='ef'>rì</span></a></li>
+		let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
+		let pairs = [
+			["lb", "hp"],
+			["tp", "tp1"],
+			["q", encodeURIComponent(args[0])]
+		];
+		let tp = type.slice(0, 1);
+		let lb = type.slice(1);
+		if (tp >=2)
+			pairs[0] = [pairs[0][0], lb];
+		pairs[1] = ["tp", "tp" + tp];
+		let pieces = [];
+		pairs.forEach(function (pair) {
+				pieces.push(pair.join("="));
+		});
 
-			var req = new XMLHttpRequest();
-			dict.suggestReq = req;
-			req.open("GET",
-				"http://www.zdic.net/sousuo/ac/?"+pieces.join("&")
-			);
-			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			req.setRequestHeader("Referer", "http://www.zdic.net/cy/ch/ZdicE9Zdic94ZdicA610728.htm");
-			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-			req.setRequestHeader("X-Prototype-Version", "1.5.0");
-			req.onreadystatechange = function () {
-				if (req.readyState == 4) {
-					if (req.status == 200) {
-						var body = dict.htmlToDom("<head></head><body>"+req.responseText+"</body>").body;
-						var lis = body.querySelectorAll(".accy li");
-						if (lis) {
-							var suggestions = [];
-							Array.slice(lis).forEach(function (li) {
-									var r = {};
-									var href = li.getElementsByTagName("a")[0];
-									var span = href.getElementsByTagName("span")[0];
-									if (span) {
-										r["e"] = span.textContent.trim();
-										href.removeChild(span);
-									}
-									r["url"] = href.getAttribute("href");
-									r["g"] = href.textContent.trim();
-									r["e"] = r["e"] || r["g"];
-									suggestions.push(r); // trim blank chars
-							});
-							context.completions = suggestions;
-						}
+		var req = new XMLHttpRequest();
+		dict.suggestReq = req;
+		req.open("GET",
+			"http://www.zdic.net/sousuo/ac/?"+pieces.join("&")
+		);
+		req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		req.setRequestHeader("Referer", "http://www.zdic.net/cy/ch/ZdicE9Zdic94ZdicA610728.htm");
+		req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		req.setRequestHeader("X-Prototype-Version", "1.5.0");
+		req.onreadystatechange = function () {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					var body = dict.htmlToDom("<head></head><body>"+req.responseText+"</body>").body;
+					var lis = body.querySelectorAll(".accy li");
+					if (lis) {
+						var suggestions = [];
+						Array.slice(lis).forEach(function (li) {
+								var r = {};
+								var href = li.getElementsByTagName("a")[0];
+								var span = href.getElementsByTagName("span")[0];
+								if (span) {
+									r["e"] = span.textContent.trim();
+									href.removeChild(span);
+								}
+								r["url"] = href.getAttribute("href");
+								r["g"] = href.textContent.trim();
+								r["e"] = r["e"] || r["g"];
+								suggestions.push(r); // trim blank chars
+						});
+						context.completions = suggestions;
 					}
 				}
-			};
-			req.send(null);
-		}
+			}
+		};
+		req.send(null);
 
 	}
 
@@ -804,45 +793,34 @@ let youdao = {
 		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">");
 	},
 
-	suggest: function(context, args) {
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
-		// context.waitingForTab = true;
-		context.title = [T(14) + " - " + T(35), T(15)];
-		context.keys = {"text":"g", "description":"e"};
-		context.filterFunc = null;
-		context.process[1] = url;
-		context.key = encodeURIComponent(args[0]);
-		context.generate = function () {
-			var req = new XMLHttpRequest();
-			dict.suggestReq = req;
-			req.open("GET",
-				"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
-			);
-			req.onreadystatechange = function () {
-				if (req.readyState == 4) {
-					if (req.status == 200) {
-						var text = unescape(req.responseText);
-						var result_arr = text.match(/this.txtBox.value=.+?">/g);
-						result_arr = result_arr.map(function(str) {
-								return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
-						});
-						let suggestions = [];
-						result_arr.forEach(function(word) {
-								let r = {};
-								r["g"] = word;
-								r["e"] = word;
-								r["url"] = youdao.href({keyword: word, le: args["-l"] || options["dict-langpair"]["y"] || "eng"});
-								suggestions.push(r);
-						});
-						context.completions = suggestions;
-					} else {
-					}
+	generate: function(context, args) {
+		var req = new XMLHttpRequest();
+		dict.suggestReq = req;
+		req.open("GET",
+			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
+		);
+		req.onreadystatechange = function () {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					var text = unescape(req.responseText);
+					var result_arr = text.match(/this.txtBox.value=.+?">/g);
+					result_arr = result_arr.map(function(str) {
+							return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
+					});
+					let suggestions = [];
+					result_arr.forEach(function(word) {
+							let r = {};
+							r["g"] = word;
+							r["e"] = word;
+							r["url"] = youdao.href({keyword: word, le: args["-l"] || options["dict-langpair"]["y"] || "eng"});
+							suggestions.push(r);
+					});
+					context.completions = suggestions;
+				} else {
 				}
-			};
-			req.send(null);
-		}
+			}
+		};
+		req.send(null);
 	},
 };
 
@@ -1024,44 +1002,33 @@ let qq = {
 		return false;
 	},
 
-	suggest: function(context, args) {
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
-		// context.waitingForTab = true;
-		context.title = [T(14) + " - " + T(25), T(15)];
-		context.keys = {"text":"g", "description":"e"};
-		context.filterFunc = null;
-		context.process[1] = url;
-		context.key = encodeURIComponent(args[0]);
-		context.generate = function () {
-			var req = new XMLHttpRequest();
-			dict.suggestReq = req;
-			req.open("GET",
-				"http://dict.qq.com/sug?" + args[0]
-			);
-			req.setRequestHeader("Referer", "http://dict.qq.com/");
-			req.onreadystatechange = function () {
-				if (req.readyState == 4) {
-					if (req.status == 200) {
-						var text = req.responseText.trim();
-						var result_arr = text.split("\n");
-						let suggestions = [];
-						result_arr.forEach(function(line) {
-								let pair = line.split("\t");
-								let r = {};
-								r["g"] = pair[0].trim();
-								r["e"] = pair[1].trim();
-								r["url"] = qq.href({"keyword": pair[0].trim()});
-								suggestions.push(r);
-						});
-						context.completions = suggestions;
-					} else {
-					}
+	generate: function(context, args) {
+		var req = new XMLHttpRequest();
+		dict.suggestReq = req;
+		req.open("GET",
+			"http://dict.qq.com/sug?" + args[0]
+		);
+		req.setRequestHeader("Referer", "http://dict.qq.com/");
+		req.onreadystatechange = function () {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					var text = req.responseText.trim();
+					var result_arr = text.split("\n");
+					let suggestions = [];
+					result_arr.forEach(function(line) {
+							let pair = line.split("\t");
+							let r = {};
+							r["g"] = pair[0].trim();
+							r["e"] = pair[1].trim();
+							r["url"] = qq.href({"keyword": pair[0].trim()});
+							suggestions.push(r);
+					});
+					context.completions = suggestions;
+				} else {
 				}
-			};
-			req.send(null);
-		}
+			}
+		};
+		req.send(null);
 	},
 
 };
@@ -1235,49 +1202,38 @@ let dict_cn = {
 		return ret;
 	},
 
-	suggest: function(context, args) {
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
-		// context.waitingForTab = true;
-		context.title = [T(14) + " - " + T(24),T(15)];
-		context.keys = {"text":"g", "description":"e"};
-		context.filterFunc = null;
-		context.process[1] = url;
-		context.key = encodeURIComponent(args[0]);
-		context.generate = function () {
-			var req = new XMLHttpRequest();
-			dict.suggestReq = req;
-			req.open("POST",
-				"http://dict.cn/ajax/suggestion.php"
-			);
-			req.onreadystatechange = function () {
-				if (req.readyState == 4) {
-					if (req.status == 200) {
-						var result_arr = JSON.parse(req.responseText);
-						var suggestions = [];
-						result_arr["s"].forEach(function (r) {
-								r["e"] = dict._html_entity_decode(r["e"].trim());
-								r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
-								r["g"] = r["g"].trim();
-								suggestions.push(r); // trim blank chars
-						});
-						context.completions = suggestions;
-					} else if (req.status == 404) {
-						// 辞海的自动补全需要 cookie
-						// 因此我们对dict.cn请求一次
-						var xhr = new XMLHttpRequest();
-						xhr.open("GET", "http://dict.cn");
-						xhr.send(null);
-					} else {
-					}
+	generate: function(context, args) {
+		var req = new XMLHttpRequest();
+		dict.suggestReq = req;
+		req.open("POST",
+			"http://dict.cn/ajax/suggestion.php"
+		);
+		req.onreadystatechange = function () {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					var result_arr = JSON.parse(req.responseText);
+					var suggestions = [];
+					result_arr["s"].forEach(function (r) {
+							r["e"] = dict._html_entity_decode(r["e"].trim());
+							r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
+							r["g"] = r["g"].trim();
+							suggestions.push(r); // trim blank chars
+					});
+					context.completions = suggestions;
+				} else if (req.status == 404) {
+					// 辞海的自动补全需要 cookie
+					// 因此我们对dict.cn请求一次
+					var xhr = new XMLHttpRequest();
+					xhr.open("GET", "http://dict.cn");
+					xhr.send(null);
+				} else {
 				}
-			};
-			var formData = new FormData();
-			formData.append("q", args[0]);
-			formData.append("s", "d");
-			req.send(formData);
-		}
+			}
+		};
+		var formData = new FormData();
+		formData.append("q", args[0]);
+		formData.append("s", "d");
+		req.send(formData);
 	},
 }
 
@@ -1650,11 +1606,24 @@ let dict = {
 
 	suggest: function(context, args) {
 		let engine = dict.engines[dict._route(args)];
-		if (engine.suggest) {
-			engine.suggest(context, args);
-		} else {
-			dict_cn.suggest(context, args);
-		}
+
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+
+		// context.waitingForTab = true;
+		context.title = [T(14) + " - " + engine.name,T(15)];
+		context.keys = {"text":"g", "description":"e"};
+		context.filterFunc = null;
+		context.process[1] = url;
+		let dash_e = args["-e"] || options.get("dict-engine").value || "";
+		let dash_l = "1024"; // 没实际用处,降低 context.key 意外相等的可能性
+		if ("yz".indexOf(dash_e) + 1)
+			dash_l += args["-l"] || options["dict-langpair"][dash_e] || "";
+		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
+		if (!engine.generate)
+			engine = dict_cn;
+		context.generate = function () engine.generate(context, args);
 		
 		/*context.fork("words_buffer", 0, this, function (context) {
 				 var keyword = args.join(" ").trim();
