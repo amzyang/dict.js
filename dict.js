@@ -605,7 +605,7 @@ let zdic = {
 		simp["word"] = decodeURIComponent(zdic.keyword);
 		simp["pron"] = false; // TODO
 		simp["audio"] = false; // TODO
-		simp["def"] = body.textContent;
+		simp["def"] = body.textContent.trim();
 		return simp;
 	},
 
