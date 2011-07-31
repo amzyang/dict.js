@@ -682,9 +682,20 @@ let zdic = {
 						});
 					}
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
-						context.completions = [{url:"http://www.zdic.net/", g:args[0], e:"自动补全查询结束, 无返回结果"}];
+						context.completions = [{url:zdic.href({keyword:args[0], type:args["-l"] || options["dict-langpair"]["z"] || "1hp"}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
+				} else {
+					var p = document.getElementById("statusbar-display");
+					p.label = "自动补全失败, 返回值: "+req.status;
+					if (dict._errortimeoutid) {
+						window.clearTimeout(dict._errortimeoutid);
+						delete dict._errortimeoutid;
+					}
+					dict._errortimeoutid = window.setTimeout(function() {
+						p.label = "";
+						delete dict._errortimeoutid;
+					}, 400);
 				}
 			}
 		};
@@ -703,7 +714,7 @@ let youdao = {
 		youdao.keyword = keyword;
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"] || "eng"}));
+		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"] || options["dict-langpair"]["y"] || "eng"}));
 		req.onreadystatechange = function (ev) {
 			dict.youdao(req);
 		};
@@ -819,15 +830,15 @@ let youdao = {
 		req.open("GET",
 			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
 		);
+		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
 					var text = unescape(req.responseText);
-					var result_arr = text.match(/this.txtBox.value=.+?">/g);
+					var result_arr = text.match(/this.txtBox.value=.+?">/g) || [];
 					result_arr = result_arr.map(function(str) {
 							return str.replace(/^this.txtBox.value=/, "").replace(/">$/, "");
 					});
-					let suggestions = [];
 					result_arr.forEach(function(word) {
 							let r = {};
 							r["g"] = word;
@@ -835,8 +846,21 @@ let youdao = {
 							r["url"] = youdao.href({keyword: word, le: args["-l"] || options["dict-langpair"]["y"] || "eng"});
 							suggestions.push(r);
 					});
-					context.completions = suggestions;
+					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
+						context.completions = [{url:youdao.href({keyword:args[0], le:args["-l"] || options["dict-langpair"]["y"] || "eng"}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
+					else
+						context.completions = suggestions;
 				} else {
+					var p = document.getElementById("statusbar-display");
+					p.label = "自动补全失败, 返回值: "+req.status;
+					if (dict._errortimeoutid) {
+						window.clearTimeout(dict._errortimeoutid);
+						delete dict._errortimeoutid;
+					}
+					dict._errortimeoutid = window.setTimeout(function() {
+						p.label = "";
+						delete dict._errortimeoutid;
+					}, 400);
 				}
 			}
 		};
@@ -1029,13 +1053,15 @@ let qq = {
 			"http://dict.qq.com/sug?" + args[0]
 		);
 		req.setRequestHeader("Referer", "http://dict.qq.com/");
+		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
 					var text = req.responseText.trim();
 					var result_arr = text.split("\n");
-					let suggestions = [];
 					result_arr.forEach(function(line) {
+							if (line.trim().length == 0)
+								return false;
 							let pair = line.split("\t");
 							let r = {};
 							r["g"] = pair[0].trim();
@@ -1043,8 +1069,21 @@ let qq = {
 							r["url"] = qq.href({"keyword": pair[0].trim()});
 							suggestions.push(r);
 					});
-					context.completions = suggestions;
+					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
+						context.completions = [{url:qq.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
+					else
+						context.completions = suggestions;
 				} else {
+					var p = document.getElementById("statusbar-display");
+					p.label = "自动补全失败, 返回值: "+req.status;
+					if (dict._errortimeoutid) {
+						window.clearTimeout(dict._errortimeoutid);
+						delete dict._errortimeoutid;
+					}
+					dict._errortimeoutid = window.setTimeout(function() {
+						p.label = "";
+						delete dict._errortimeoutid;
+					}, 400);
 				}
 			}
 		};
@@ -1228,25 +1267,39 @@ let dict_cn = {
 		req.open("POST",
 			"http://dict.cn/ajax/suggestion.php"
 		);
+		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
 					var result_arr = JSON.parse(req.responseText);
-					var suggestions = [];
 					result_arr["s"].forEach(function (r) {
 							r["e"] = dict._html_entity_decode(r["e"].trim());
 							r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
 							r["g"] = r["g"].trim();
 							suggestions.push(r); // trim blank chars
 					});
-					context.completions = suggestions;
-				} else if (req.status == 404) {
-					// 辞海的自动补全需要 cookie
-					// 因此我们对dict.cn请求一次
-					var xhr = new XMLHttpRequest();
-					xhr.open("GET", "http://dict.cn");
-					xhr.send(null);
+					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
+						context.completions = [{url:dict_cn.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
+					else
+						context.completions = suggestions;
 				} else {
+					if (req.status == 404) {
+						// 辞海的自动补全需要 cookie
+						// 因此我们对dict.cn请求一次
+						var xhr = new XMLHttpRequest();
+						xhr.open("GET", "http://dict.cn");
+						xhr.send(null);
+					}
+					var p = document.getElementById("statusbar-display");
+					p.label = "自动补全失败, 返回值: "+req.status;
+					if (dict._errortimeoutid) {
+						window.clearTimeout(dict._errortimeoutid);
+						delete dict._errortimeoutid;
+					}
+					dict._errortimeoutid = window.setTimeout(function() {
+						p.label = "";
+						delete dict._errortimeoutid;
+					}, 400);
 				}
 			}
 		};
@@ -1379,6 +1432,10 @@ let dict = {
 		var self = this;
 		var p = document.getElementById('statusbar-display');
 		req.addEventListener('loadstart', function(evt) {
+			if (self.timeoutid) {
+				window.clearTimeout(self.timeoutid);
+				delete self.timeoutid;
+			}
 			self.timeoutid = window.setTimeout(function() {
 					p.label = T(6);
 					self.intervalid = window.setInterval(function() {p.label = T(6);}, 400);
@@ -1410,6 +1467,36 @@ let dict = {
 		if (dict.suggestReq)
 			dict.suggestReq.abort();
 		dict._suggestReq = req;
+
+		// show progressing
+		var self = this;
+		var p = document.getElementById('statusbar-display');
+		req.addEventListener('loadstart', function(evt) {
+			if (self._suggesttimeoutid) {
+				window.clearTimeout(self._suggesttimeoutid);
+				delete self._suggesttimeoutid;
+			}
+			self._suggesttimeoutid = window.setTimeout(function() {
+					p.label = "自动补全中...";
+					self._suggestintervalid = window.setInterval(function() {p.label = "自动补全中...";}, 400);
+					delete self._suggesttimeoutid;
+				},
+				400);
+		},
+		false);
+		["load", "error", "abort"].forEach(function(st) { // loadend
+			req.addEventListener(st, function(evt) {
+				if (self._suggesttimeoutid) {
+					window.clearTimeout(self._suggesttimeoutid);
+					delete self._suggesttimeoutid;
+				} else {
+					p.label = "";
+					window.clearInterval(self._suggestintervalid);
+					delete self._suggestintervalid;
+				}
+			},
+			false);
+		});
 	},
 	get keyword() dict._keyword,
 	set keyword(keyword) {
@@ -2052,7 +2139,7 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		bang: true, // TODO
 		completer: function (context, args) {
-			if (args.length >= 1 && args[0] !== "-")
+			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
 				return dict.suggest(context, args);
 		},
 		literal: 0,
@@ -2123,7 +2210,7 @@ Array.slice("dgqyz").forEach(function(char) {
 				bang: true, // TODO
 				completer: function (context, args) {
 					args["-e"] = char;
-					if (args.length >= 1 && args[0] !== "-")
+					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
 						return dict.suggest(context, args);
 				},
 				literal: 0,
