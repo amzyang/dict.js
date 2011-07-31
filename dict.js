@@ -588,7 +588,7 @@ let zdic = {
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
-		ret["simple"] = ret["def"];
+		ret["simple"] = ret["def"].replace(/\n|\r/g, " ");
 		ret["full"] = zdic._full(body);
 		return ret;
 	},
