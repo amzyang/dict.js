@@ -549,9 +549,16 @@ let zdic = {
 		let body = document.body;
 		dict.resolveRelative(body, "http://www.zdic.net/");
 		// 移除网友讨论
-		// var wy = body.getElementById("wy");
-		// if (wy)
-			// body.removeChild(wy);
+		var wy = document.getElementById("wy");
+		if (wy)
+			wy.parentNode.removeChild(wy);
+		// 移除添加到备忘录
+		var bwladd = body.querySelectorAll(".bwladd");
+		if (bwladd) {
+			Array.slice(bwladd).forEach(function (i) {
+				i.parentNode.removeChild(i);
+			});
+		}
 		// TODO: 移除 comments, stylesheets, objects, javascripts
 		var nodes = body.getElementsByTagName("*");
 		Array.slice(nodes).forEach(function(node) {
