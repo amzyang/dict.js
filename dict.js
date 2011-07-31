@@ -315,7 +315,8 @@ PARSER();
 
 var STYLE = <style type="text/css">
 <![CDATA[
-body { line-height:22px; white-space:normal; }
+body { white-space:normal; }
+* {line-height:24px;}
 th, dt { font-weight:bolder; }
 dt { list-style-type: disc; }
 dd { margin:0.1em 0 0.2em; }
@@ -325,7 +326,7 @@ p > span, li > a { margin-right: 1em; }
 span > b { margin-right: 0.4em; }
 .basic dt + span { margin-right: 0.4em; }
 p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word;}
-.dict_block>table {width:600px;}
+.dict_block>table {width:800px;}
 /* youdao */
 #dict_js_y p > span, #dict_js_y li > a {margin-right: 0;}
 #dict_js_y .example-via a:nth-child(2) {display:none;}
@@ -347,8 +348,10 @@ p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word
 	width: 30px;
 }
 
+#dict_js_z * {background-image:none;}
+#dict_js_z .notice {clear:both;overflow:hidden;}
 #dict_js_z .dicpy {font-weight: bolder;}
-#dict_js_z .diczy {color: #000099;}
+/*#dict_js_z .diczy {color: #000099;}*/
 #dict_js_z .info{color:#999;font-size:14px;margin-right:5px;padding-left:10px;}
 #dict_js_z .mut_jies{padding:10px 20px 20px 20px;font-size:14px;}
 #dict_js_z .yf_all{padding:3px 4px 4px 4px;}
@@ -362,10 +365,25 @@ p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word
 #dict_js_z .jiaru_s{margin:10px 0;text-align:center;}
 #dict_js_z .more{margin:10px 10px 10px 15px;font-size:13px;}
 #dict_js_z .mutti_pp{padding:10px;}
-#dict_js_z .diczx1{font-weight:bolder;}
-#dict_js_z .diczx2{font-weight:bolder;}
-#dict_js_z .diczx3{font-weight:bolder;}
-#dict_js_z .diczx4{font-weight:bolder;}
+#dict_js_z .diczx1, #dict_js_z .diczx2,#dict_js_z .diczx3,#dict_js_z .diczx4 {background-color:#9999FF;color:#000;}
+#dict_js_z #z_i_1,#z_i_2{font-size:16px;line-height:20px;}
+#dict_js_z #z_i_1 a{color:#900;text-decoration:underline;}
+#dict_js_z #zil2,#zir2{height:100px;}
+#dict_js_z #ziip{height:30px;line-height:30px;}
+#dict_js_z #zil2{margin:0;padding:0;background:url("http://www.zdic.net/images/z_100.gif") no-repeat center;height:100px;width:100px;}
+#dict_js_z #pytab{text-align:right;}
+#dict_js_z #ztdg{width:38px;text-align:left;}
+#dict_js_z #jbs{text-indent:40px;background:url("http://www.zdic.net/images/z_i_jb.gif") no-repeat;margin:2px 0 5px 0;}
+#dict_js_z #bs{text-indent:40px;background:url("http://www.zdic.net/images/z_i_bs.gif") no-repeat;margin:2px 0 5px 0;}
+#dict_js_z #fbs{text-indent:40px;background:url("http://www.zdic.net/images/z_i_fb.gif") no-repeat;margin:5px 0 5px 0;}
+#dict_js_z #bis{text-indent:40px;background:url("http://www.zdic.net/images/z_i_bis.gif") no-repeat;margin:5px 0 5px 0;}
+#dict_js_z #jt{text-indent:40px;background:url("http://www.zdic.net/images/z_i_jt.gif") no-repeat;margin:5px 15px 2px 0;float:left;}
+#dict_js_z #ft{text-indent:40px;background:url("http://www.zdic.net/images/z_i_ft.gif") no-repeat;margin:5px 0 2px 0;float:left;}
+#dict_js_z #uinfo{text-indent:40px;background:url("http://www.zdic.net/images/z_i_bm.gif") no-repeat;margin:0 15px 0 0;float: left;}
+#dict_js_z #wb{text-indent:40px;background:url("http://www.zdic.net/images/z_i_wb.gif") no-repeat;margin:0 15px 0 0;float: left;}
+#dict_js_z #cj{text-indent:40px;background:url("http://www.zdic.net/images/z_i_cj.gif") no-repeat;margin:0 15px 0 0;float: left;}
+#dict_js_z #zm{text-indent:40px;background:url("http://www.zdic.net/images/z_i_zm.gif") no-repeat;margin:0 15px 0 0;float: left;}
+#dict_js_z #fc{text-indent:40px;background:url("http://www.zdic.net/images/z_i_fc.gif") no-repeat;margin:0 15px 0 0;float: left;}
 ]]>
 </style>;
 
@@ -550,7 +568,7 @@ let zdic = {
 		dict.resolveRelative(body, "http://www.zdic.net/");
 
 		// 移除添加到备忘录, 网友讨论
-		var rems = body.querySelectorAll(".bwladd,#wy");
+		var rems = body.querySelectorAll(".badd,.bwladd,#wy,.secpan,.gdym,.annu_div,.ga,ga+div");
 		if (rems) {
 			Array.slice(rems).forEach(function (i) {
 				i.parentNode.removeChild(i);
@@ -590,17 +608,9 @@ let zdic = {
 			</p>;
 		}
 
-		var notice = body.querySelectorAll("div#wrapper div#container div#content div.notice");
-		if (notice) {
-			let inner = "";
-			Array.slice(notice).forEach(function (n) {
-				inner += zdic._htmlPre(n.innerHTML);
-			});
-			full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(inner)+"</div>");
-		}
-		var explain = body.querySelectorAll("div#wrapper div#container div#content div.tab-pane");
+		var explain = body.querySelectorAll("div#wrapper div#container div#content");
 		if (explain[0])
-			full["sub"][T(5)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(zdic._htmlPre(explain[0].innerHTML))+"</div>");
+			full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(zdic._htmlPre(explain[0].innerHTML))+"</div>");
 		return full;
 	},
 
@@ -609,7 +619,8 @@ let zdic = {
 		simp["word"] = decodeURIComponent(zdic.keyword);
 		simp["pron"] = false; // TODO
 		simp["audio"] = false; // TODO
-		simp["def"] = body.textContent.trim();
+		var def = body.querySelectorAll("#content");
+		simp["def"] = def[0].textContent.trim();
 		return simp;
 	},
 
@@ -1546,7 +1557,7 @@ let dict = {
 						// dactyl.echo("\n");
 					let output = <></>;
 					for (let [i, v] in  Iterator(t)) {
-						output += <><p style="margin:0;padding:5px 10px;width:600px;white-space:normal;text-indent:2em;line-height:22px;">{v}</p></>;
+						output += <><p style="margin:0;padding:5px 10px;width:800px;white-space:normal;text-indent:2em;line-height:24px;">{v}</p></>;
 					}
 					if (t.length == 1 && t[0].length <= 40)
 						dactyl.echo(output, commandline.FORCE_SINGLELINE);
