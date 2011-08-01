@@ -1889,9 +1889,10 @@ let dict = {
 				var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
 				addonbar.appendChild(sound);
 				dict_sound = document.getElementById("dict-sound");
-				dict_sound.setAttribute("hidden", "false"); // dirty hack, tell me why.
-				if (!dict_sound.Play)
+				if (!dict_sound.Play) {
 					dict_sound.setAttribute("autostart", "true");
+					dict_sound.setAttribute("hidden", "false"); // dirty hack, tell me why.
+				}
 			}
 			dict_sound.setAttribute("src", uri);
 			dict_sound.setAttribute("src", uri);
