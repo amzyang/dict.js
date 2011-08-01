@@ -941,23 +941,28 @@ let qq = {
 			if (t.sen)
 				gsen = t.sen;
 			t.des.forEach(function(item) {
-				if (item["p"]) {
-					let pos = item["p"];
-					let sen = qq._digIntoSen(pos, gsen);
-					let dt = new XML("<dt><span>"+item["p"]+"</span><span>"+item["d"]+"</span></dt>");
-					let dds = <></>;
-					if (sen) {
-						sen.s.forEach(function(single) {
-								let es = single["es"];
-								let cs = single["cs"];
-								dds += new XML("<dd>"+es+"</dd>");
-								dds += new XML("<dd>"+cs+"</dd>");
-						});
-					}
-					des += <><dl>{dt}{dds}</dl></>;
-				} else {
-					let dt = new XML("<dt><span>"+item["d"]+"</span></dt>");
+				if (typeof item === "string") {
+					let dt = new XML("<dt><span>"+item+"</span></dt>");
 					des += <><dl>{dt}</dl></>;
+				} else {
+					if (item["p"]) {
+						let pos = item["p"];
+						let sen = qq._digIntoSen(pos, gsen);
+						let dt = new XML("<dt><span>"+item["p"]+"</span><span>"+item["d"]+"</span></dt>");
+						let dds = <></>;
+						if (sen) {
+							sen.s.forEach(function(single) {
+									let es = single["es"];
+									let cs = single["cs"];
+									dds += new XML("<dd>"+es+"</dd>");
+									dds += new XML("<dd>"+cs+"</dd>");
+							});
+						}
+						des += <><dl>{dt}{dds}</dl></>;
+					} else {
+						let dt = new XML("<dt><span>"+item["d"]+"</span></dt>");
+						des += <><dl>{dt}</dl></>;
+					}
 				}
 			});
 			full["sub"][T(8)] = <div class="basic">{des}</div>;
@@ -1022,10 +1027,14 @@ let qq = {
 		if (t.des) {
 			_ret["def"] = [];
 			t.des.forEach(function(item) {
-					if (item["p"])
-						_ret["def"].push(item["p"] + " " + item["d"]);
-					else
-						_ret["def"].push(item["d"]);
+					if (typeof(item) !== "string") {
+						if (item["p"])
+							_ret["def"].push(item["p"] + " " + item["d"]);
+						else
+							_ret["def"].push(item["d"]);
+					} else {
+						_ret["def"].push(item);
+					}
 			});
 			_ret["def"] = dict._html_entity_decode(_ret["def"].join(" | "));
 		}
