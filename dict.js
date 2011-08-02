@@ -430,7 +430,8 @@ var tr = {
 		38: "Chinese ↔ Korean",
 		39: "Chinese ↔ Japanese",
 		40: "Open result in new tab!",
-		41: "Han Dian"
+		41: "Han Dian",
+		42: "Wikipedia"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -472,7 +473,8 @@ var tr = {
 		38: "汉韩互译",
 		39: "汉日互译",
 		40: "在新标签页中打开结果！",
-		41: "汉典"
+		41: "汉典",
+		42: "维基百科"
 	}
 };
 
@@ -485,6 +487,43 @@ function T(i) {
 if (document.getElementById("dict-frame")) // workaround for :rehash
 	document.getElementById('main-window').removeChild(document.getElementById('dict-frame'));
 
+let wikipedia = {
+	name: T(42),
+	keyword: "",
+	args: {lang:''},
+	logo: "", // TODO: dynamic
+	favicon: "", // TODO: dynamic
+	init: function(keyword, args) {
+		var req = new XMLHttpRequest();
+		dict.req = req;
+		req.open("GET", "");
+
+	},
+
+	href: function(params) {
+		let keyword = encodeURIComponent(params["keyword"]);
+		let site = params["sites"] || options["dict-Langpair"]["w"] || options.get("dict-langpair").defaultValue["w"];
+		return "http://"+site+".wikipedia.org/wiki/"+keyword;
+
+	},
+
+	process: function(text) {
+
+	},
+
+	_full: function(arg) {
+
+	},
+
+	_simple: function(arg) {
+
+	},
+
+	generate: function(context, args) {
+
+	}
+};
+
 let zdic = {
 	name: T(41),
 	keyword: "",
@@ -492,7 +531,7 @@ let zdic = {
 	favicon: "http://www.zdic.net/favicon.ico",
 	init: function(keyword, args) {
 		zdic.keyword = keyword;
-		let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
+		let type = args["-l"] || options["dict-langpair"]["z"] || options.get("dict-langpair").defaultValue["z"];
 		let pairs = [
 			["lb_a", "hp"],
 			["lb_b", "mh"],
@@ -524,7 +563,7 @@ let zdic = {
 	href: function (params) {
 		// return "http://zdic.net/search?c=3&q=" + encodeURIComponent(params["keyword"]);
 		let keyword = encodeURIComponent(params["keyword"]);
-		let type = params["type"] || "1hp";
+		let type = params["type"] || options["dict-langpair"]["z"] || options.get("dict-langpair").defaultValue["z"];
 		let pairs = [
 			["lb_a", "hp"],
 			["lb_b", "mh"],
@@ -635,7 +674,7 @@ let zdic = {
 	},
 
 	generate: function(context, args) { // TODO 检查"日"字, <li><a href="/zd/zi3/ZdicF0ZdicA8Zdic96ZdicB9.htm" class="usual">　<img src="http://www.zdic.net/zd/3s/285B9.gif" width="20"  height="20"> <span class='ef'>rì</span></a></li>
-		let type = args["-l"] || options["dict-langpair"]["z"] || "1hp";
+		let type = args["-l"] || options["dict-langpair"]["z"] || options.get("dict-langpair").defaultValue["z"];
 		let pairs = [
 			["lb", "hp"],
 			["tp", "tp1"],
@@ -682,7 +721,7 @@ let zdic = {
 						});
 					}
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
-						context.completions = [{url:zdic.href({keyword:args[0], type:args["-l"] || options["dict-langpair"]["z"] || "1hp"}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
+						context.completions = [{url:zdic.href({keyword:args[0], type:args["-l"]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
 				} else {
@@ -714,7 +753,7 @@ let youdao = {
 		youdao.keyword = keyword;
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"] || options["dict-langpair"]["y"] || "eng"}));
+		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"]}));
 		req.onreadystatechange = function (ev) {
 			dict.youdao(req);
 		};
@@ -723,7 +762,7 @@ let youdao = {
 	},
 	href: function (params) {
 		let keyword = encodeURIComponent(params["keyword"]);
-		let le = params["le"] || "eng"; // TODO
+		let le = params["le"] || options["dict-langpair"]["y"] || options.get("dict-langpair").defaultValue["y"];
 		return "http://dict.youdao.com/search?q=" +
 				keyword + "&le=" + le + "&tab=chn";
 	},
@@ -759,7 +798,7 @@ let youdao = {
 	_full: function (document) {
 		var full = {title: "", sub: {}};
 		var simp = youdao._simple(document);
-		var keyword_url = youdao.href({keyword: simp["word"], le: dict.args["-l"] || "eng"});
+		var keyword_url = youdao.href({keyword: simp["word"], le: dict.args["-l"]});
 		if (simp["pron"]) {
 			full["title"] = <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
@@ -804,7 +843,7 @@ let youdao = {
 		simp["audio"] = false;
 		if (audio) {
 			let datarel = audio.getAttribute("data-rel");
-			simp["audio"] = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(datarel) + "&le=" + (dict.args["-l"] || "eng");
+			simp["audio"] = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(datarel) + "&le=" + (dict.args["-l"] || options["dict-langpair"]["y"] || options.get("dict-langpair").defaultValue["y"]);
 		}
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle")[0];
 		simp["def"] = def ? def.textContent.trim().replace(/\n\s+/g, " | ") : false;
@@ -828,7 +867,7 @@ let youdao = {
 		var req = new XMLHttpRequest();
 		dict.suggestReq = req;
 		req.open("GET",
-			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + args[0]
+			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + encodeURIComponent(args[0])
 		);
 		var suggestions = [];
 		req.onreadystatechange = function () {
@@ -843,11 +882,11 @@ let youdao = {
 							let r = {};
 							r["g"] = word;
 							r["e"] = word;
-							r["url"] = youdao.href({keyword: word, le: args["-l"] || options["dict-langpair"]["y"] || "eng"});
+							r["url"] = youdao.href({keyword: word, le: args["-l"]});
 							suggestions.push(r);
 					});
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
-						context.completions = [{url:youdao.href({keyword:args[0], le:args["-l"] || options["dict-langpair"]["y"] || "eng"}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
+						context.completions = [{url:youdao.href({keyword:args[0], le:args["-l"]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
 				} else {
@@ -1059,7 +1098,7 @@ let qq = {
 		var req = new XMLHttpRequest();
 		dict.suggestReq = req;
 		req.open("GET",
-			"http://dict.qq.com/sug?" + args[0]
+			"http://dict.qq.com/sug?" + encodeURIComponent(args[0])
 		);
 		req.setRequestHeader("Referer", "http://dict.qq.com/");
 		var suggestions = [];
@@ -1078,7 +1117,7 @@ let qq = {
 							r["url"] = qq.href({"keyword": pair[0].trim()});
 							suggestions.push(r);
 					});
-					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
+					if (suggestions.length == 0 && args[0].trim().length > 0)
 						context.completions = [{url:qq.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
@@ -1116,7 +1155,7 @@ let google = {
 		// let langpair = options.get("dict-langpair").value;
 		// if (args["-l"])
 			// langpair=args["-l"];
-		let langpair = args["-l"] || options["dict-langpair"]["g"] || "en|zh-CN";
+		let langpair = args["-l"] || options["dict-langpair"]["g"] || options.get("dict-langpair").defaultValue["g"];
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
@@ -1133,15 +1172,7 @@ let google = {
 		req.send(formData);
 		return req;
 	},
-	opts: function() {
-		return {
-			names: ["-langpair", "-la"],
-			description: T(17),
-			default: "en|zh-CN", // TODO en,zh-CN
-			type: CommandOption.STRING
-		};
-	},
-	href: false,
+	href: false, // todo
 	_randomIp: function() {
 		let pieces = [];
 		for (var i = 0; i < 4; i++)
@@ -1188,11 +1219,9 @@ let dict_cn = {
 			def: false,
 			simple: false,
 			full: false,
-			text: false,
 			audio: false
 		};
 		var parser = new DOMParser();
-		ret["text"] = text;
 		var xml = parser.parseFromString(text, "text/xml");
 		var def = xml.getElementsByTagName("def");
 		if (def.length && (def[0].textContent !== "Not Found")) {
@@ -1321,6 +1350,7 @@ let dict_cn = {
 
 let dict = {
 	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao, "z": zdic},
+	history: storage.newMap("dict.js", {store: true}),
 	languages: [
 		["af", "Afrikaans"],
 		["sq", "Albanian"],
@@ -1522,6 +1552,8 @@ let dict = {
 	get engine() dict.engines[dict._route(dict.args)],
 	args: {},
 	init: function(args) {
+		if (dict.suggestReq)
+			dict.suggestReq.abort(); // clear suggest request
 		dict.args = args;
 		let keyword = args[0] || "";
 		keyword = keyword.trim();
@@ -1533,15 +1565,27 @@ let dict = {
 				keyword = dict._selection() || dactyl.clipboardRead() || "";
 		}
 		keyword = keyword.trim();
+		let engine = dict._route();
+		let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
 		if (keyword.length == 0) {
 			commandline.input(T(4), function(keyword) {
-					dict.keyword = keyword.trim();
+					var keyword = keyword.trim();
+					dict.keyword = keyword;
 					if (args["-t"])
-						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
-					dict.engine.init(dict.keyword, args);
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
+					let key = dict.generateKey(keyword, engine);
+					if (lp)
+						key = dict.generateKey(keyword, engine, lp);
+					let ret = dict.getCache(key);
+					if (ret)
+						dict.process(ret);
+					else {
+						dict.cacheKey = key;
+						dict.engine.init(dict.keyword, args);
+					}
 				},
 				{
-					completer: function (context) {
+					completer: function (context/*, args*/) { // todo
 						dict.suggest(context, [commandline.command]); // this != dict
 					}
 				}
@@ -1549,8 +1593,37 @@ let dict = {
 		} else {
 			dict.keyword = keyword;
 			if (args["-t"])
-				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"] || "eng"}), {background:false, where:dactyl.NEW_TAB});
-			dict.engine.init(dict.keyword, args);
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
+			let key = dict.generateKey(keyword, engine);
+			if (lp)
+				key = dict.generateKey(keyword, engine, lp);
+			let ret = dict.getCache(key);
+			if (ret)
+				dict.process(ret);
+			else {
+				dict.cacheKey = key;
+				dict.engine.init(dict.keyword, args);
+			}
+		}
+	},
+
+	getCache: function (key) {
+		let all = dict.history.get("index");
+		if (!all)
+			return false;
+		let index = all.indexOf(key);
+		return dict.history.get(index);
+	},
+
+	storeCache: function(ret) {
+		let all = dict.history.get("index");
+		if (!all) {
+			dict.history.set("index", [dict.cacheKey]);
+			dict.history.set(0, ret);
+		} else {
+			dict.history.set(all.length, ret);
+			var newAll = all.concat([dict.cacheKey]);
+			dict.history.set("index", newAll);
 		}
 	},
 
@@ -1584,7 +1657,7 @@ let dict = {
 					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
 				} else {
 					var list = template.table(ret["full"]["title"], ret["full"]["sub"]);
-					dactyl.echo(<>{STYLE}<div class="dict_block" id={"dict_js_"+(dict.args["-e"] || options["dict-engine"])}>{list}</div></>, commandline.FORCE_MULTILINE);
+					dactyl.echo(<>{STYLE}<div class="dict_block" id={"dict_js_"+(dict.args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue)}>{list}</div></>, commandline.FORCE_MULTILINE);
 					// dactyl.echomsg(ret["full"]); // commandline.FORCE_MULTILINE
 				}
 				break;
@@ -1608,6 +1681,7 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = dict_cn.process(req.responseText);
+				dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1620,6 +1694,7 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = qq.process(req.responseText);
+				dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1632,6 +1707,7 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = youdao.process(req.responseText);
+				dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1644,7 +1720,7 @@ let dict = {
 			if (req.status == 200) {
 				let g = JSON.parse(req.responseText);
 				let t = g.responseData.translatedText.replace(/\n$/, "").split("\n");
-				let show = options.get("dict-show").value;
+				let show = options.get("dict-show").value || options.get("dict-show").defaultValue;
 				if (dict.args["-o"])
 					show = dict.args["-o"];
 				// tts
@@ -1713,6 +1789,7 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = zdic.process(req.responseText);
+				dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1732,17 +1809,17 @@ let dict = {
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.process[1] = url;
-		let dash_e = args["-e"] || options.get("dict-engine").value || "";
+		let dash_e = args["-e"] || options.get("dict-engine").value || options.get("dict-engine").defaultValue;
 		let dash_l = "1024"; // 没实际用处,降低 context.key 意外相等的可能性
 		if ("yz".indexOf(dash_e) + 1)
-			dash_l += args["-l"] || options["dict-langpair"][dash_e] || "";
+			dash_l += args["-l"] || options["dict-langpair"][dash_e] || options.get("dict-langpair").defaultValue[dash_e];
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
 		if (!engine.generate)
 			engine = dict_cn;
 		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
 			context.regenerate = true;
 		context.generate = function () engine.generate(context, args);
-		
+
 		/*context.fork("words_buffer", 0, this, function (context) {
 				 var keyword = args.join(" ").trim();
 				 if (keyword.length < 3)
@@ -1763,14 +1840,13 @@ let dict = {
 		});*/
 	},
 
-	opts: function () {
-		if (dict.engine.hasOwnProperty('opts'))
-			return dict.engine.opts() || undefined;
-		return undefined;
+	generateKey: function () { // keyword, engine, langpair
+		return JSON.stringify(arguments);
 	},
 
 	optsCompleter: function(context, extra) {
 		context.quote = ["", util.identity, ""];
+		context.compare = null;
 		let youdao_completions = [
 			['eng', T(36)],
 			['fr', T(37)],
@@ -1808,7 +1884,6 @@ let dict = {
 			context.fork("youdao_le", 0, this, function(context) {
 					context.title = [T(16) + " - " + T(35), T(1)];
 					context.completions = youdao_completions;
-					context.compare = null;
 			});
 			break;
 
@@ -1820,7 +1895,6 @@ let dict = {
 			case 'g':
 			context.fork("dict_langpairs", 0, this, function (context) {
 					context.title = [T(16) + " - " + T(34), T(1)];
-					context.compare = null;
 					context.completions = dict.langpairs;
 			});
 			break;
@@ -1828,12 +1902,23 @@ let dict = {
 			case 'z':
 			context.fork("zdic_type", 0, this, function (context) {
 					context.title = [T(16) + " - " + T(41), T(1)];
-					context.compare = null;
 					context.completions = zdic_completions;
 			});
 			break;
 
 			default :
+			context.fork("youdao_le", 0, this, function(context) {
+					context.title = [T(16) + " - " + T(35), T(1)];
+					context.completions = youdao_completions;
+			});
+			context.fork("zdic_type", 0, this, function (context) {
+					context.title = [T(16) + " - " + T(41), T(1)];
+					context.completions = zdic_completions;
+			});
+			context.fork("dict_langpairs", 0, this, function (context) {
+					context.title = [T(16) + " - " + T(34), T(1)];
+					context.completions = dict.langpairs;
+			});
 			context.completions = [];
 			break;
 		}
@@ -1843,10 +1928,10 @@ let dict = {
 
 	},
 
-	_route: function (args) {
-		let keyword = args[0] || "";
+	_route: function (/*args*/) {
+		let args = arguments[0] || dict.args;
 		let lang = args["-l"] || "";
-		let engine = args["-e"] || options["dict-engine"];
+		let engine = args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue;
 		switch (lang) {
 			case "jap":
 			case "eng":
@@ -2149,8 +2234,32 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		bang: true, // TODO
 		completer: function (context, args) {
+			var all = dict.history.get("index");
+			if (all) {
+				context.fork("words_history", 0, this, function (context) {
+					var completions = [];
+					let e = dict._route(args);
+					let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+					all.forEach(function (i, index) {
+						var _args = JSON.parse(i);
+						if (e !== _args[1])
+							return false;
+						let _lp = _args[2] || "";
+						if (lp !== _lp)
+							return false;
+						var desc = dict.history.get(index).simple;
+						if (!desc)
+							return false;
+						completions.push([_args[0], desc]);
+					});
+					context.title = ["Words from history!"];
+					context.completions = completions;
+				});
+			}
+		
 			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
-				return dict.suggest(context, args);
+				dict.suggest(context, args);
+
 		},
 		literal: 0,
 		options: [
@@ -2220,6 +2329,29 @@ Array.slice("dgqyz").forEach(function(char) {
 				bang: true, // TODO
 				completer: function (context, args) {
 					args["-e"] = char;
+					var all = dict.history.get("index");
+					if (all) {
+						context.fork("words_history", 0, this, function (context) {
+								var completions = [];
+								let e = args["-e"];
+								let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+								all.forEach(function (i, index) {
+										var _args = JSON.parse(i);
+										if (e !== _args[1])
+											return false;
+										let _lp = _args[2] || "";
+										if (lp !== _lp)
+											return false;
+										var desc = dict.history.get(index).simple;
+										if (!desc)
+											return false;
+										completions.push([_args[0], desc]);
+								});
+								context.title = ["Words from history!"];
+								context.completions = completions;
+						});
+					}
+
 					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
 						return dict.suggest(context, args);
 				},
