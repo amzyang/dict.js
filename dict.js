@@ -586,7 +586,6 @@ let zdic = {
 	process: function(text) {
 		let ret = {
 			notfound: false,
-			ok: true,
 			pron: false,
 			def: false,
 			simple: false,
@@ -624,7 +623,6 @@ let zdic = {
 		});
 
 		var _ret = zdic._simple(body);
-		ret["keyword"] = _ret["word"];
 		ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
@@ -771,26 +769,23 @@ let youdao = {
 		var html = youdao._strip_html_tag(text);
 		var ret = {
 			notfound: false,
-			ok: true,
 			pron: false,
 			def: false,
 			simple: false,
 			full: false,
-			text: false,
 			audio: false
 		};
 		var doc = dict.htmlToDom(html);
 		dict.resolveRelative(doc, "http://dict.youdao.com/");
 		var _ret = youdao._simple(doc);
-		ret["keyword"] = _ret["word"];
 		ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
 		if (ret["pron"])
-			ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
+			ret["simple"] = _ret["word"] + " [" + ret["pron"] + "] " + ret["def"];
 		else
-			ret["simple"] = ret["keyword"] + " " + ret["def"];
+			ret["simple"] = _ret["word"] + " " + ret["def"];
 		ret["full"] = youdao._full(doc);
 		return ret;
 	},
@@ -934,24 +929,21 @@ let qq = {
 		let j = JSON.parse(text);
 		let ret = {
 			notfound: false,
-			ok: true,
 			pron: false,
 			def: false,
 			simple: false,
 			full: false,
-			text: false,
 			audio: false
 		};
 		if (j["local"]) {
 			let _ret = qq._simple(j);
-			ret["keyword"] = _ret["word"];
 			ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
 			ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 			ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 			if (ret["pron"])
-				ret["simple"] = ret["keyword"] + " [" + ret["pron"] + "] " + ret["def"];
+				ret["simple"] = _ret["word"] + " [" + ret["pron"] + "] " + ret["def"];
 			else
-				ret["simple"] = ret["keyword"] + " " + ret["def"];
+				ret["simple"] = _ret["word"] + " " + ret["def"];
 			ret["full"] = qq._full(j);
 		} else
 			ret["notfound"] = true;
@@ -1214,7 +1206,6 @@ let dict_cn = {
 	process: function(text) { // FIXME: kiss
 		let ret = {
 			notfound: false,
-			ok: true,
 			pron: false,
 			def: false,
 			simple: false,
@@ -1266,23 +1257,18 @@ let dict_cn = {
 					origTrans.push([org, trans]);
 				}
 				ret["full"]["sub"][T(18)] = <dl>{oT}</dl>;
-				ret["origTrans"] = origTrans;
-			} else
-				ret["origTrans"] = false;
+			}
 
 			// rel
 			var rels = xml.getElementsByTagName("rel");
 			if (rels.length) {
-				ret["rels"] = [];
 				let rs = <></>;
 				for (var i = 0; i < rels.length; i++) {
 					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
 					rs += <><span><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
-					ret["rels"].push(rels[i].textContent);
 				}
 				ret["full"]["sub"][T(9)] = rs;
-			} else
-				ret["rels"] = false;
+			}
 
 			// audio
 			var audioelem = xml.getElementsByTagName("audio");
@@ -1612,36 +1598,29 @@ let dict = {
 	},
 
 	getCache: function (key) {
-		let all = dict.history.get("index");
-		if (!all)
-			return false;
-		let index = all.indexOf(key);
-		let ret = dict.history.get(index);
+		let ret = dict.history.get(key);
 		if (!ret)
 			return false;
-		ret["full"]["title"] = new XML(ret["full"]["title"]);
+		ret["full"]["title"] = new XML("<block>"+ret["full"]["title"]+"</block>");
 		for (var prop in ret["full"]["sub"]) {
-			ret["full"]["sub"][prop] = new XML(ret["full"]["sub"][prop]);
+			ret["full"]["sub"][prop] = new XML("<block>"+ret["full"]["sub"][prop]+"</block>");
 		}
 		return ret;
 	},
 
 	storeCache: function(ret) {
 		let all = dict.history.get("index");
+		if (!all)
+			all = [];
 		let ret_serialize = JSON.parse(JSON.stringify(ret));
 		ret_serialize["full"]["title"] = ret["full"]["title"].toXMLString();
 		ret_serialize["full"]["sub"] = {};
 		for (var prop in ret["full"]["sub"]) {
 			ret_serialize["full"]["sub"][prop] = ret["full"]["sub"][prop].toXMLString();
 		}
-		if (!all) {
-			dict.history.set("index", [dict.cacheKey]);
-			dict.history.set(0, ret_serialize);
-		} else {
-			dict.history.set(all.length, ret_serialize);
-			var newAll = all.concat([dict.cacheKey]);
-			dict.history.set("index", newAll);
-		}
+		var newAll = all.concat([dict.cacheKey]);
+		dict.history.set("index", newAll);
+		dict.history.set(dict.cacheKey, ret_serialize);
 	},
 
 	process: function(ret) {
@@ -2264,7 +2243,7 @@ group.commands.add(["di[ct]", "dic"],
 						let _lp = _args[2] || "";
 						if (lp !== _lp)
 							return false;
-						var desc = dict.history.get(index).simple;
+						var desc = dict.history.get(i).simple;
 						if (!desc)
 							return false;
 						completions.push([_args[0], desc]);
@@ -2367,7 +2346,7 @@ Array.slice("dgqyz").forEach(function(char) {
 										let _lp = _args[2] || "";
 										if (lp !== _lp)
 											return false;
-										var desc = dict.history.get(index).simple;
+										var desc = dict.history.get(i).simple;
 										if (!desc)
 											return false;
 										completions.push([_args[0], desc]);
