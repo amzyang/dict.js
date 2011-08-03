@@ -1616,16 +1616,29 @@ let dict = {
 		if (!all)
 			return false;
 		let index = all.indexOf(key);
-		return dict.history.get(index);
+		let ret = dict.history.get(index);
+		if (!ret)
+			return false;
+		ret["full"]["title"] = new XML(ret["full"]["title"]);
+		for (var prop in ret["full"]["sub"]) {
+			ret["full"]["sub"][prop] = new XML(ret["full"]["sub"][prop]);
+		}
+		return ret;
 	},
 
 	storeCache: function(ret) {
 		let all = dict.history.get("index");
+		let ret_serialize = JSON.parse(JSON.stringify(ret));
+		ret_serialize["full"]["title"] = ret["full"]["title"].toXMLString();
+		ret_serialize["full"]["sub"] = {};
+		for (var prop in ret["full"]["sub"]) {
+			ret_serialize["full"]["sub"][prop] = ret["full"]["sub"][prop].toXMLString();
+		}
 		if (!all) {
 			dict.history.set("index", [dict.cacheKey]);
-			dict.history.set(0, ret);
+			dict.history.set(0, ret_serialize);
 		} else {
-			dict.history.set(all.length, ret);
+			dict.history.set(all.length, ret_serialize);
 			var newAll = all.concat([dict.cacheKey]);
 			dict.history.set("index", newAll);
 		}
