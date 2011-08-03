@@ -838,7 +838,7 @@ let youdao = {
 		var pron = document.querySelectorAll("#results .phonetic")[0];
 		var simp = {};
 		simp["word"] = decodeURIComponent(youdao.keyword);
-		simp["pron"] = pron ? pron.textContent.trim().replace(/^\[|\]$/g, "") : false;
+		simp["pron"] = pron ? pron.textContent.trim().replace(/^\[,?|\]$/g, "").replace(/, ,/g, ", ") : false;
 		var audio = document.querySelectorAll("#results .phonetic+a")[0];
 		simp["audio"] = false;
 		if (audio) {
@@ -1552,6 +1552,10 @@ let dict = {
 	get engine() dict.engines[dict._route(dict.args)],
 	args: {},
 	init: function(args) {
+		if (args["-h"] && args["-h"]=="clear") {
+			dict.history.clear();
+			return true;
+		}
 		if (dict.suggestReq)
 			dict.suggestReq.abort(); // clear suggest request
 		dict.args = args;
@@ -2280,6 +2284,14 @@ group.commands.add(["di[ct]", "dic"],
 				description: T(17),
 				type: CommandOption.STRING,
 				completer: function(context, args) dict.optsCompleter(context,{key:args["-e"] || ""})
+			},
+			{
+				names: ["-h"],
+				description: "History management",
+				type: CommandOption.STRING,
+				completer: function (context, args) [
+					["clear", "Remove all history"]
+				]
 			},
 			{
 				names: ["-o"],
