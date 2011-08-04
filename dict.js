@@ -627,7 +627,7 @@ let zdic = {
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
-		ret["simple"] = ret["def"].replace(/\n|\r/g, " ").replace(/\s\s+/g, " ");
+		ret["simple"] = ret["def"].replace(/\n|\r/g, " ").replace(/\s\s+/g, " ").slice(0, 200);
 		ret["full"] = zdic._full(body);
 		return ret;
 	},
@@ -1620,7 +1620,9 @@ let dict = {
 		}
 		var newAll = all.concat([dict.cacheKey]);
 		dict.history.set("index", newAll);
+		dict.history.save("index");
 		dict.history.set(dict.cacheKey, ret_serialize);
+		dict.history.save(dict.cacheKey);
 	},
 
 	process: function(ret) {
