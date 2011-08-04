@@ -1336,7 +1336,36 @@ let dict_cn = {
 
 let dict = {
 	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao, "z": zdic},
-	history: storage.newMap("dict.js", {store: true}),
+	get DBConn() {
+		if (dict._DBConn)
+			return dict._DBConn;
+		// https://developer.mozilla.org/En/Storage
+		Components.utils.import("resource://gre/modules/Services.jsm");
+		Components.utils.import("resource://gre/modules/FileUtils.jsm");
+
+		let file = FileUtils.getFile("ProfD", ["dict.js.sqlite"]);
+		let DBConn = Services.storage.openDatabase(file); // Will also create the file
+		//
+		// id, key, engine, word, lp, simple, all, create_time, frequency
+		let dict_js = "id            INTEGER PRIMARY KEY, " +
+					  "key           TEXT NOT NULL DEFAULT '{}', " +
+					  "engine        TEXT NOT NULL DEFAULT 'd', " +
+					  "word          TEXT NOT NULL DEFAULT '', " +
+					  "lp            TEXT DEFAULT '', " +
+					  "simple        TEXT DEFAULT '', " +
+					  "ret           TEXT DEFAULT '', " +
+					  "create_time   INTEGER DEFAULT 0, " +
+					  "frequency     INTEGER DEFAULT 1";
+		try {
+			DBConn.createTable("dict_js", dict_js);
+			dict._DBConn = DBConn;
+			return dict._DBConn;
+		} catch (e) { // Table already exists or the requested table couldn't be created.
+			// dactyl.echoerr(e.message); // do nth
+		}
+		dict._DBConn = DBConn;
+		return dict._DBConn;
+	},
 	languages: [
 		["af", "Afrikaans"],
 		["sq", "Albanian"],
@@ -1539,7 +1568,7 @@ let dict = {
 	args: {},
 	init: function(args) {
 		if (args["-h"] && args["-h"]=="clear") {
-			dict.history.clear();
+			dict.clearCache();
 			return true;
 		}
 		if (dict.suggestReq)
@@ -1563,9 +1592,7 @@ let dict = {
 					dict.keyword = keyword;
 					if (args["-t"])
 						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
-					let key = dict.generateKey(keyword, engine);
-					if (lp)
-						key = dict.generateKey(keyword, engine, lp);
+					let key = dict.generateKey(keyword, engine, lp || "");
 					let ret = dict.getCache(key);
 					if (ret)
 						dict.process(ret);
@@ -1584,9 +1611,7 @@ let dict = {
 			dict.keyword = keyword;
 			if (args["-t"])
 				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
-			let key = dict.generateKey(keyword, engine);
-			if (lp)
-				key = dict.generateKey(keyword, engine, lp);
+			let key = dict.generateKey(keyword, engine, lp||"");
 			let ret = dict.getCache(key);
 			if (ret)
 				dict.process(ret);
@@ -1597,8 +1622,12 @@ let dict = {
 		}
 	},
 
-	getCache: function (key) {
-		let ret = dict.history.get(key);
+	getCache: function (key) { // 保存声音?
+		let statement = dict.DBConn.createStatement("SELECT ret FROM dict_js WHERE key = :key ORDER BY frequency, create_time");
+		statement.params.key = key;
+		var ret = false
+		while (statement.executeStep())
+			ret = JSON.parse(statement.row.ret);
 		if (!ret)
 			return false;
 		ret["full"]["title"] = new XML("<block>"+ret["full"]["title"]+"</block>");
@@ -1609,20 +1638,64 @@ let dict = {
 	},
 
 	storeCache: function(ret) {
-		let all = dict.history.get("index");
-		if (!all)
-			all = [];
+		let _arguments = JSON.parse(dict.cacheKey);
+		let create_time = (new Date()).getTime();
 		let ret_serialize = JSON.parse(JSON.stringify(ret));
 		ret_serialize["full"]["title"] = ret["full"]["title"].toXMLString();
 		ret_serialize["full"]["sub"] = {};
 		for (var prop in ret["full"]["sub"]) {
 			ret_serialize["full"]["sub"][prop] = ret["full"]["sub"][prop].toXMLString();
 		}
-		var newAll = all.concat([dict.cacheKey]);
-		dict.history.set("index", newAll);
-		dict.history.save("index");
-		dict.history.set(dict.cacheKey, ret_serialize);
-		dict.history.save(dict.cacheKey);
+		let _ret = JSON.stringify(ret_serialize);
+		var statement = dict.DBConn.createStatement(
+			"INSERT INTO dict_JS " +
+			"(key, word, engine, lp, simple, ret, create_time) " +
+			"VALUES (:key, :word, :engine, :lp, :simple, :ret, :create_time)"
+		);
+		statement.params.key = dict.cacheKey;
+		statement.params.word = _arguments[0];
+		statement.params.engine = _arguments[1];
+		statement.params.lp = _arguments[2];
+		statement.params.simple = ret["simple"];
+		statement.params.ret = _ret;
+		statement.params.create_time = create_time;
+
+		statement.execute();
+	},
+
+	clearCache: function() {
+		dict.DBConn.executeSimpleSQL("DELETE FROM dict_js");
+	},
+
+	cacheGenerate: function(engine, lp, context) {
+		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp");
+		statement.params.engine=engine;
+		statement.params.lp=lp;
+		statement.executeAsync({
+				handleResult: function(aResultSet) {
+					var completions = [];
+					for (let row = aResultSet.getNextRow();
+						row;
+						row = aResultSet.getNextRow()) {
+						let word = row.getResultByName('word');
+						let desc = row.getResultByName('simple');
+						if (desc.trim().length==0)
+							continue;
+						completions.push([word, desc]);
+					}
+					context.title = ["Words from history!"];
+					context.completions = completions;
+				},
+
+				handleError: function(aError) {
+					print("Error: " + aError.message);
+				},
+
+				handleCompletion: function(aReason) {
+					if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
+						print("Query canceled or aborted!");
+				}
+		});
 	},
 
 	process: function(ret) {
@@ -2232,28 +2305,13 @@ group.commands.add(["di[ct]", "dic"],
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
 		bang: true, // TODO
 		completer: function (context, args) {
-			var all = dict.history.get("index");
-			if (all) {
 				context.fork("words_history", 0, this, function (context) {
-					var completions = [];
 					let e = dict._route(args);
 					let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-					all.forEach(function (i, index) {
-						var _args = JSON.parse(i);
-						if (e !== _args[1])
-							return false;
-						let _lp = _args[2] || "";
-						if (lp !== _lp)
-							return false;
-						var desc = dict.history.get(i).simple;
-						if (!desc)
-							return false;
-						completions.push([_args[0], desc]);
-					});
-					context.title = ["Words from history!"];
-					context.completions = completions;
-				});
-			}
+					context.generate = function () {
+						dict.cacheGenerate(e, lp, context);
+					};
+			});
 		
 			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
 				dict.suggest(context, args);
@@ -2335,28 +2393,13 @@ Array.slice("dgqyz").forEach(function(char) {
 				bang: true, // TODO
 				completer: function (context, args) {
 					args["-e"] = char;
-					var all = dict.history.get("index");
-					if (all) {
-						context.fork("words_history", 0, this, function (context) {
-								var completions = [];
-								let e = args["-e"];
-								let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-								all.forEach(function (i, index) {
-										var _args = JSON.parse(i);
-										if (e !== _args[1])
-											return false;
-										let _lp = _args[2] || "";
-										if (lp !== _lp)
-											return false;
-										var desc = dict.history.get(i).simple;
-										if (!desc)
-											return false;
-										completions.push([_args[0], desc]);
-								});
-								context.title = ["Words from history!"];
-								context.completions = completions;
-						});
-					}
+					context.fork("words_history", 0, this, function (context) {
+							let e = args["-e"];
+							let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+							context.generate = function () {
+								dict.cacheGenerate(e, lp, context);
+							};
+					});
 
 					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
 						return dict.suggest(context, args);
