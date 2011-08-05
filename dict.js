@@ -1688,17 +1688,17 @@ let dict = {
 		}
 	},
 
-	cacheGenerate: function(engine, lp, context) {
+	cacheGenerate: function(word, engine, lp, context) {
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 		var engineObj = dict.engines[engine];
-		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp ORDER BY frequency DESC, create_time DESC");
+		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE '"+word+"%' ORDER BY frequency DESC, create_time DESC LIMIT 30");
 		statement.params.engine=engine;
 		statement.params.lp=lp;
+		var completions = [];
 		statement.executeAsync({
 				handleResult: function(aResultSet) {
-					var completions = [];
 					for (let row = aResultSet.getNextRow();
 						row;
 						row = aResultSet.getNextRow()) {
@@ -1709,11 +1709,6 @@ let dict = {
 							continue;
 						completions.push({word:word, desc:desc, url:url});
 					}
-					context.keys = {"text":"word", "description":"desc"};
-					context.process[1] = url;
-					context.title = ["Words from history!"];
-					context.compare = null;
-					context.completions = completions;
 				},
 
 				handleError: function(aError) {
@@ -1723,6 +1718,12 @@ let dict = {
 				handleCompletion: function(aReason) {
 					if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
 						print("Query canceled or aborted!");
+					context.keys = {"text":"word", "description":"desc"};
+					context.process[1] = url;
+					context.title = ["Words from history!"];
+					context.filterFunc = null;
+					context.compare = null;
+					context.completions = completions;
 				}
 		});
 	},
@@ -2342,8 +2343,9 @@ group.commands.add(["di[ct]", "dic"],
 				context.fork("words_history", 0, this, function (context) {
 					let e = dict._route(args);
 					let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+					context.regenerate = true;
 					context.generate = function () {
-						dict.cacheGenerate(e, lp, context);
+						dict.cacheGenerate(args[0] || "", e, lp, context);
 					};
 			});
 		
@@ -2430,8 +2432,9 @@ Array.slice("dgqyz").forEach(function(char) {
 					context.fork("words_history", 0, this, function (context) {
 							let e = args["-e"];
 							let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+							context.regenerate = true;
 							context.generate = function () {
-								dict.cacheGenerate(e, lp, context);
+								dict.cacheGenerate(args[0] || "", e, lp, context);
 							};
 					});
 
@@ -2819,3 +2822,4 @@ var INFO =
 // use bytes instead of length
 // use soundManager and xul iframe?
 // 存入的数据加入版本号,每次检测版本号,　是否需要更新
+// context.cancel 移除异步自动补全调用
