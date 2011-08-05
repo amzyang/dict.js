@@ -1787,7 +1787,8 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = dict_cn.process(req.responseText);
-				dict.storeCache(ret);
+				if (!ret.notfound)
+					dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1800,7 +1801,8 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = qq.process(req.responseText);
-				dict.storeCache(ret);
+				if (!ret.notfound)
+					dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1813,7 +1815,8 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = youdao.process(req.responseText);
-				dict.storeCache(ret);
+				if (!ret.notfound)
+					dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
@@ -1895,7 +1898,8 @@ let dict = {
 			let ret = {};
 			if (req.status == 200) {
 				ret = zdic.process(req.responseText);
-				dict.storeCache(ret);
+				if (!ret.notfound)
+					dict.storeCache(ret);
 				dict.process(ret);
 			} else
 				dict.error(req.status);
