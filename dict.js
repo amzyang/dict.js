@@ -1569,7 +1569,7 @@ let dict = {
 	args: {},
 	init: function(args) {
 		if (args["-h"] && args["-h"]=="clear") {
-			dict.clearCache();
+			dict.clearCache(args);
 			return true;
 		}
 		if (dict.suggestReq)
@@ -1653,11 +1653,46 @@ let dict = {
 		statement.execute();
 	},
 
-	clearCache: function() {
-		dict.DBConn.executeSimpleSQL("DELETE FROM dict_js");
+	clearCache: function(/*args*/) {
+		let args = arguments[0];
+		if (args[0].length == 0)
+			dict.DBConn.executeSimpleSQL("DELETE FROM dict_js");
+		else {
+			let engine = args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue;
+			let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
+			let word = args[0];
+			var statement = dict.DBConn.createStatement(
+				"DELETE FROM dict_JS " +
+				"WHERE word = :word AND engine = :engine AND lp = :lp"
+			);
+			statement.params.word = word;
+			statement.params.engine = engine;
+			statement.params.lp = lp;
+			statement.executeAsync({
+					handleResult: function(aResultSet) {
+						; // do nth
+					},
+
+					handleError: function(aError) {
+						print("Error: " + aError.message);
+					},
+
+					handleCompletion: function(aReason) {
+						if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
+							print("Query canceled or aborted!");
+						else
+							dactyl.echo('"' + word + "\" has been removed!");
+					}
+			});
+
+		}
 	},
 
 	cacheGenerate: function(engine, lp, context) {
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
+		var engineObj = dict.engines[engine];
 		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp ORDER BY frequency DESC, create_time DESC");
 		statement.params.engine=engine;
 		statement.params.lp=lp;
@@ -1668,11 +1703,14 @@ let dict = {
 						row;
 						row = aResultSet.getNextRow()) {
 						let word = row.getResultByName('word');
+						let url = engineObj.href({keyword:word, le: lp, type: lp})
 						let desc = row.getResultByName('simple');
 						if (desc.trim().length==0)
 							continue;
-						completions.push([word, desc]);
+						completions.push({word:word, desc:desc, url:url});
 					}
+					context.keys = {"text":"word", "description":"desc"};
+					context.process[1] = url;
 					context.title = ["Words from history!"];
 					context.compare = null;
 					context.completions = completions;
@@ -2309,7 +2347,7 @@ group.commands.add(["di[ct]", "dic"],
 					};
 			});
 		
-			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
+			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0 && !args["-h"])
 				dict.suggest(context, args);
 
 		},
@@ -2397,7 +2435,7 @@ Array.slice("dgqyz").forEach(function(char) {
 							};
 					});
 
-					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0)
+					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0 && !args["-h"])
 						return dict.suggest(context, args);
 				},
 				literal: 0,
@@ -2410,6 +2448,14 @@ Array.slice("dgqyz").forEach(function(char) {
 							["s", T(27)],
 							["a", T(28)],
 							["n", T(29)]
+						]
+					},
+					{
+						names: ["-h"],
+						description: "History management",
+						type: CommandOption.STRING,
+						completer: function (context, args) [
+							["clear", "Remove all history"]
 						]
 					},
 					{
