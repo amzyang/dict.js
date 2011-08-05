@@ -1655,12 +1655,12 @@ let dict = {
 
 	clearCache: function(/*args*/) {
 		let args = arguments[0];
-		if (args[0].length == 0)
+		let word = args[0] || "";
+		if (word.length == 0)
 			dict.DBConn.executeSimpleSQL("DELETE FROM dict_js");
 		else {
 			let engine = args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue;
 			let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
-			let word = args[0];
 			var statement = dict.DBConn.createStatement(
 				"DELETE FROM dict_JS " +
 				"WHERE word = :word AND engine = :engine AND lp = :lp"
