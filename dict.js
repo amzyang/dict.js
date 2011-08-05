@@ -1915,6 +1915,10 @@ let dict = {
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.process[1] = url;
+		context.cancel = function () {
+			if (dict.suggestReq)
+				dict.suggestReq.abort();
+		};
 		let dash_e = args["-e"] || options.get("dict-engine").value || options.get("dict-engine").defaultValue;
 		let dash_l = "1024"; // 没实际用处,降低 context.key 意外相等的可能性
 		if ("yz".indexOf(dash_e) + 1)
