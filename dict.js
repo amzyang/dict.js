@@ -640,16 +640,16 @@ let zdic = {
 			full["title"] = <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
 				<span>[{simp["pron"]}]</span>
-			</p>;
+				</p>.toXMLString();
 		} else {
 			full["title"] = <p class="title">
 				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
-			</p>;
+			</p>.toXMLString();
 		}
 
 		var explain = body.querySelectorAll("div#wrapper div#container div#content");
 		if (explain[0])
-			full["sub"][T(8)] = new XML("<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(zdic._htmlPre(explain[0].innerHTML))+"</div>");
+			full["sub"][T(8)] = "<div xmlns=\""+XHTML+"\">"+PARSER.HTMLtoXML(zdic._htmlPre(explain[0].innerHTML))+"</div>";
 		return full;
 	},
 
@@ -795,36 +795,36 @@ let youdao = {
 		var simp = youdao._simple(document);
 		var keyword_url = youdao.href({keyword: simp["word"], le: dict.args["-l"]});
 		if (simp["pron"]) {
-			full["title"] = <p class="title">
+			full["title"] = "" + <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{simp["word"]}</a>
 				<span>[{simp["pron"]}]</span>
 			</p>;
 		} else {
-			full["title"] = <p class="title">
+			full["title"] = "" + <p class="title">
 				<a href={keyword_url} target="_blank" highlight="URL">{simp["word"]}</a>
 			</p>;
 		}
 
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
 		if (def[0])
-			full["sub"][T(8)] = new XML("<ul>"+youdao._htmlPre(def[0].innerHTML)+"</ul>");
+			full["sub"][T(8)] = "<ul>"+youdao._htmlPre(def[0].innerHTML)+"</ul>";
 
 		var ph = document.querySelectorAll("#wordGroup");
 		if (ph[0])
-			full["sub"][T(9)] = new XML("<div>"+youdao._htmlPre(ph[0].innerHTML)+"</div>");
+			full["sub"][T(9)] = "<div>"+youdao._htmlPre(ph[0].innerHTML)+"</div>";
 
 		var syn = document.querySelectorAll("#Synonyms");
 		if (syn[0])
-			full["sub"][T(10)] = new XML("<div>"+youdao._htmlPre(syn[0].innerHTML)+"</div>");
+			full["sub"][T(10)] = "<div>"+youdao._htmlPre(syn[0].innerHTML)+"</div>";
 
 
 		var ex = document.querySelectorAll("#examples");
 		if (ex[0])
-			full["sub"][T(18)] = new XML("<div>"+youdao._htmlPre(ex[0].innerHTML)+"</div>");
+			full["sub"][T(18)] = "<div>"+youdao._htmlPre(ex[0].innerHTML)+"</div>";
 
 		var mor = document.querySelectorAll("#etcTrans p");
 		if (mor[0])
-			full["sub"][T(13)] = new XML("<p>"+youdao._htmlPre(mor[0].innerHTML)+"</p>");
+			full["sub"][T(13)] = "<p>"+youdao._htmlPre(mor[0].innerHTML)+"</p>";
 
 		return full;
 	},
@@ -957,56 +957,56 @@ let qq = {
 		let _simple = qq._simple(e);
 		let keyword_url = qq.href({"keyword":_simple["word"]});
 		if (_simple["pron"]) {
-			full["title"] = <p class="title">
+			full["title"] = "" + <p class="title">
 			<a href={keyword_url} target="_new" highlight="URL">{_simple["word"]}</a>
 				<span>[{_simple["pron"]}]</span>
 			</p>;
 		} else {
-			full["title"] = <p class="title">
+			full["title"] = "" + <p class="title">
 				<a href={keyword_url} target="_blank" highlight="URL">{_simple["word"]}</a>
 			</p>;
 		}
 		if (t.des) { // Define
-			let des = <></>;
+			let des = "";
 			let gsen = [];
 			if (t.sen)
 				gsen = t.sen;
 			t.des.forEach(function(item) {
 				if (typeof item === "string") {
-					let dt = new XML("<dt><span>"+item+"</span></dt>");
-					des += <><dl>{dt}</dl></>;
+					let dt = "<dt><span>"+item+"</span></dt>";
+					des += "<dl>"+dt+"</dl>";
 				} else {
 					if (item["p"]) {
 						let pos = item["p"];
 						let sen = qq._digIntoSen(pos, gsen);
-						let dt = new XML("<dt><span>"+item["p"]+"</span><span>"+item["d"]+"</span></dt>");
-						let dds = <></>;
+						let dt = "<dt><span>"+item["p"]+"</span><span>"+item["d"]+"</span></dt>";
+						let dds = "";
 						if (sen) {
 							sen.s.forEach(function(single) {
 									let es = single["es"];
 									let cs = single["cs"];
-									dds += new XML("<dd>"+es+"</dd>");
-									dds += new XML("<dd>"+cs+"</dd>");
+									dds += "<dd>"+es+"</dd>";
+									dds += "<dd>"+cs+"</dd>";
 							});
 						}
-						des += <><dl>{dt}{dds}</dl></>;
+						des += "<dl>"+dt+dds+"</dl>";
 					} else {
-						let dt = new XML("<dt><span>"+item["d"]+"</span></dt>");
-						des += <><dl>{dt}</dl></>;
+						let dt = "<dt><span>"+item["d"]+"</span></dt>";
+						des += "<dl>"+dt+"</dl>";
 					}
 				}
 			});
-			full["sub"][T(8)] = <div class="basic">{des}</div>;
+			full["sub"][T(8)] = '<div class="basic">'+des+"</div>";
 		}
 
 		if (t.ph) { // Related phrases
-			let ph = <></>;
+			let ph = "";
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
-				let phs = new XML(item["phs"]);
-				ph += <><li><a href={href} highlight="URL">{phs}</a> {item["phd"]}</li></>;
+				let phs = item["phs"];
+				ph += "" + <li><a href={href} highlight="URL">{phs}</a> {item["phd"]}</li>.toXMLString();
 			});
-			full["sub"][T(9)] = <ol>{ph}</ol>;
+			full["sub"][T(9)] = "<ol>"+ph+"</ol>";
 		}
 
 		if (t.syn) { // Synonyms
@@ -1019,7 +1019,7 @@ let qq = {
 				});
 				syn += <>{syn_item}</>;
 			});
-			full["sub"][T(12)] = <p>{T(10)}{syn}</p>;
+			full["sub"][T(12)] = <p>{T(10)}{syn}</p>.toXMLString();
 		}
 		if (t.ant) { // Antonyms
 			let ant = <></>;
@@ -1042,7 +1042,7 @@ let qq = {
 				let href = qq.href({"keyword": item["m"]});
 				mor += <><span><b>{item["c"]}</b><a href={href} highlight="URL">{item["m"]}</a></span></>;
 			});
-			full["sub"][T(13)] = <p>{mor}</p>;
+			full["sub"][T(13)] = <p>{mor}</p>.toXMLString();
 		}
 		return full;
 	},
@@ -1229,9 +1229,9 @@ let dict_cn = {
 				ret["full"]["title"] = <p class="title">
 					<a href={dict_cn.url} target="_blank" highlight="URL">{ret["keyword"]}</a>
 					<span>[{ret["pron"]}]</span>
-				</p>;
+				</p>.toXMLString();
 			} else {
-				ret["full"]["title"] = <p class="title"><a href={dict_cn.url} target="_blank" highlight="URL">{ret["keyword"]}</a></p>;
+				ret["full"]["title"] = <p class="title"><a href={dict_cn.url} target="_blank" highlight="URL">{ret["keyword"]}</a></p>.toXMLString();
 			}
 
 			// def
@@ -1240,7 +1240,7 @@ let dict_cn = {
 			let ps = ret["def"].trim().split("\n");
 			for (let [i, v] in Iterator(ps))
 				piece += <><span>{v}</span><br/></>;
-			ret["full"]["sub"][T(8)] = <div>{piece}</div>;
+			ret["full"]["sub"][T(8)] = <div>{piece}</div>.toXMLString();
 
 			// origTrans
 			var sentelems = xml.getElementsByTagName("sent");
@@ -1256,7 +1256,7 @@ let dict_cn = {
 
 					origTrans.push([org, trans]);
 				}
-				ret["full"]["sub"][T(18)] = <dl>{oT}</dl>;
+				ret["full"]["sub"][T(18)] = <dl>{oT}</dl>.toXMLString();
 			}
 
 			// rel
@@ -1267,7 +1267,7 @@ let dict_cn = {
 					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
 					rs += <><span><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
 				}
-				ret["full"]["sub"][T(9)] = rs;
+				ret["full"]["sub"][T(9)] = rs.toXMLString();
 			}
 
 			// audio
@@ -1358,6 +1358,7 @@ let dict = {
 					  "frequency     INTEGER DEFAULT 1";
 		try {
 			DBConn.createTable("dict_js", dict_js);
+			DBConn.executeSimpleSQL('CREATE  INDEX "main"."search" ON "dict_js" ("key" ASC, "engine" ASC, "word" ASC, "lp" ASC)');
 			dict._DBConn = DBConn;
 			return dict._DBConn;
 		} catch (e) { // Table already exists or the requested table couldn't be created.
@@ -1623,30 +1624,19 @@ let dict = {
 	},
 
 	getCache: function (key) { // 保存声音?
-		let statement = dict.DBConn.createStatement("SELECT ret FROM dict_js WHERE key = :key ORDER BY frequency, create_time");
+		dict.DBConn.executeSimpleSQL("UPDATE dict_js SET frequency=frequency+1 WHERE KEY='"+key+"'");
+		let statement = dict.DBConn.createStatement("SELECT ret FROM dict_js WHERE key = :key ORDER BY frequency DESC, create_time DESC");
 		statement.params.key = key;
 		var ret = false
 		while (statement.executeStep())
 			ret = JSON.parse(statement.row.ret);
-		if (!ret)
-			return false;
-		ret["full"]["title"] = new XML("<block>"+ret["full"]["title"]+"</block>");
-		for (var prop in ret["full"]["sub"]) {
-			ret["full"]["sub"][prop] = new XML("<block>"+ret["full"]["sub"][prop]+"</block>");
-		}
 		return ret;
 	},
 
 	storeCache: function(ret) {
 		let _arguments = JSON.parse(dict.cacheKey);
 		let create_time = (new Date()).getTime();
-		let ret_serialize = JSON.parse(JSON.stringify(ret));
-		ret_serialize["full"]["title"] = ret["full"]["title"].toXMLString();
-		ret_serialize["full"]["sub"] = {};
-		for (var prop in ret["full"]["sub"]) {
-			ret_serialize["full"]["sub"][prop] = ret["full"]["sub"][prop].toXMLString();
-		}
-		let _ret = JSON.stringify(ret_serialize);
+		let _ret = JSON.stringify(ret);
 		var statement = dict.DBConn.createStatement(
 			"INSERT INTO dict_JS " +
 			"(key, word, engine, lp, simple, ret, create_time) " +
@@ -1668,7 +1658,7 @@ let dict = {
 	},
 
 	cacheGenerate: function(engine, lp, context) {
-		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp");
+		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp ORDER BY frequency DESC, create_time DESC");
 		statement.params.engine=engine;
 		statement.params.lp=lp;
 		statement.executeAsync({
@@ -1684,6 +1674,7 @@ let dict = {
 						completions.push([word, desc]);
 					}
 					context.title = ["Words from history!"];
+					context.compare = null;
 					context.completions = completions;
 				},
 
@@ -1727,6 +1718,11 @@ let dict = {
 					dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
 					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
 				} else {
+					ret["full"]["title"] = new XML(ret["full"]["title"]);
+					for (var prop in ret["full"]["sub"]) {
+						ret["full"]["sub"][prop] = new XML("<r>"+ret["full"]["sub"][prop]+"</r>");
+					}
+
 					var list = template.table(ret["full"]["title"], ret["full"]["sub"]);
 					dactyl.echo(<>{STYLE}<div class="dict_block" id={"dict_js_"+(dict.args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue)}>{list}</div></>, commandline.FORCE_MULTILINE);
 					// dactyl.echomsg(ret["full"]); // commandline.FORCE_MULTILINE
@@ -2776,3 +2772,4 @@ var INFO =
 // * dict-langpair -> stringmap
 // use bytes instead of length
 // use soundManager and xul iframe?
+// 存入的数据加入版本号,每次检测版本号,　是否需要更新
