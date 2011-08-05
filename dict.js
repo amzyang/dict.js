@@ -1663,9 +1663,10 @@ let dict = {
 	clearCache: function(/*args*/) {
 		let args = arguments[0];
 		let word = args[0] || "";
-		if (word.length == 0)
+		if (word.length == 0) {
 			dict.DBConn.executeSimpleSQL("DELETE FROM dict_js");
-		else {
+			dactyl.echo("All words has been clear out!");
+		} else {
 			let engine = args["-e"] || options["dict-engine"] || options.get("dict-engine").defaultValue;
 			let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
 			var statement = dict.DBConn.createStatement(
