@@ -1569,7 +1569,14 @@ let dict = {
 	args: {},
 	init: function(args) {
 		if (args["-h"] && args["-h"]=="clear") {
-			dict.clearCache(args);
+			let clearWord = args[0] || "";
+			if (clearWord.trim().length == 0) {
+				commandline.input("你确定要删除所有记录吗 (y/n) ? : ", function (word) {
+					if (word == "y" || word == "Y")
+						dict.clearCache(args);
+				})
+			} else
+				dict.clearCache(args);
 			return true;
 		}
 		if (dict.suggestReq)
