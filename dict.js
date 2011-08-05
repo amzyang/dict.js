@@ -1693,7 +1693,7 @@ let dict = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 		var engineObj = dict.engines[engine];
-		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE '"+word+"%' ORDER BY frequency DESC, create_time DESC LIMIT 30");
+		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE '"+word+"%' ORDER BY frequency DESC, create_time DESC LIMIT 10");
 		statement.params.engine=engine;
 		statement.params.lp=lp;
 		var completions = [];
