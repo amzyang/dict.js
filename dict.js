@@ -1650,7 +1650,7 @@ let dict = {
 			"VALUES (:key, :word, :engine, :lp, :simple, :ret, :create_time)"
 		);
 		statement.params.key = dict.cacheKey;
-		statement.params.word = _arguments[0];
+		statement.params.word = _arguments[0].toLowerCase();
 		statement.params.engine = _arguments[1];
 		statement.params.lp = _arguments[2];
 		statement.params.simple = ret["simple"];
@@ -1697,6 +1697,7 @@ let dict = {
 	},
 
 	cacheGenerate: function(word, engine, lp, context) {
+		// TODO item.command/item.id ??? invalid???
 		var url = function(item, text)
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
@@ -1963,7 +1964,10 @@ let dict = {
 	},
 
 	generateKey: function () { // keyword, engine, langpair
-		return JSON.stringify(arguments);
+		let args = Array.slice(arguments).map(function(arg) {
+			return arg.toLowerCase();
+		});
+		return JSON.stringify(args);
 	},
 
 	optsCompleter: function(context, extra) {
@@ -2838,4 +2842,4 @@ var INFO =
 // use bytes instead of length
 // use soundManager and xul iframe?
 // 存入的数据加入版本号,每次检测版本号,　是否需要更新
-// context.cancel 移除异步自动补全调用
+// * context.cancel 移除异步自动补全调用
