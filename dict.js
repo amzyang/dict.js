@@ -1967,7 +1967,7 @@ let dict = {
 		let args = Array.slice(arguments).map(function(arg) {
 			return arg.toLowerCase();
 		});
-		return JSON.stringify(args);
+		return JSON.stringify(args).replace(/'/g, "''");
 	},
 
 	optsCompleter: function(context, extra) {
@@ -2111,6 +2111,7 @@ let dict = {
 				dict_sound.Play();
 		} else {
 			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop"
+			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop"
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
 				var sound = util.xmlToDom(<embed id="dict-sound" src={value} quality="high" wmode="transparent" width="0" height="0" align="" hidden="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" xmlns={XHTML}/>, document);
