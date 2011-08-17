@@ -1586,7 +1586,7 @@ let dict = {
 		keyword = keyword.trim();
 		if (keyword.length == 0) {
 			// keyword = content.window.getSelection().toString() || "";
-			if (util.OS.isWindows)
+			if (config.OS.isWindows)
 				keyword = dict._selection() || "";
 			else
 				keyword = dict._selection() || dactyl.clipboardRead() || "";
@@ -2093,7 +2093,7 @@ let dict = {
 	_play: function(uri) {
 		if (!options["dict-hasaudio"])
 			return false;
-		if (util.OS.isWindows) {
+		if (config.OS.isWindows) {
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
 				var sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
@@ -2256,19 +2256,19 @@ let dict = {
 };
 
 // check whether windows media player plugin exists.
-options.add(["dict-hasaudio", "dich"],
+group.options.add(["dict-hasaudio", "dich"],
 	T(21),
 	"boolean",
 	false
 );
 
-options.add(["dict-simple", "dics"],
+group.options.add(["dict-simple", "dics"],
 	T(22),
 	"boolean",
 	true
 );
 
-options.add(["dict-engine", "dice"],
+group.options.add(["dict-engine", "dice"],
 	T(23),
 	"string",
 	"d",
@@ -2283,7 +2283,7 @@ options.add(["dict-engine", "dice"],
 	}
 );
 
-options.add(["dict-show", "dico"],
+group.options.add(["dict-show", "dico"],
 	T(26),
 	"string",
 	"s",
@@ -2314,7 +2314,7 @@ function dblclick(event) {
 	}
 }
 
-options.add(["dict-dblclick", "dicd"],
+group.options.add(["dict-dblclick", "dicd"],
 	T(30),
 	"boolean",
 	false,
@@ -2330,7 +2330,7 @@ options.add(["dict-dblclick", "dicd"],
 	}
 );
 
-options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
+group.options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"stringmap",
 	"g:en|zh-CN,y:eng,z:1hp",
