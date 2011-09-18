@@ -496,7 +496,7 @@ let wikipedia = {
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", "http://zh.wikipedia.org/w/api.php?action=parse&format=json&page="+encodeURIComponent(args[0]));
+		req.open("GET", options["dictw-api"] + "?action=parse&format=json&page="+encodeURIComponent(args[0]));
 		req.onreadystatechange = function(ev) {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
@@ -548,7 +548,7 @@ let wikipedia = {
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
 		dict.suggestReq = req;
-		req.open("GET", "http://zh.wikipedia.org/w/api.php?action=opensearch&format=json&limit=100&search="+encodeURIComponent(args[0]));
+		req.open("GET", options["dictw-api"] + "?action=opensearch&format=json&limit=100&search="+encodeURIComponent(args[0]));
 		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
@@ -2171,8 +2171,8 @@ let dict = {
 			if (dict_sound.Play)
 				dict_sound.Play();
 		} else {
-			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop"
-			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop"
+			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
+			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop";
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
 				var sound = util.xmlToDom(<embed id="dict-sound" src={value} quality="high" wmode="transparent" width="0" height="0" align="" hidden="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" xmlns={XHTML}/>, document);
@@ -2343,6 +2343,12 @@ group.options.add(["dict-engine", "dice"],
 			["w", T(42)]
 		]
 	}
+);
+
+group.options.add(["dictw-api", "dicwa"],
+	"自定义的 mediawiki 系统域名",
+	"string",
+	"http://zh.wikipedia.org/w/api.php"
 );
 
 group.options.add(["dict-show", "dico"],
