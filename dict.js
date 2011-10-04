@@ -547,7 +547,6 @@ let wikipedia = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
-		dict.suggestReq = req;
 		req.open("GET", options["dictw-api"] + "?action=opensearch&format=json&limit=100&search="+encodeURIComponent(args[0]));
 		var suggestions = [];
 		req.onreadystatechange = function () {
@@ -561,21 +560,11 @@ let wikipedia = {
 							r["url"] = wikipedia.href({keyword: word});
 							suggestions.push(r);
 					});
+					context.incomplete = false;
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
 						context.completions = [{url:wikipedia.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
-				} else {
-					var p = document.getElementById("statusbar-display");
-					p.label = "自动补全失败, 返回值: "+req.status;
-					if (dict._errortimeoutid) {
-						window.clearTimeout(dict._errortimeoutid);
-						delete dict._errortimeoutid;
-					}
-					dict._errortimeoutid = window.setTimeout(function() {
-						p.label = "";
-						delete dict._errortimeoutid;
-					}, 400);
 				}
 			}
 
@@ -749,7 +738,6 @@ let zdic = {
 		});
 
 		var req = new XMLHttpRequest();
-		dict.suggestReq = req;
 		req.open("GET",
 			"http://www.zdic.net/sousuo/ac/?"+pieces.join("&")
 		);
@@ -778,21 +766,11 @@ let zdic = {
 								suggestions.push(r); // trim blank chars
 						});
 					}
+					context.incomplete = false;
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
 						context.completions = [{url:zdic.href({keyword:args[0], type:args["-l"]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
-				} else {
-					var p = document.getElementById("statusbar-display");
-					p.label = "自动补全失败, 返回值: "+req.status;
-					if (dict._errortimeoutid) {
-						window.clearTimeout(dict._errortimeoutid);
-						delete dict._errortimeoutid;
-					}
-					dict._errortimeoutid = window.setTimeout(function() {
-						p.label = "";
-						delete dict._errortimeoutid;
-					}, 400);
 				}
 			}
 		};
@@ -920,7 +898,6 @@ let youdao = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
-		dict.suggestReq = req;
 		req.open("GET",
 			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + encodeURIComponent(args[0])
 		);
@@ -940,21 +917,11 @@ let youdao = {
 							r["url"] = youdao.href({keyword: word, le: args["-l"]});
 							suggestions.push(r);
 					});
+					context.incomplete = false;
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
 						context.completions = [{url:youdao.href({keyword:args[0], le:args["-l"]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
-				} else {
-					var p = document.getElementById("statusbar-display");
-					p.label = "自动补全失败, 返回值: "+req.status;
-					if (dict._errortimeoutid) {
-						window.clearTimeout(dict._errortimeoutid);
-						delete dict._errortimeoutid;
-					}
-					dict._errortimeoutid = window.setTimeout(function() {
-						p.label = "";
-						delete dict._errortimeoutid;
-					}, 400);
 				}
 			}
 		};
@@ -1148,7 +1115,6 @@ let qq = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
-		dict.suggestReq = req;
 		req.open("GET",
 			"http://dict.qq.com/sug?" + encodeURIComponent(args[0])
 		);
@@ -1169,21 +1135,11 @@ let qq = {
 							r["url"] = qq.href({"keyword": pair[0].trim()});
 							suggestions.push(r);
 					});
+					context.incomplete = false;
 					if (suggestions.length == 0 && args[0].trim().length > 0)
 						context.completions = [{url:qq.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
 						context.completions = suggestions;
-				} else {
-					var p = document.getElementById("statusbar-display");
-					p.label = "自动补全失败, 返回值: "+req.status;
-					if (dict._errortimeoutid) {
-						window.clearTimeout(dict._errortimeoutid);
-						delete dict._errortimeoutid;
-					}
-					dict._errortimeoutid = window.setTimeout(function() {
-						p.label = "";
-						delete dict._errortimeoutid;
-					}, 400);
 				}
 			}
 		};
@@ -1347,7 +1303,6 @@ let dict_cn = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
-		dict.suggestReq = req;
 		req.open("POST",
 			"http://dict.cn/ajax/suggestion.php"
 		);
@@ -1362,6 +1317,7 @@ let dict_cn = {
 							r["g"] = r["g"].trim();
 							suggestions.push(r); // trim blank chars
 					});
+					context.incomplete = false;
 					if (suggestions.length == 0 && args[0].trim().length > 0) // TODO
 						context.completions = [{url:dict_cn.href({keyword:args[0]}), g:args[0], e:"自动补全查询结束, 无返回结果"}];
 					else
@@ -1374,16 +1330,6 @@ let dict_cn = {
 						xhr.open("GET", "http://dict.cn");
 						xhr.send(null);
 					}
-					var p = document.getElementById("statusbar-display");
-					p.label = "自动补全失败, 返回值: "+req.status;
-					if (dict._errortimeoutid) {
-						window.clearTimeout(dict._errortimeoutid);
-						delete dict._errortimeoutid;
-					}
-					dict._errortimeoutid = window.setTimeout(function() {
-						p.label = "";
-						delete dict._errortimeoutid;
-					}, 400);
 				}
 			}
 		};
@@ -1577,42 +1523,6 @@ let dict = {
 	set langpairs(langpairs) {
 		dict._langpairs = langpairs;
 	},
-	get suggestReq() dict._suggestReq || null,
-	set suggestReq(req) {
-		if (dict.suggestReq)
-			dict.suggestReq.abort();
-		dict._suggestReq = req;
-
-		// show progressing
-		var self = this;
-		var p = document.getElementById('statusbar-display');
-		req.addEventListener('loadstart', function(evt) {
-			if (self._suggesttimeoutid) {
-				window.clearTimeout(self._suggesttimeoutid);
-				delete self._suggesttimeoutid;
-			}
-			self._suggesttimeoutid = window.setTimeout(function() {
-					p.label = "自动补全中...";
-					self._suggestintervalid = window.setInterval(function() {p.label = "自动补全中...";}, 400);
-					delete self._suggesttimeoutid;
-				},
-				400);
-		},
-		false);
-		["load", "error", "abort"].forEach(function(st) { // loadend
-			req.addEventListener(st, function(evt) {
-				if (self._suggesttimeoutid) {
-					window.clearTimeout(self._suggesttimeoutid);
-					delete self._suggesttimeoutid;
-				} else {
-					p.label = "";
-					window.clearInterval(self._suggestintervalid);
-					delete self._suggestintervalid;
-				}
-			},
-			false);
-		});
-	},
 	get keyword() dict._keyword,
 	set keyword(keyword) {
 		dict._keyword = encodeURIComponent(keyword.trim());
@@ -1639,8 +1549,6 @@ let dict = {
 				dict.clearCache(args);
 			return true;
 		}
-		if (dict.suggestReq)
-			dict.suggestReq.abort(); // clear suggest request
 		dict.args = args;
 		let keyword = args[0] || "";
 		keyword = keyword.trim();
@@ -1671,7 +1579,12 @@ let dict = {
 				},
 				{
 					completer: function (context/*, args*/) { // todo
-						dict.suggest(context, [commandline.command]); // this != dict
+						let _args = args;
+						_args[0] = commandline.command;
+						if (_args.length >= 1 && _args[0] !== "-" && _args[0].length > 0 && !_args["-h"])
+							dict.suggest(context, _args);
+
+						context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, _args));
 					}
 				}
 			);
@@ -1756,6 +1669,18 @@ let dict = {
 		}
 	},
 
+	cacheSuggest: function (context, args) {
+		context.title = ["Words from history!"];
+		context.updateAsync = true;
+		context.incomplete = true;
+		let e = dict._route(args);
+		let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+		context.regenerate = true;
+		context.generate = function () {
+			dict.cacheGenerate(args[0] || "", e, lp, context);
+		};
+	},
+
 	cacheGenerate: function(word, engine, lp, context) {
 		// TODO item.command/item.id ??? invalid???
 		var url = function(item, text)
@@ -1789,9 +1714,9 @@ let dict = {
 						print("Query canceled or aborted!");
 					context.keys = {"text":"word", "description":"desc"};
 					context.process[1] = url;
-					context.title = ["Words from history!"];
 					context.filterFunc = null;
 					context.compare = null;
+					context.incomplete = false;
 					context.completions = completions;
 				}
 		});
@@ -1984,14 +1909,12 @@ let dict = {
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 
 		// context.waitingForTab = true;
+		context.updateAsync = true;
+		context.incomplete = true;
 		context.title = [T(14) + " - " + engine.name,T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
 		context.process[1] = url;
-		context.cancel = function () {
-			if (dict.suggestReq)
-				dict.suggestReq.abort();
-		};
 		let dash_e = args["-e"] || options.get("dict-engine").value || options.get("dict-engine").defaultValue;
 		let dash_l = "1024"; // 没实际用处,降低 context.key 意外相等的可能性
 		if ("yz".indexOf(dash_e) + 1)
@@ -2001,6 +1924,8 @@ let dict = {
 			engine = dict_cn;
 		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
 			context.regenerate = true;
+		if (context.itemCache[context.key] && context.itemCache[context.key].length > 0)
+			context.incomplete = false;
 		context.generate = function () engine.generate(context, args);
 
 		/*context.fork("words_buffer", 0, this, function (context) {
@@ -2427,20 +2352,12 @@ group.commands.add(["di[ct]", "dic"],
 		argCount: "?", // TODO ?
 		// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
 		// http://code.google.com/p/dactyl/issues/detail?id=514#c2
-		bang: true, // TODO
+		bang: true,
 		completer: function (context, args) {
-				context.fork("words_history", 0, this, function (context) {
-					let e = dict._route(args);
-					let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-					context.regenerate = true;
-					context.generate = function () {
-						dict.cacheGenerate(args[0] || "", e, lp, context);
-					};
-			});
-		
 			if (args.length >= 1 && args[0] !== "-" && args[0].length > 0 && !args["-h"])
 				dict.suggest(context, args);
 
+			context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, args));
 		},
 		literal: 0,
 		options: [
@@ -2516,20 +2433,13 @@ Array.slice("dgqyzw").forEach(function(char) {
 				argCount: "?", // TODO ?
 				// http://stackoverflow.com/questions/1203074/firefox-extension-multiple-xmlhttprequest-calls-per-page/1203155#1203155
 				// http://code.google.com/p/dactyl/issues/detail?id=514#c2
-				bang: true, // TODO
+				bang: true,
 				completer: function (context, args) {
 					args["-e"] = char;
-					context.fork("words_history", 0, this, function (context) {
-							let e = args["-e"];
-							let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-							context.regenerate = true;
-							context.generate = function () {
-								dict.cacheGenerate(args[0] || "", e, lp, context);
-							};
-					});
-
 					if (args.length >= 1 && args[0] !== "-" && args[0].length > 0 && !args["-h"])
-						return dict.suggest(context, args);
+						dict.suggest(context, args);
+
+					context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, args));
 				},
 				literal: 0,
 				options: extra_options.concat([
