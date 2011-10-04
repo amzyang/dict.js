@@ -1670,22 +1670,30 @@ let dict = {
 	},
 
 	cacheSuggest: function (context, args) {
+		// TODO item.command/item.id ??? invalid???
+		var url = function(item, text)
+		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		href={item.item.url} highlight="URL">{text || ""}</a>;
 		context.title = ["Words from history!"];
 		context.updateAsync = true;
 		context.incomplete = true;
+		context.keys = {"text":"word", "description":"desc"};
+		context.process[1] = url;
+		context.filterFunc = null;
+		context.compare = null;
 		let e = dict._route(args);
 		let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-		context.regenerate = true;
+		context.key = encodeURIComponent(args[0]);
+		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
+			context.regenerate = true;
+		if (context.itemCache[context.key] && context.itemCache[context.key].length > 0)
+			context.incomplete = false;
 		context.generate = function () {
 			dict.cacheGenerate(args[0] || "", e, lp, context);
 		};
 	},
 
 	cacheGenerate: function(word, engine, lp, context) {
-		// TODO item.command/item.id ??? invalid???
-		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
-		href={item.item.url} highlight="URL">{text || ""}</a>;
 		var engineObj = dict.engines[engine];
 		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE '"+word+"%' ORDER BY frequency DESC, create_time DESC LIMIT 15");
 		statement.params.engine=engine;
@@ -1712,10 +1720,6 @@ let dict = {
 				handleCompletion: function(aReason) {
 					if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
 						print("Query canceled or aborted!");
-					context.keys = {"text":"word", "description":"desc"};
-					context.process[1] = url;
-					context.filterFunc = null;
-					context.compare = null;
 					context.incomplete = false;
 					context.completions = completions;
 				}
