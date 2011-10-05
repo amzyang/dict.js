@@ -1586,7 +1586,7 @@ let dict = {
 					},
 					historyKey: 'dict.js'
 				}
-			)).open(dactyl.clipboardRead() || "");
+		)).open(options["dict-clipboard"] ? dactyl.clipboardRead() : "");
 		} else {
 			dict.keyword = keyword;
 			if (args["-t"])
@@ -1721,6 +1721,7 @@ let dict = {
 						print("Query canceled or aborted!");
 					context.incomplete = false;
 					context.completions = completions;
+					context.regenerate = false;
 				}
 		});
 	},
@@ -1920,13 +1921,14 @@ let dict = {
 		if ("yz".indexOf(dash_e) + 1)
 			dash_l += args["-l"] || options["dict-langpair"][dash_e] || options.get("dict-langpair").defaultValue[dash_e];
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
-		if (!engine.generate)
-			engine = dict_cn;
 		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
 			context.updateAsync = true;
 			context.incomplete = true;
 			context.regenerate = true;
 		}
+
+		if (!engine.generate)
+			engine = dict_cn;
 		context.generate = function () engine.generate(context, args);
 
 		/*context.fork("words_buffer", 0, this, function (context) {
@@ -2245,6 +2247,12 @@ let dict = {
 // check whether windows media player plugin exists.
 group.options.add(["dict-hasaudio", "dich"],
 	T(21),
+	"boolean",
+	false
+);
+
+group.options.add(["dict-clipboard", "dicb"],
+	"clipboard support", // global or selection or both? TODO
 	"boolean",
 	false
 );
