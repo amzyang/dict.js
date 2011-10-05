@@ -1552,18 +1552,14 @@ let dict = {
 		dict.args = args;
 		let keyword = args[0] || "";
 		keyword = keyword.trim();
-		if (keyword.length == 0) {
+		if (keyword.length == 0)
+			keyword = dict._selection() || "";
 			// keyword = content.window.getSelection().toString() || "";
-			if (config.OS.isWindows)
-				keyword = dict._selection() || "";
-			else
-				keyword = dict._selection() || dactyl.clipboardRead() || "";
-		}
 		keyword = keyword.trim();
 		let engine = dict._route();
 		let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
 		if (keyword.length == 0) {
-			commandline.input(T(4), function(keyword) {
+			CommandPromptMode(T(4), update({onSubmit: function(keyword) {
 					var keyword = keyword.trim();
 					if (!keyword)
 						return false;
@@ -1578,7 +1574,7 @@ let dict = {
 						dict.cacheKey = key;
 						dict.engine.init(dict.keyword, args);
 					}
-				},
+				}},
 				{
 					completer: function (context/*, args*/) { // todo
 						let _args = args;
@@ -1590,7 +1586,7 @@ let dict = {
 					},
 					historyKey: 'dict.js'
 				}
-			);
+			)).open(dactyl.clipboardRead() || "");
 		} else {
 			dict.keyword = keyword;
 			if (args["-t"])
