@@ -1603,7 +1603,9 @@ let dict = {
 	},
 
 	getCache: function (key) { // 保存声音?
-		dict.DBConn.executeSimpleSQL("UPDATE dict_js SET frequency=frequency+1 WHERE KEY='"+key+"'");
+		var updateStatement = dict.DBConn.createStatement("UPDATE dict_js SET frequency=frequency+1 WHERE KEY = :key");
+		updateStatement.params.key = key;
+		updateStatement.execute();
 		let statement = dict.DBConn.createStatement("SELECT ret FROM dict_js WHERE key = :key ORDER BY frequency DESC, create_time DESC");
 		statement.params.key = key;
 		var ret = false
@@ -1622,7 +1624,7 @@ let dict = {
 			"VALUES (:key, :word, :engine, :lp, :simple, :ret, :create_time)"
 		);
 		statement.params.key = dict.cacheKey;
-		statement.params.word = _arguments[0].toLowerCase();
+		statement.params.word = _arguments[0];
 		statement.params.engine = _arguments[1];
 		statement.params.lp = _arguments[2];
 		statement.params.simple = ret["simple"];
@@ -1643,7 +1645,7 @@ let dict = {
 			let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
 			var statement = dict.DBConn.createStatement(
 				"DELETE FROM dict_JS " +
-				"WHERE word LIKE :word AND engine = :engine AND lp = :lp"
+				"WHERE word = :word AND engine = :engine AND lp = :lp"
 			);
 			statement.params.word = word;
 			statement.params.engine = engine;
@@ -1694,9 +1696,10 @@ let dict = {
 
 	cacheGenerate: function(word, engine, lp, context) {
 		var engineObj = dict.engines[engine];
-		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE '"+word+"%' ORDER BY frequency DESC, create_time DESC LIMIT 15");
+		var statement = dict.DBConn.createStatement("SELECT word,simple FROM dict_js WHERE engine = :engine AND lp = :lp AND word LIKE :word ORDER BY frequency DESC, create_time DESC LIMIT 15");
 		statement.params.engine=engine;
 		statement.params.lp=lp;
+		statement.params.word = word+"%";
 		var completions = [];
 		statement.executeAsync({
 				handleResult: function(aResultSet) {
@@ -1951,12 +1954,7 @@ let dict = {
 		});*/
 	},
 
-	generateKey: function () { // keyword, engine, langpair
-		let args = Array.slice(arguments).map(function(arg) {
-			return arg.toLowerCase();
-		});
-		return JSON.stringify(args).replace(/'/g, "''");
-	},
+	generateKey: function () JSON.stringify(Array.slice(arguments)), // keyword, engine, langpair
 
 	optsCompleter: function(context, extra) {
 		context.quote = ["", util.identity, ""];
