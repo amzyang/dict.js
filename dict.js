@@ -1585,7 +1585,8 @@ let dict = {
 							dict.suggest(context, _args);
 
 						context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, _args));
-					}
+					},
+					historyKey: 'dict.js'
 				}
 			);
 		} else {
