@@ -1565,6 +1565,8 @@ let dict = {
 		if (keyword.length == 0) {
 			commandline.input(T(4), function(keyword) {
 					var keyword = keyword.trim();
+					if (!keyword)
+						return false;
 					dict.keyword = keyword;
 					if (args["-t"])
 						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
@@ -1682,7 +1684,7 @@ let dict = {
 		context.filter = (args[0] || "").trim();
 		context.compare = null;
 		context.key = encodeURIComponent((args[0]||"_NULL").trim());
-		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
+		if (!context.itemCache[context.key]) {
 			context.updateAsync = true;
 			context.incomplete = true;
 			context.regenerate = true;
@@ -1924,7 +1926,7 @@ let dict = {
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
 		if (!engine.generate)
 			engine = dict_cn;
-		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
+		if (!context.itemCache[context.key]) {
 			context.updateAsync = true;
 			context.incomplete = true;
 			context.regenerate = true;
