@@ -1922,7 +1922,7 @@ let dict = {
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
 		if (!engine.generate)
 			engine = dict_cn;
-		if (!context.itemCache[context.key]) {
+		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
 			context.updateAsync = true;
 			context.incomplete = true;
 			context.regenerate = true;
