@@ -1675,21 +1675,21 @@ let dict = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 		context.title = ["Words from history!"];
-		context.updateAsync = true;
-		context.incomplete = true;
 		context.keys = {"text":"word", "description":"desc"};
 		context.process[1] = url;
 		context.filterFunc = null;
+		context.filter = (args[0] || "").trim();
 		context.compare = null;
-		let e = dict._route(args);
-		let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
-		context.key = encodeURIComponent(args[0]);
-		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
+		context.key = encodeURIComponent((args[0]||"_NULL").trim());
+		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
+			context.updateAsync = true;
+			context.incomplete = true;
 			context.regenerate = true;
-		if (context.itemCache[context.key] && context.itemCache[context.key].length > 0)
-			context.incomplete = false;
+		}
 		context.generate = function () {
-			dict.cacheGenerate(args[0] || "", e, lp, context);
+			let e = dict._route(args);
+			let lp = args["-l"] || options["dict-langpair"][e] || options.get("dict-langpair").defaultValue[e] || "";
+			dict.cacheGenerate((args[0] || "").trim(), e, lp, context);
 		};
 	},
 
@@ -1912,9 +1912,6 @@ let dict = {
 		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 
-		// context.waitingForTab = true;
-		context.updateAsync = true;
-		context.incomplete = true;
 		context.title = [T(14) + " - " + engine.name,T(15)];
 		context.keys = {"text":"g", "description":"e"};
 		context.filterFunc = null;
@@ -1926,10 +1923,11 @@ let dict = {
 		context.key = encodeURIComponent(dash_e+dash_l+args[0].trim()); // TODO
 		if (!engine.generate)
 			engine = dict_cn;
-		if (context.itemCache[context.key] && context.itemCache[context.key].length == 0)
+		if (!context.itemCache[context.key] || context.itemCache[context.key].length == 0) {
+			context.updateAsync = true;
+			context.incomplete = true;
 			context.regenerate = true;
-		if (context.itemCache[context.key] && context.itemCache[context.key].length > 0)
-			context.incomplete = false;
+		}
 		context.generate = function () engine.generate(context, args);
 
 		/*context.fork("words_buffer", 0, this, function (context) {
