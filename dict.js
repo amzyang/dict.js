@@ -547,6 +547,9 @@ let wikipedia = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict.suggestReq = req;
 		req.open("GET", options["dictw-api"] + "?action=opensearch&format=json&limit=100&search="+encodeURIComponent(args[0]));
 		var suggestions = [];
 		req.onreadystatechange = function () {
@@ -738,6 +741,9 @@ let zdic = {
 		});
 
 		var req = new XMLHttpRequest();
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict.suggestReq = req;
 		req.open("GET",
 			"http://www.zdic.net/sousuo/ac/?"+pieces.join("&")
 		);
@@ -898,6 +904,9 @@ let youdao = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict.suggestReq = req;
 		req.open("GET",
 			"http://dsuggest.ydstatic.com/suggest/suggest.s?query=" + encodeURIComponent(args[0])
 		);
@@ -1115,6 +1124,9 @@ let qq = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict.suggestReq = req;
 		req.open("GET",
 			"http://dict.qq.com/sug?" + encodeURIComponent(args[0])
 		);
@@ -1303,6 +1315,9 @@ let dict_cn = {
 
 	generate: function(context, args) {
 		var req = new XMLHttpRequest();
+		if (dict.suggestReq)
+			dict.suggestReq.abort();
+		dict.suggestReq = req;
 		req.open("POST",
 			"http://dict.cn/ajax/suggestion.php"
 		);
