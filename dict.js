@@ -2092,9 +2092,7 @@ let dict = {
 		return engine;
 	},
 
-	_play: function(uri) {
-		if (!options["dict-hasaudio"])
-			return false;
+	speak: function(uri) {
 		if (config.OS.isWindows) {
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
@@ -2123,6 +2121,12 @@ let dict = {
 				dict_sound.setAttribute("src", value);
 			}
 		}
+	},
+
+	_play: function(uri) {
+		if (!options["dict-hasaudio"])
+			return false;
+		dict.speak(uri);
 	},
 
 	_clear: function() { // TODO: more tests
@@ -2494,8 +2498,47 @@ Array.slice("dgqyzw").forEach(function(char) {
 		);
 });
 
-dactyl.execute("map -modes=n,v -description='"+T(32)+"' -builtin -silent <A-d> :dict<CR>");
-dactyl.execute("map -modes=n,v -description='"+T(33)+"' -builtin -silent <A-S-d> :dict!<CR>");
+group.commands.add(["spe[ak]"],
+	"Speak",
+	function(args) {
+		let words = args[0] || buffer.selection;
+		let le = args["-l"] || "eng";
+		let uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
+		dict.speak(uri);
+	},
+	{
+		argCount: "?",
+		// bang:true,
+		literal: 0,
+		options: [
+			{
+				names: ["-l"],
+				description: "Language",
+				type: CommandOption.STRING,
+				completer: [
+					["eng", "English"],
+					["fr", "French"],
+					["ko", "Korean"],
+					["jap", "Japanese"],
+				]
+			}
+		]
+	},
+	true
+);
+
+group.mappings.add(
+	[modes.MAIN, modes.VISUAL],
+	['<A-d>'],
+	T(32),
+	dict.init
+);
+group.mappings.add(
+	[modes.MAIN, modes.VISUAL],
+	['<A-S-d>'],
+	T(33),
+	function () dict.init({bang:true})
+);
 
 var INFO =
 <plugin name="dict.js" version="0.9.9"
