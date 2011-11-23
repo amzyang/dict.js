@@ -899,7 +899,7 @@ let youdao = {
 		return str.slice(start, end);
 	},
 	_htmlPre: function (str) {
-		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">");
+		return str.replace(/&nbsp;/g, "&#160;").replace(/<\?(.*?)\?>/g,"").replace(/<br>/gi, "<br/>").replace(/<(img|input) +(.+?)>/gi, "<\$1 \$2/>").replace(/<a +(.+?)>/gi, "<a \$1 highlight=\"URL\">").replace(/,=""/g, "");
 	},
 
 	generate: function(context, args) {
@@ -2110,6 +2110,7 @@ let dict = {
 			if (dict_sound.Play)
 				dict_sound.Play();
 		} else {
+			// var value= "http://dict.youdao.com/test.nobound.swf?audio="+encodeURIComponent(uri);
 			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
 			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop";
 			var dict_sound = document.getElementById("dict-sound");
