@@ -1179,7 +1179,7 @@ let google = {
 		var formData = new FormData();
 		formData.append("v", "1.0");
 		formData.append("q", decodeURIComponent(keyword));
-		formData.append("langpair", langpair); // en|zh_CN
+		formData.append("langpair", langpair); // en|zh-CN
 		// formData.append("key", "YOUR KEY HERE");
 		formData.append("userip", google._randomIp());
 		formData.append("format", "text"); // 
