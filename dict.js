@@ -1156,48 +1156,6 @@ let qq = {
 			}
 		};
 		req.send(null);
-	},
-
-};
-
-// http://code.google.com/apis/language/translate/v1/using_rest_translate.html
-// http://code.google.com/apis/language/translate/v1/using_rest_langdetect.html
-// http://code.google.com/apis/language/translate/v1/reference.html
-// http://code.google.com/apis/language/translate/v1/getting_started.html
-// http://code.google.com/apis/language/
-let google = {
-	name: T(34),
-	favicon: "http://translate.google.com/favicon.ico",
-	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
-	keyword: "",
-	url: "https://ajax.googleapis.com/ajax/services/language/translate",
-	init: function(keyword, args) {
-		// let langpair = options.get("dict-langpair").value;
-		// if (args["-l"])
-			// langpair=args["-l"];
-		let langpair = args["-l"] || options["dict-langpair"]["g"] || options.get("dict-langpair").defaultValue["g"];
-		var formData = new FormData();
-		formData.append("v", "1.0");
-		formData.append("q", decodeURIComponent(keyword));
-		formData.append("langpair", langpair); // en|zh-CN
-		// formData.append("key", "YOUR KEY HERE");
-		formData.append("userip", google._randomIp());
-		formData.append("format", "text"); // 
-		var req = new XMLHttpRequest();
-		dict.req = req;
-		req.open("POST", google.url, true);
-		req.onreadystatechange = function(ev) {
-			dict.google(req);
-		};
-		req.send(formData);
-		return req;
-	},
-	href: false, // todo
-	_randomIp: function() {
-		let pieces = [];
-		for (var i = 0; i < 4; i++)
-			pieces.push(Math.floor(Math.random()*254)+1);
-		return pieces.join(".");
 	}
 };
 
@@ -1352,11 +1310,11 @@ let dict_cn = {
 		formData.append("q", args[0]);
 		formData.append("s", "d");
 		req.send(formData);
-	},
+	}
 }
 
 let dict = {
-	engines: {"d" : dict_cn, "g" : google, "q": qq, "y": youdao, "z": zdic, "w": wikipedia},
+	engines: {"d" : dict_cn, "q": qq, "y": youdao, "z": zdic, "w": wikipedia},
 	get DBConn() {
 		if (dict._DBConn)
 			return dict._DBConn;
@@ -1388,116 +1346,6 @@ let dict = {
 		dict._DBConn = DBConn;
 		return dict._DBConn;
 	},
-	languages: [
-		["af", "Afrikaans"],
-		["sq", "Albanian"],
-		["am", "Amharic"],
-		["ar", "Arabic"],
-		["hy", "Armenian"],
-		["az", "Azerbaijani"],
-		["eu", "Basque"],
-		["be", "Belarusian"],
-		["bn", "Bengali"],
-		["bh", "Bihari"],
-		["br", "Breton"],
-		["bg", "Bulgarian"],
-		["my", "Burmese"],
-		["ca", "Catalan"],
-		["chr", "Cherokee"],
-		["zh", "Chinese"],
-		["zh-CN", "Chinese Simplified"],
-		["zh-TW", "Chinese Traditional"],
-		["co", "Corsican"],
-		["hr", "Croatian"],
-		["cs", "Czech"],
-		["da", "Danish"],
-		["dv", "Dhivehi"],
-		["nl", "Dutch"],
-		["en", "English"],
-		["eo", "Esperanto"],
-		["et", "Estonian"],
-		["fo", "Faroese"],
-		["tl", "Filipino"],
-		["fi", "Finnish"],
-		["fr", "French"],
-		["fy", "Frisian"],
-		["gl", "Galician"],
-		["ka", "Georgian"],
-		["de", "German"],
-		["el", "Greek"],
-		["gu", "Gujarati"],
-		["ht", "Haitian Creole"],
-		["iw", "Hebrew"],
-		["hi", "Hindi"],
-		["hu", "Hungarian"],
-		["is", "Icelandic"],
-		["id", "Indonesian"],
-		["iu", "Inuktitut"],
-		["ga", "Irish"],
-		["it", "Italian"],
-		["ja", "Japanese"],
-		["jw", "Javanese"],
-		["kn", "Kannada"],
-		["kk", "Kazakh"],
-		["km", "Khmer"],
-		["ko", "Korean"],
-		["ku", "Kurdish"],
-		["ky", "Kyrgyz"],
-		["lo", "Lao"],
-		["la", "Latin"],
-		["lv", "Latvian"],
-		["lt", "Lithuanian"],
-		["lb", "Luxembourgish"],
-		["mk", "Macedonian"],
-		["ms", "Malay"],
-		["ml", "Malayalam"],
-		["mt", "Maltese"],
-		["mi", "Maori"],
-		["mr", "Marathi"],
-		["mn", "Mongolian"],
-		["ne", "Nepali"],
-		["no", "Norwegian"],
-		["oc", "Occitan"],
-		["or", "Oriya"],
-		["ps", "Pashto"],
-		["fa", "Persian"],
-		["pl", "Polish"],
-		["pt", "Portuguese"],
-		["pt-PT", "Portuguese Portugal"],
-		["pa", "Ppnjabi"],
-		["qu", "Qpechua"],
-		["ro", "Rpmanian"],
-		["ru", "Rpssian"],
-		["sa", "Sanskrit"],
-		["gd", "Scots Gaelic"],
-		["sr", "Serbian"],
-		["sd", "Sindhi"],
-		["si", "Sinhalese"],
-		["sk", "Slovak"],
-		["sl", "Slovenian"],
-		["es", "Spanish"],
-		["su", "Sundanese"],
-		["sw", "Swahili"],
-		["sv", "Swedish"],
-		["syr", "Syriac"],
-		["tg", "Tajik"],
-		["ta", "Tamil"],
-		["tt", "Tatar"],
-		["te", "Telugu"],
-		["th", "Thai"],
-		["bo", "Tibetan"],
-		["to", "Tonga"],
-		["tr", "Turkish"],
-		["uk", "Ukrainian"],
-		["ur", "Urdu"],
-		["uz", "Uzbek"],
-		["ug", "Uighur"],
-		["vi", "Vietnamese"],
-		["cy", "Welsh"],
-		["yi", "Yiddish"],
-		["yo", "Yoruba"],
-		["", "Unknown"]
-	],
 	get req() dict._req || null,
 	set req(req) {
 		if (dict.req)
@@ -1533,10 +1381,6 @@ let dict = {
 			},
 			false);
 		});
-	},
-	get langpairs() dict._langpairs || false,
-	set langpairs(langpairs) {
-		dict._langpairs = langpairs;
 	},
 	get keyword() dict._keyword,
 	set keyword(keyword) {
@@ -1840,75 +1684,6 @@ let dict = {
 		}
 	},
 
-	google: function(req) {
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				let g = JSON.parse(req.responseText);
-				let t = g.responseData.translatedText.replace(/\n$/, "").split("\n");
-				let show = options.get("dict-show").value || options.get("dict-show").defaultValue;
-				if (dict.args["-o"])
-					show = dict.args["-o"];
-				// tts
-				if (/^[\u0001-\u00ff']+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
-					var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
-					dict._play(uri);
-				}
-				switch (show) {
-					case "s":
-					// if (t.length > 1 && !mow.visible)
-						// dactyl.echo("\n");
-					let output = <></>;
-					for (let [i, v] in  Iterator(t)) {
-						output += <><p style="margin:0;padding:5px 10px;width:800px;white-space:normal;text-indent:2em;line-height:24px;">{v}</p></>;
-					}
-					if (t.length == 1 && t[0].length <= 40)
-						dactyl.echo(output, commandline.FORCE_SINGLELINE);
-					else
-						dactyl.echo(output);
-					if (!mow.visible)
-						dict.timeout = dactyl.timeout(dict._clear, 15000);
-					break;
-
-					case "a":
-					PopupNotifications.show(gBrowser.selectedBrowser, "dict-popup",
-						g.responseData.translatedText,
-						"dict-popup-anchor", /* anchor ID */
-						{
-							label: T(5),
-							accessKey: "S",
-							callback: function() {
-								dactyl.open("http://translate.google.com/", {background:false, where:dactyl.NEW_TAB});
-							}
-						},
-						null,  /* secondary action */
-						{
-							timeout: Date.now() + 15000
-						}
-					);
-					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left top;background-size:contain contain;}');
-					break;
-
-					case "n":
-					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
-					let listener = {
-						observe: function(subject, topic, data) {
-							if (topic == "alertclickcallback")
-								dactyl.open(data, {background:true, where:dactyl.NEW_TAB});
-						}
-					}
-					let title = T(34);
-					notify.showAlertNotification(dict.engine.favicon, title, g.responseData.translatedText, true, 'http://translate.google.com/', listener, "dict-js-popup");
-					break;
-
-					default:
-					break;
-				}
-			} else
-				dict.error(req.status);
-			req.onreadystatechange = function() {};
-		}
-	},
-
 	zdic: function(req) {
 		if (req.readyState == 4) {
 			let ret = {};
@@ -1993,19 +1768,6 @@ let dict = {
 			["4mh", "成语 - 模糊搜索 ?月 => 月朗星稀 月下老人"],
 			["4jq", "成语 - 精确搜索 ?一?二 => 一石二鸟 独一无二"]
 		];
-		if (!dict.langpairs) {
-			let cpt = [];
-			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
-				for (let [, [inabbr, inlang]] in Iterator(dict.languages)) {
-					if (inabbr == "")
-						continue;
-					if (abbr == inabbr)
-						continue;
-					cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
-				}
-			}
-			dict.langpairs = cpt;
-		}
 		switch (extra.key) {
 			case 'y':
 			context.fork("youdao_le", 0, this, function(context) {
@@ -2018,13 +1780,6 @@ let dict = {
 			case 'q':
 			case 'w':
 			context.completions = [];
-			break;
-
-			case 'g':
-			context.fork("dict_langpairs", 0, this, function (context) {
-					context.title = [T(16) + " - " + T(34), T(1)];
-					context.completions = dict.langpairs;
-			});
 			break;
 
 			case 'z':
@@ -2042,10 +1797,6 @@ let dict = {
 			context.fork("zdic_type", 0, this, function (context) {
 					context.title = [T(16) + " - " + T(41), T(1)];
 					context.completions = zdic_completions;
-			});
-			context.fork("dict_langpairs", 0, this, function (context) {
-					context.title = [T(16) + " - " + T(34), T(1)];
-					context.completions = dict.langpairs;
 			});
 			context.completions = [];
 			break;
@@ -2082,11 +1833,7 @@ let dict = {
 			engine = "z";
 			break;
 
-			case "":
-			break;
-
 			default:
-			engine = "g";
 			break;
 		}
 		return engine;
@@ -2289,7 +2036,6 @@ group.options.add(["dict-engine", "dice"],
 		completer: function(context) [
 			["d", T(24)],
 			["q", T(25)],
-			["g", T(34)],
 			["y", T(35)],
 			["z", T(41)],
 			["w", T(42)]
@@ -2353,14 +2099,13 @@ group.options.add(["dict-dblclick", "dicd"],
 group.options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"stringmap",
-	"g:en|zh-CN,y:eng,z:1hp",
+	"y:eng,z:1hp",
 	{
 		completer: function(context, extra) {
 
 			if (extra.value == null)
 				return [
 					["y", T(35)],
-					["g", T(34)],
 					["z", T(41)]
 				].filter(function (e) !Set.has(extra.values, e[0]));
 			else
@@ -2395,7 +2140,6 @@ group.commands.add(["di[ct]", "dic"],
 				completer: [
 					["d", T(24)],
 					["q", T(25)],
-					["g", T(34)],
 					["y", T(35)],
 					["z", T(41)],
 					["w", T(42)]
@@ -2435,9 +2179,9 @@ group.commands.add(["di[ct]", "dic"],
 	true
 );
 
-Array.slice("dgqyzw").forEach(function(char) {
+Array.slice("dqyzw").forEach(function(char) {
 		let extra_options = [];
-		if ("gyz".indexOf(char) + 1) {
+		if ("yz".indexOf(char) + 1) {
 			extra_options = [
 				{
 					names: ["-l"],
@@ -2551,8 +2295,8 @@ var INFO =
     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
     <project name="Pentadactyl" minVersion="1.0"/>
 
-      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.youdao.com/">Youdao</link>, <link topic="http://dict.cn/">Dict.cn</link>, <link topic="http://www.zdic.net/">Han Dian</link> and <link topic="http://translate.google.com/">Google Translate</link>.</p>
-      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>, <link topic="http://www.zdic.net/">汉典</link> 和 <link topic="http://translate.google.com/">谷歌翻译</link>。</p>
+      <p lang="en-US">Dict.js is an online dictionary plugin for pentadactyl. It supports <link topic="http://dict.qq.com/">QQ</link>, <link topic="http://dict.youdao.com/">Youdao</link>, <link topic="http://dict.cn/">Dict.cn</link>, <link topic="http://www.zdic.net/">Han Dian</link>.</p>
+      <p lang="zh-CN">Pentadactyl 的词典插件。dict.js 目前支持 <link topic="http://dict.qq.com/">QQ词典</link>，<link topic="http://dict.youdao.com/">网易有道在线词典</link>，<link topic="http://dict.cn/">海词</link>, <link topic="http://www.zdic.net/">汉典</link>。</p>
 
       <item lang="en-US">
         <tags>'dicd' 'dict-dblclick'</tags>
@@ -2584,7 +2328,6 @@ var INFO =
 			  <p>Sites that dict.js supports:  </p>
 			  <dl dt="width: 6em;">
 					<dt>d</dt>      <dd><link topic="http://dict.cn/">Dict.cn</link></dd>
-					<dt>g</dt>      <dd><link topic="http://translate.google.com">Google Translate</link></dd>
 					<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ</link></dd>
 					<dt>y</dt>      <dd><link topic="http://dict.youdao.com">Youdao</link></dd>
 					<dt>z</dt>      <dd><link topic="http://www.zdic.net">Han Dian</link></dd>
@@ -2601,7 +2344,6 @@ var INFO =
 			<p>dict.js 当前支持的网站：</p>
 			<dl dt="width: 6em;">
 				<dt>d</dt>      <dd><link topic="http://dict.cn/">海词</link></dd>
-				<dt>g</dt>      <dd><link topic="http://translate.google.com">谷歌翻译</link></dd>
 				<dt>q</dt>      <dd><link topic="http://qq.dict.com">QQ词典</link></dd>
 				<dt>y</dt>      <dd><link topic="http://dict.youdao.com">网易有道在线词典</link></dd>
 				<dt>z</dt>      <dd><link topic="http://www.zdic.net">汉典</link></dd>
@@ -2635,21 +2377,13 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng,z:1hp</default>
+        <default>y:eng,z:1hp</default>
         <description>
-			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
-
-			<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=|es.</p>
-
-			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
-			<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
 			<dl dt="width: 8em;">
 				<dt>jap</dt>      <dd>Chinese ↔ Japanese&#160;&#160;&#160;&#160;Youdao</dd>
 				<dt>eng</dt>      <dd>Chinese ↔ English&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
 				<dt>ko</dt>      <dd>Chinese ↔ Korean&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
 				<dt>fr</dt>      <dd>Chinese ↔ French&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
-				<dt>en|zh-CN</dt>      <dd>From English to Simplified Chinese&#160;&#160;&#160;&#160;&#160;&#160;Google Translate</dd>
-				<dt>...|...</dt>      <dd>From ... to ...&#160;&#160;&#160;&#160;&#160;&#160;Google Translate</dd>
 			</dl>
         </description>
       </item>
@@ -2657,18 +2391,13 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng,z:1hp</default>
+        <default>y:eng,z:1hp</default>
         <description>
-			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
-			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
-			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
 			<dl dt="width: 8em;">
 				<dt>jap</dt>      <dd>汉日互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
 				<dt>eng</dt>      <dd>汉英互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
 				<dt>ko</dt>      <dd>汉韩互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
 				<dt>fr</dt>      <dd>汉法互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
-				<dt>en|zh-CN</dt>      <dd>从 英文 到 简体中文&#160;&#160;&#160;&#160;&#160;谷歌翻译</dd>
-				<dt>...|...</dt>      <dd>从 ... 到 ...&#160;&#160;&#160;&#160;&#160;谷歌翻译</dd>
 			</dl>
         </description>
       </item>
