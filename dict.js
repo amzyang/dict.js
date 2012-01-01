@@ -606,7 +606,7 @@ let zdic = {
 		req.open("POST", "http://www.zdic.net/sousuo/", true);
 		req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		req.onreadystatechange = function (ev) {
-			dict.zdic(req);
+			dict.ready(zdic, req);
 		};
 		req.send(pieces.join("&"));
 		return req;
@@ -797,7 +797,7 @@ let youdao = {
 		dict.req = req;
 		req.open("GET", youdao.href({keyword: decodeURIComponent(keyword), le: args["-l"]}));
 		req.onreadystatechange = function (ev) {
-			dict.youdao(req);
+			dict.ready(youdao, req);
 		};
 		req.send(null);
 		return req;
@@ -950,7 +950,7 @@ let qq = {
 		req.setRequestHeader("Referer", "http://dict.qq.com/");
 		req.send(null);
 		req.onreadystatechange = function(ev) {
-			dict.qq(req);
+			dict.ready(qq, req);
 		};
 		return req;
 	},
@@ -1177,7 +1177,7 @@ let dict_cn = {
 			true
 		);
 		req.onreadystatechange = function(ev) {
-			dict.dict_cn(req);
+			dict.ready(dict_cn, req);
 		};
 		req.send(null);
 		return req;
@@ -1642,53 +1642,11 @@ let dict = {
 		}
 	},
 
-	dict_cn: function(req) {
+	ready: function(worker, req) {
 		if (req.readyState == 4) {
 			let ret = {};
 			if (req.status == 200) {
-				ret = dict_cn.process(req.responseText);
-				if (!ret.notfound)
-					dict.storeCache(ret);
-				dict.process(ret);
-			} else
-				dict.error(req.status);
-			req.onreadystatechange = function() {};
-		}
-	},
-
-	qq: function(req) {
-		if (req.readyState == 4) {
-			let ret = {};
-			if (req.status == 200) {
-				ret = qq.process(req.responseText);
-				if (!ret.notfound)
-					dict.storeCache(ret);
-				dict.process(ret);
-			} else
-				dict.error(req.status);
-			req.onreadystatechange = function() {};
-		}
-	},
-
-	youdao: function (req) {
-		if (req.readyState == 4) {
-			let ret = {};
-			if (req.status == 200) {
-				ret = youdao.process(req.responseText);
-				if (!ret.notfound)
-					dict.storeCache(ret);
-				dict.process(ret);
-			} else
-				dict.error(req.status);
-			req.onreadystatechange = function() {};
-		}
-	},
-
-	zdic: function(req) {
-		if (req.readyState == 4) {
-			let ret = {};
-			if (req.status == 200) {
-				ret = zdic.process(req.responseText);
+				ret = worker.process(req.responseText);
 				if (!ret.notfound)
 					dict.storeCache(ret);
 				dict.process(ret);
