@@ -1897,7 +1897,7 @@ let dict = {
 
 	_selection: function() {
 		// check focused frame first
-		let focusedSel = buffer.focusedFrame.getSelection().toString().trim() || "";
+		let focusedSel = buffer.focusedFrame.getSelection().toString().trim() || buffer.currentWord || "";
 		if (focusedSel != '')
 			return focusedSel;
 		// now the main window
