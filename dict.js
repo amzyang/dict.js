@@ -1915,7 +1915,12 @@ let dict = {
 				return sel;
 			i += 1;
 		}
-		return sel;
+
+		// now finally, check what mode we are in.
+		if (modes.mainMode.name == modes.CARET.name)
+			return buffer.currentWord;
+		else
+			return wordUnderCursor;
 	},
 
 	_nl2br: function(str) {
@@ -2242,6 +2247,41 @@ group.mappings.add(
 	T(33),
 	function () dict.init({bang:true})
 );
+
+var wordUnderCursor = "";
+var mousemove = function (e) {
+	if(e && e.rangeParent && e.rangeParent.nodeType == e.rangeParent.TEXT_NODE
+		&& e.rangeParent.parentNode == e.target)
+		; // do nth
+	else
+		return wordUnderCursor = "";
+
+	var offset = e.rangeOffset;
+	var range = e.target.ownerDocument.createRange();
+	range.selectNode(e.rangeParent);
+	var str = range.toString();
+	range.detach();
+	var re = new RegExp(options["iskeyword"]+"+", "g");
+	if (str.trim() && re.test(str.charAt(offset))) {
+		var pieces1 = [];
+		var leftPart = str.slice(0, offset);
+		var re = new RegExp(options["iskeyword"]+"+", "g"); // dirty hack, bug?
+		var hasLeftPart = re.test(str.charAt(offset - 1));
+		if (hasLeftPart)
+			pieces1 = leftPart.match(re);
+		var pieces2 = str.slice(offset).match(re);
+		wordUnderCursor = (pieces1.pop() || "") + (pieces2.shift() || "");
+	} else {
+		wordUnderCursor = "";
+	}
+}
+gBrowser.addEventListener("mousemove", mousemove, false);
+
+function onUnload() {
+	gBrowser.removeEventListener("mousemove", mousemove, false);
+	if (options["dict-dblclick"])
+		gBrowser.removeEventListener("click", dblclick, false);
+}
 
 var INFO =
 <plugin name="dict.js" version="0.9.9"
