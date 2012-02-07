@@ -1302,8 +1302,8 @@ let dict_cn = {
 						var xhr = new XMLHttpRequest();
 						xhr.open("GET", "http://en.dict.cn/api/article/hotwords");
 						xhr.onreadystatechange = function () {
-							if (req.readyState == 4) {
-								if (req.status !== 200)
+							if (xhr.readyState == 4) {
+								if (xhr.status !== 200)
 									dict_cn._fix();
 							}
 						};
