@@ -1305,6 +1305,7 @@ let dict_cn = {
 							if (xhr.readyState == 4) {
 								if (xhr.status !== 200)
 									dict_cn._fix();
+								dict_cn.generate(context, args);
 							}
 						};
 						xhr.send(null);
