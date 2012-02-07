@@ -1300,7 +1300,13 @@ let dict_cn = {
 						// 辞海的自动补全需要 cookie
 						// 因此我们对dict.cn请求一次
 						var xhr = new XMLHttpRequest();
-						xhr.open("GET", "http://dict.cn");
+						xhr.open("GET", "http://en.dict.cn/api/article/hotwords");
+						xhr.onreadystatechange = function () {
+							if (req.readyState == 4) {
+								if (req.status !== 200)
+									dict_cn._fix();
+							}
+						};
 						xhr.send(null);
 					}
 				}
@@ -1310,6 +1316,30 @@ let dict_cn = {
 		formData.append("q", args[0]);
 		formData.append("s", "d");
 		req.send(formData);
+	},
+
+	_fix: function () {
+		var cookieUri = services.io.newURI("http://dict.cn", null, null);
+
+		// check 'dictsid' cookie whether exists
+		var cookie = services.cookies.getCookieString(cookieUri, null) || "";
+
+		var hasDictsid = cookie.split("; ").some(function (item) {
+			var parts = item.split("=");
+
+			if (parts.length == 2 && parts[0] == "dictsid")
+				return true;
+
+			return false;
+		});
+
+		// if not exists, then create it
+		if (!hasDictsid) {
+			var expireDate = new Date();
+			expireDate.setMonth(expireDate.getMonth() + 1);
+			var cookieString = "dictsid=0;domain=.dict.cn;expires=" + expireDate.toUTCString();
+			services.cookies.setCookieString(cookieUri, null, cookieString, null);
+		}
 	}
 }
 
