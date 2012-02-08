@@ -2305,10 +2305,22 @@ var mousemove = function (e) {
 	} else {
 		wordUnderCursor = "";
 	}
+};
+if (config.OS.isWindows) {
+	var fullscreen = function (e) {
+		var dict_sound = document.getElementById("dict-sound");
+		if (dict_sound) {
+			var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
+			addonbar.removeChild(dict_sound);
+		}
+	};
+	window.addEventListener("fullscreen", fullscreen, false);
 }
 gBrowser.addEventListener("mousemove", mousemove, false);
 
 function onUnload() {
+	if (config.OS.isWindows)
+		window.removeEventListener("fullscreen", fullscreen, false);
 	gBrowser.removeEventListener("mousemove", mousemove, false);
 	if (options["dict-dblclick"])
 		gBrowser.removeEventListener("click", dblclick, false);
