@@ -1233,22 +1233,25 @@ let google = {
 		}
 
 		let words = result[5];
-		// "<span highlight="Link">TEXT<span highlight="LinkInfo">TIPS</span></span>"
-		let assoc = "";
-		words.forEach(function (word) {
-			if (word[2]) {
-				assoc += '<span class="LinkWord" highlight="Link">'+word[2][0][0]+'<span style="white-space:nowrap;top:-1.6em;" highlight="LinkInfo">';
-				assoc += word[0] + ": ";
-				assoc += word[2].map(function(i) i[0]).join("; ") + "<br/>";
-				assoc += '</span></span>';
-			}
-		});
 
-		output += "<p>" + assoc + "</p>";
-		output += '<style type="text/css">' +
-				 '.LinkWord {padding:0.4em 0.2em;font-size:18px;}' +
-				 '.LinkWord:hover {background-color:blue;border-radius:1ex;}' +
-				 '</style>';
+		if (words) {
+			let assoc = "";
+			words.forEach(function (word) {
+					// "<span highlight="Link">TEXT<span highlight="LinkInfo">TIPS</span></span>"
+				if (word[2]) {
+					assoc += '<span class="LinkWord" highlight="Link">'+word[2][0][0]+'<span style="white-space:nowrap;top:-1.6em;" highlight="LinkInfo">';
+					assoc += word[0] + ": ";
+					assoc += word[2].map(function(i) i[0]).join("; ") + "<br/>";
+					assoc += '</span></span>';
+				}
+			});
+
+			output += "<p>" + assoc + "</p>";
+			output += '<style type="text/css">' +
+					 '.LinkWord {padding:0.4em 0.2em;font-size:18px;}' +
+					 '.LinkWord:hover {background-color:blue;border-radius:1ex;}' +
+					 '</style>';
+		}
 		output = '<div style="padding:40px;line-height:24px;width:600px;white-space:normal;">' + output + '</div>';
 		return output;
 	}
