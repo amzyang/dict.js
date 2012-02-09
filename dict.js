@@ -1624,7 +1624,22 @@ let dict = {
 			false);
 		});
 	},
-	get langpairs() dict._langpairs || false,
+	get langpairs()  {
+		if (!dict._langpairs) {
+			let cpt = [];
+			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
+				for (let [, [inabbr, inlang]] in Iterator(dict.languages)) {
+					if (inabbr == "")
+						continue;
+					if (abbr == inabbr)
+						continue;
+					cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
+				}
+			}
+			dict._langpairs = cpt;
+		}
+		return dict._langpairs;
+	},
 	set langpairs(langpairs) {
 		dict._langpairs = langpairs;
 	},
@@ -1957,6 +1972,9 @@ let dict = {
 				if (/^[\u0001-\u00ff']+$/.test(decodeURIComponent(dict.keyword))) { // 0-255
 					var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
 					dict._play(uri);
+				} else {
+					var uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+dict.keyword+"&tl="+g[8][0][0]+"&prev=input";
+					dict._play(uri);
 				}
 			} else
 				dict.error(req.status);
@@ -2034,19 +2052,6 @@ let dict = {
 			["4mh", "成语 - 模糊搜索 ?月 => 月朗星稀 月下老人"],
 			["4jq", "成语 - 精确搜索 ?一?二 => 一石二鸟 独一无二"]
 		];
-		if (!dict.langpairs) {
-			let cpt = [];
-			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
-				for (let [, [inabbr, inlang]] in Iterator(dict.languages)) {
-					if (inabbr == "")
-						continue;
-					if (abbr == inabbr)
-						continue;
-					cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
-				}
-			}
-			dict.langpairs = cpt;
-		}
 		switch (extra.key) {
 			case 'y':
 			context.fork("youdao_le", 0, this, function(context) {
@@ -2548,9 +2553,12 @@ Array.forEach("dgqyzw", function(char) {
 group.commands.add(["spe[ak]"],
 	"Speak",
 	function(args) {
-		let words = args[0] || buffer.selection;
-		let le = args["-l"] || "eng";
-		let uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
+		let words = args[0] || dict._selection();
+		let le = args["-l"] || "";
+		if (le)
+			var uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input";
+		else
+			var uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
 		dict.speak(uri);
 	},
 	{
@@ -2567,7 +2575,7 @@ group.commands.add(["spe[ak]"],
 					["fr", "French"],
 					["ko", "Korean"],
 					["jap", "Japanese"],
-				]
+				].concat(dict.languages) // TODO
 			}
 		]
 	},
@@ -2982,3 +2990,6 @@ var INFO =
 // use soundManager and xul iframe?
 // 存入的数据加入版本号,每次检测版本号,　是否需要更新
 // * context.cancel 移除异步自动补全调用
+//  http://translate.google.com/translate_tts\?ie\=UTF-8\&q\=你好\&tl\=zh-CN\&prev\=input -- 支持非英文的页面发音
+//  http://translate.google.cn/translate_a/t?client=t&text=%E4%BD%A0%E5%A5%BD&hl=en&sl=auto&tl=en&multires=1&prev=conf&psl=az&ptl=en&otf=1&it=sel.5284%2Csrcd_gms.2521&ssel=4&tsel=6&uptl=en&alttl=zh-CN&sc=1 -- 自动检测语言
+//  如果是查询选区或者是光标下的词，可以根据当前页面的编码来猜测语言
