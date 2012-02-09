@@ -1162,16 +1162,19 @@ let qq = {
 
 let google = {
 	name: T(34),
-	favicon: "http://translate.google.com/favicon.ico",
+	favicon: "http://translate.google.cn/favicon.ico",
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
 	keyword: "",
+	langpairs: "",
 	init: function(keyword, args) {
 		let langpair = args["-l"] || options["dict-langpair"]["g"] || options.get("dict-langpair").defaultValue["g"];
 		let langpairs = langpair.split("|");
+		langpairs[0] = langpairs[0] || 'auto';
+		google.langpairs = langpairs;
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("GET",
-			'http://translate.google.cn/translate_a/t?client=t&hl=auto&sl='+(langpairs[0]||"auto")+'&tl='+langpairs[1]+'&text=' + keyword,
+			'http://translate.google.cn/translate_a/t?client=t&hl=auto&sl='+langpairs[0]+'&tl='+langpairs[1]+'&text=' + keyword,
 			true
 		);
 		req.onreadystatechange = function(ev) {
@@ -1193,10 +1196,10 @@ let google = {
 		let explain = result[1];
 		if (explain) {
 			explain.forEach(function (kind) {
+				output += '\n';
 				output += kind[0] + '. ';
 				let es = kind[1].filter(function(i) i.trim().length);
 				output += es.join("; ");
-				output += '\n';
 			});
 		}
 		return output;
@@ -1934,15 +1937,17 @@ let dict = {
 					break;
 
 					case "n":
-					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService)
+					let pairs = google.langpairs;
+					pairs.push(dict.keyword);
+					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService);
 					let listener = {
 						observe: function(subject, topic, data) {
 							if (topic == "alertclickcallback")
 								dactyl.open(data, {background:true, where:dactyl.NEW_TAB});
 						}
-					}
+					};
 					let title = T(34);
-					notify.showAlertNotification(dict.engine.favicon, title, google.genSimpleOutput(g), true, 'http://translate.google.com/', listener, "dict-js-popup");
+					notify.showAlertNotification(null, title, google.genSimpleOutput(g), true, 'http://translate.google.cn/?hl=zh-CN#' + pairs.join("|"), listener, "dict-js-popup");
 					break;
 
 					default:
@@ -2191,7 +2196,7 @@ let dict = {
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
 		let def = dict._pipelineToBr(ret["def"]);
-		notify.showAlertNotification(dict.engine.favicon, title, def, true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
+		notify.showAlertNotification(null, title, def, true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
 	},
 
 	_alert: function(ret) {
