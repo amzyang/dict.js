@@ -662,13 +662,13 @@ let zdic = {
 		// 移除添加到备忘录, 网友讨论
 		var rems = body.querySelectorAll(".badd,.bwladd,#wy,.secpan,.gdym,.annu_div,.ga,ga+div");
 		if (rems) {
-			Array.slice(rems).forEach(function (i) {
+			Array.forEach(rems, function (i) {
 				i.parentNode.removeChild(i);
 			});
 		}
 		// TODO: 移除 comments, stylesheets, objects, javascripts
 		var nodes = body.getElementsByTagName("*");
-		Array.slice(nodes).forEach(function(node) {
+		Array.forEach(nodes, function(node) {
 			if (node && node.nodeType == Node.COMMENT_NODE || node.nodeName == "SCRIPT" || node.nodeName == "STYLE" || node.nodeName == "LINK" || node.nodeName == "IFRAME") {
 				node.parentNode.removeChild(node);
 			}
@@ -758,7 +758,7 @@ let zdic = {
 					var body = dict.htmlToDom("<head></head><body>"+req.responseText+"</body>").body;
 					var lis = body.querySelectorAll(".accy li");
 					if (lis) {
-						Array.slice(lis).forEach(function (li) {
+						Array.forEach(lis, function (li) {
 								var r = {};
 								var href = li.getElementsByTagName("a")[0];
 								var span = href.getElementsByTagName("span")[0];
@@ -2173,7 +2173,7 @@ group.commands.add(["di[ct]", "dic"],
 	true
 );
 
-Array.slice("dqyzw").forEach(function(char) {
+Array.forEach("dqyzw", function(char) {
 		let extra_options = [];
 		if ("yz".indexOf(char) + 1) {
 			extra_options = [
