@@ -1165,7 +1165,7 @@ let qq = {
 
 let google = {
 	name: T(34),
-	favicon: "http://translate.google.cn/favicon.ico",
+	favicon: "http://translate.google.com/favicon.ico",
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
 	keyword: "",
 	langpairs: "",
@@ -1177,7 +1177,7 @@ let google = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("GET",
-			'http://translate.google.cn/translate_a/t?client=t&hl=auto&sl='+langpairs[0]+'&tl='+langpairs[1]+'&text=' + keyword,
+			'http://translate.google.com/translate_a/t?client=t&hl=auto&sl='+langpairs[0]+'&tl='+langpairs[1]+'&text=' + keyword,
 			true
 		);
 		req.onreadystatechange = function(ev) {
@@ -1210,6 +1210,8 @@ let google = {
 	genOutput: function(result) {
 		let output = "";
 		let desc = result[0];
+		let pairs = google.langpairs.concat([dict.keyword]);
+		pairs = pairs.join("|");
 		var values = [];
 		if (desc) {
 			desc.forEach(function (parag, i) {
@@ -1226,6 +1228,7 @@ let google = {
 			values.forEach(function (row) {
 				output += "<p>" + row.join("<br/>") + "</p>";
 			})
+			output += '<a href="http://translate.google.com/#' + pairs + '" highlight="URL" target="_blank">...</a>';
 			output = '<div style="line-height:36px;font-size:18px;">' + output + '</div>';
 		}
 		let explain = result[1];
@@ -1928,11 +1931,14 @@ let dict = {
 				if (dict.args["-o"])
 					show = dict.args["-o"];
 
+				let pairs = google.langpairs.concat([dict.keyword]);
+				pairs = pairs.join("|");
+
 				switch (show) {
 					case "s":
 					dactyl.echo(new XML(google.genOutput(g)));
 					if (!mow.visible)
-						dict.timeout = dactyl.timeout(dict._clear, 15000);
+						dict.timeout = dactyl.timeout(dict._clear, 10000);
 					break;
 
 					case "a":
@@ -1943,7 +1949,7 @@ let dict = {
 							label: T(5),
 							accessKey: "S",
 							callback: function() {
-								dactyl.open("http://translate.google.com/", {background:false, where:dactyl.NEW_TAB});
+								dactyl.open("http://translate.google.com/#" + pairs , {background:false, where:dactyl.NEW_TAB});
 							}
 						},
 						null,  /* secondary action */
@@ -1955,8 +1961,6 @@ let dict = {
 					break;
 
 					case "n":
-					let pairs = google.langpairs;
-					pairs.push(dict.keyword);
 					let notify = Components.classes['@mozilla.org/alerts-service;1'].getService(Components.interfaces.nsIAlertsService);
 					let listener = {
 						observe: function(subject, topic, data) {
@@ -1965,7 +1969,7 @@ let dict = {
 						}
 					};
 					let title = T(34);
-					notify.showAlertNotification(null, title, google.genSimpleOutput(g), true, 'http://translate.google.cn/?hl=zh-CN#' + pairs.join("|"), listener, "dict-js-popup");
+					notify.showAlertNotification(null, title, google.genSimpleOutput(g), true, 'http://translate.google.com/#' + pairs, listener, "dict-js-popup");
 					break;
 
 					default:
@@ -1978,9 +1982,10 @@ let dict = {
 				} else {
 					let le = g[8][0][0];
 					var uri = "";
-					if (["en", "fr", "ko", "ja"].indexOf(le) + 1)
+					if (["en", "fr", "ko", "ja"].indexOf(le) + 1) {
+						le = ["eng","fr", "ko", "jap"][["en", "fr", "ko", "ja"].indexOf(le)];
 						uri = "http://dict.youdao.com/dictvoice?audio="+dict.keyword+"&le="+le;
-					else
+					} else
 						uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+dict.keyword+"&tl="+le+"&prev=input";
 					dict._play(uri);
 				}
@@ -2150,31 +2155,31 @@ let dict = {
 		if (config.OS.isWindows) {
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
-				var sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
+				var dict_sound = util.xmlToDom(<embed id="dict-sound" src="" autostart="false" type="application/x-mplayer2" hidden="true" height="0" width="0" enablejavascript="true" xmlns={XHTML}/>, document);
 				var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
-				addonbar.appendChild(sound);
-				dict_sound = document.getElementById("dict-sound");
-				if (!dict_sound.Play) {
-					dict_sound.setAttribute("autostart", "true");
-					dict_sound.setAttribute("hidden", "false"); // dirty hack, tell me why.
-				}
+				addonbar.appendChild(dict_sound);
 			}
 			dict_sound.setAttribute("src", uri);
 			dict_sound.setAttribute("src", uri);
 			if (dict_sound.Play)
 				dict_sound.Play();
+			else {
+				setTimeout(function () dict_sound.controls.play(), 1000);
+				dict_sound.controls.play();
+			}
+			
 		} else {
-			// var value= "http://dict.youdao.com/test.nobound.swf?audio="+encodeURIComponent(uri);
 			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
-			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop";
+			var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=no&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop&einterface=yes";
+
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
-				var sound = util.xmlToDom(<embed id="dict-sound" src={value} quality="high" wmode="transparent" width="0" height="0" align="" hidden="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" xmlns={XHTML}/>, document);
+				dict_sound = util.xmlToDom(<embed id="dict-sound" src={value} quality="high" wmode="transparent" width="0" height="0" align="" hidden="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" allowScriptAccess="always" xmlns={XHTML}/>, document);
 				var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
-				addonbar.appendChild(sound);
-			} else {
-				dict_sound.setAttribute("src", value);
+				addonbar.appendChild(dict_sound);
 			}
+			dict_sound.setAttribute("src", value);
+			setTimeout(function () dict_sound.playMusic(), 1000);
 		}
 	},
 
@@ -2562,20 +2567,44 @@ group.commands.add(["spe[ak]"],
 	"Speak",
 	function(args) {
 		let words = args[0] || dict._selection();
+		if (args.bang || !words) {
+			let player = DOM("#dict-sound", document)[0] || false;
+			if (player && player.getAttribute("src"))
+				try {
+					player.controls.play();
+				} catch (e if e instanceof TypeError) {
+					try {
+						player.playMusic();
+					} catch (e if e instanceof TypeError) {
+						try {
+							player.Play();
+						} catch (e if e instanceof TypeError) {
+							; // do nth
+						} catch (e) {
+							player.setAttribute("src", player.getAttribute("src"));
+						}
+					}
+				}
+			else
+				dactyl.echo("重新播放失败，无播放器或者播放链接为空！", commandline.FORCE_SINGLELINE);
+			return true;
+		}
 		let le = args["-l"] || "en";
         let isYoudao = ["yeng", "yfr", "yko", "yjap"].some(function(ylang) ylang==le);
         let uri = "";
 		if (isYoudao)
 			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le.substr(1);
-		else if (["en", "fr", "ko", "ja"].indexOf(le) + 1)
+		else if (["en", "fr", "ko", "ja"].indexOf(le) + 1) {
+			le = ["eng","fr", "ko", "jap"][["en", "fr", "ko", "ja"].indexOf(le)];
 			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
+		}
 		else
-			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input"; // Limit:
+			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le; // Limit:
 		dict.speak(uri);
 	},
 	{
 		argCount: "?",
-		// bang:true,
+		bang:true,
 		literal: 0,
 		options: [
 			{
@@ -2638,20 +2667,25 @@ var mousemove = function (e) {
 	}
 };
 if (config.OS.isWindows) {
-	var fullscreen = function (e) {
+	var removePlayer = function () {
 		var dict_sound = document.getElementById("dict-sound");
 		if (dict_sound) {
 			var addonbar = document.getElementById("addon-bar"); // FIXME: firefox 3.6 support
 			addonbar.removeChild(dict_sound);
 		}
 	};
+	var fullscreen = function (e) {
+		removePlayer();
+	};
 	window.addEventListener("fullscreen", fullscreen, false);
 }
 gBrowser.addEventListener("mousemove", mousemove, false);
 
 function onUnload() {
-	if (config.OS.isWindows)
+	if (config.OS.isWindows) {
 		window.removeEventListener("fullscreen", fullscreen, false);
+		removePlayer();
+	}
 	gBrowser.removeEventListener("mousemove", mousemove, false);
 	if (options["dict-dblclick"])
 		gBrowser.removeEventListener("click", dblclick, false);
@@ -2995,7 +3029,7 @@ var INFO =
 // www.zdic.net support?
 // 当为汉字时，使用www.zdic.net的自动补全和解释
 // automatic select proper engine
-// x translate.google.cn -- doesn't workable, need more test.
+// x translate.google.com -- doesn't workable, need more test.
 // * literal
 // 检测命令行参数是否有效，比如 :di -e xxxx
 // Unicode Ranges
@@ -3006,5 +3040,5 @@ var INFO =
 // 存入的数据加入版本号,每次检测版本号,　是否需要更新
 // * context.cancel 移除异步自动补全调用
 //  http://translate.google.com/translate_tts\?ie\=UTF-8\&q\=你好\&tl\=zh-CN\&prev\=input -- 支持非英文的页面发音
-//  http://translate.google.cn/translate_a/t?client=t&text=%E4%BD%A0%E5%A5%BD&hl=en&sl=auto&tl=en&multires=1&prev=conf&psl=az&ptl=en&otf=1&it=sel.5284%2Csrcd_gms.2521&ssel=4&tsel=6&uptl=en&alttl=zh-CN&sc=1 -- 自动检测语言
+//  http://translate.google.com/translate_a/t?client=t&text=%E4%BD%A0%E5%A5%BD&hl=en&sl=auto&tl=en&multires=1&prev=conf&psl=az&ptl=en&otf=1&it=sel.5284%2Csrcd_gms.2521&ssel=4&tsel=6&uptl=en&alttl=zh-CN&sc=1 -- 自动检测语言
 //  如果是查询选区或者是光标下的词，可以根据当前页面的编码来猜测语言
