@@ -680,6 +680,7 @@ let zdic = {
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
 		ret["simple"] = ret["def"].replace(/\n|\r/g, " ").replace(/\s\s+/g, " ").slice(0, 200);
+        ret["keyword"] = zdic.keyword;
 		ret["full"] = zdic._full(body);
 		return ret;
 	},
@@ -831,6 +832,7 @@ let youdao = {
 		else
 			ret["simple"] = _ret["word"] + " " + ret["def"];
 		ret["full"] = youdao._full(doc);
+        ret["keyword"] = _ret["word"];
 		return ret;
 	},
 
@@ -980,6 +982,7 @@ let qq = {
 				ret["simple"] = _ret["word"] + " [" + ret["pron"] + "] " + ret["def"];
 			else
 				ret["simple"] = _ret["word"] + " " + ret["def"];
+            ret["keyword"] = _ret["word"];
 			ret["full"] = qq._full(j);
 		} else
 			ret["notfound"] = true;
