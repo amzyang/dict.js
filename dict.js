@@ -603,7 +603,7 @@ let zdic = {
 
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("POST", "http://www.zdic.net/sousuo/", true);
+		req.open("POST", "http://www.zdic.net/sousuo/");
 		req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		req.onreadystatechange = function (ev) {
 			dict.ready(zdic, req);
@@ -948,7 +948,7 @@ let qq = {
 	init: function(keyword, args) {
 		var req = new XMLHttpRequest();
 		dict.req = req;
-		req.open("GET", "http://dict.qq.com/dict?f=web&q="+keyword, true);
+		req.open("GET", "http://dict.qq.com/dict?f=web&q="+keyword);
 		req.setRequestHeader("Referer", "http://dict.qq.com/");
 		req.send(null);
 		req.onreadystatechange = function(ev) {
@@ -1177,8 +1177,7 @@ let google = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		req.open("GET",
-			'http://translate.google.com/translate_a/t?client=t&hl=auto&sl='+langpairs[0]+'&tl='+langpairs[1]+'&text=' + keyword,
-			true
+			'http://translate.google.com/translate_a/t?client=t&hl=auto&sl='+langpairs[0]+'&tl='+langpairs[1]+'&text=' + keyword
 		);
 		req.onreadystatechange = function(ev) {
 			dict.google(req);
@@ -1280,8 +1279,7 @@ let dict_cn = {
 		dict_cn.keyword = keyword;
 		dict_cn.url = "http://dict.cn/"+keyword;
 		req.open("POST",
-			"http://dict.cn/ws.php?utf8=true&q="+keyword,
-			true
+			"http://dict.cn/ws.php?utf8=true&q="+keyword
 		);
 		req.onreadystatechange = function(ev) {
 			dict.ready(dict_cn, req);
@@ -1865,6 +1863,21 @@ let dict = {
 				// http://dict.youdao.com/dictvoice?audio=you_are_welcome&le=en
 				var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
 				dict._play(uri);
+			} else {
+				var req = new XMLHttpRequest();
+				req.open("GET",
+					'http://translate.google.com/translate_a/t?client=t&hl=auto&sl=auto&tl=en&text=' + dict.keyword
+				);
+				req.onreadystatechange = function (ev) {
+					if (req.readyState == 4) {
+						if (req.status == 200) {
+							eval("var g=" + req.responseText + ";");
+							let le = g[8][0][0];
+							dict.speak(dict.getSoundUriByLocaleKeyword(le, decodeURIComponent(dict.keyword)));
+						}
+					}
+				};
+				req.send(null);
 			}
 		}
 
@@ -2170,7 +2183,7 @@ let dict = {
 			
 		} else {
 			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
-			var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=no&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop&einterface=yes";
+			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=no&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop&einterface=yes";
 
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
@@ -2323,6 +2336,19 @@ let dict = {
 			if (!pattern.test(src))
 				img.setAttribute("src", prefix+src);
 		}
+	},
+
+	getSoundUriByLocaleKeyword: function (le, keyword) {
+		let isYoudao = ["yeng", "yfr", "yko", "yjap"].some(function(ylang) ylang==le);
+		let uri = "";
+		if (isYoudao)
+			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(keyword) + "&le=" + le.substr(1);
+		else if (["en", "fr", "ko", "ja"].indexOf(le) + 1) {
+			le = ["eng","fr", "ko", "jap"][["en", "fr", "ko", "ja"].indexOf(le)];
+			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(keyword) + "&le=" + le;
+		} else
+			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(keyword)+"&tl="+le; // Limit:
+		return uri;
 	}
 };
 
@@ -2589,18 +2615,27 @@ group.commands.add(["spe[ak]"],
 				dactyl.echo("重新播放失败，无播放器或者播放链接为空！", commandline.FORCE_SINGLELINE);
 			return true;
 		}
-		let le = args["-l"] || "en";
-        let isYoudao = ["yeng", "yfr", "yko", "yjap"].some(function(ylang) ylang==le);
-        let uri = "";
-		if (isYoudao)
-			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le.substr(1);
-		else if (["en", "fr", "ko", "ja"].indexOf(le) + 1) {
-			le = ["eng","fr", "ko", "jap"][["en", "fr", "ko", "ja"].indexOf(le)];
-			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
+		// let le = args["-l"] || "en";
+		let le = args["-l"] || "";
+		if (le) {
+			dict.speak(dict.getSoundUriByLocaleKeyword(le, words));
+		} else {
+			// 自动检测语言
+			var req = new XMLHttpRequest();
+			req.open("GET",
+				'http://translate.google.com/translate_a/t?client=t&hl=auto&sl=auto&tl=en&text=' + encodeURIComponent(words)
+			);
+			req.onreadystatechange = function (ev) {
+				if (req.readyState == 4) {
+					if (req.status == 200) {
+						eval("var g=" + req.responseText + ";");
+						let le = g[8][0][0];
+						dict.speak(dict.getSoundUriByLocaleKeyword(le, words));
+					}
+				}
+			};
+			req.send(null);
 		}
-		else
-			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le; // Limit:
-		dict.speak(uri);
 	},
 	{
 		argCount: "?",
