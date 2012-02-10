@@ -2558,10 +2558,12 @@ group.commands.add(["spe[ak]"],
 	function(args) {
 		let words = args[0] || dict._selection();
 		let le = args["-l"] || "";
-		if (le)
-			var uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input";
+        let isYoudao = ["yeng", "yfr", "yko", "yjap"].some(function(ylang) ylang==le);
+        let uri = "";
+		if (isYoudao)
+			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le.substr(1);
 		else
-			var uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
+			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input";
 		dict.speak(uri);
 	},
 	{
@@ -2573,12 +2575,15 @@ group.commands.add(["spe[ak]"],
 				names: ["-l"],
 				description: "Language",
 				type: CommandOption.STRING,
-				completer: [
-					["eng", "English"],
-					["fr", "French"],
-					["ko", "Korean"],
-					["jap", "Japanese"],
-				].concat(dict.languages) // TODO
+				completer: function (context) {
+					context.completions = [
+						["yeng", "Youdao - English"],
+						["yfr",  "Youdao - French"],
+						["yko",  "Youdao - Korean"],
+						["yjap", "Youdao - Japanese"],
+					].concat(dict.languages); // TODO
+					context.filters = [CompletionContext.Filter.textDescription];
+				}
 			}
 		]
 	},
