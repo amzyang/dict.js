@@ -1976,7 +1976,12 @@ let dict = {
 					var uri = "http://dict.youdao.com/dictvoice?audio=" + dict.keyword; // TODO: support langpair
 					dict._play(uri);
 				} else {
-					var uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+dict.keyword+"&tl="+g[8][0][0]+"&prev=input";
+					let le = g[8][0][0];
+					var uri = "";
+					if (["en", "fr", "ko", "ja"].indexOf(le) + 1)
+						uri = "http://dict.youdao.com/dictvoice?audio="+dict.keyword+"&le="+le;
+					else
+						uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+dict.keyword+"&tl="+le+"&prev=input";
 					dict._play(uri);
 				}
 			} else
@@ -2557,13 +2562,15 @@ group.commands.add(["spe[ak]"],
 	"Speak",
 	function(args) {
 		let words = args[0] || dict._selection();
-		let le = args["-l"] || "";
+		let le = args["-l"] || "en";
         let isYoudao = ["yeng", "yfr", "yko", "yjap"].some(function(ylang) ylang==le);
         let uri = "";
 		if (isYoudao)
 			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le.substr(1);
+		else if (["en", "fr", "ko", "ja"].indexOf(le) + 1)
+			uri = "http://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(words) + "&le=" + le;
 		else
-			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input";
+			uri = "http://translate.google.com/translate_tts?ie=UTF-8&q="+encodeURIComponent(words)+"&tl="+le+"&prev=input"; // Limit:
 		dict.speak(uri);
 	},
 	{
