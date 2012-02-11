@@ -2443,7 +2443,7 @@ group.options.add(["dict-dblclick", "dicd"],
 group.options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"stringmap",
-	"g:en|zh-CN,y:eng,z:1hp",
+	"g:|zh-CN,y:eng,z:1hp",
 	{
 		completer: function(context, extra) {
 
@@ -2820,7 +2820,7 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng,z:1hp</default>
+        <default>g:|zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
@@ -2842,7 +2842,7 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:en|zh-CN,y:eng,z:1hp</default>
+        <default>g:|zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
 			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
