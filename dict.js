@@ -2356,7 +2356,7 @@ let dict = {
 group.options.add(["dict-hasaudio", "dich"],
 	T(21),
 	"boolean",
-	false
+	true
 );
 
 group.options.add(["dict-clipboard", "dicb"],
@@ -2799,7 +2799,7 @@ var INFO =
         <tags>'dich' 'dict-hasaudio'</tags>
         <spec>'dict-hasaudio' 'dich'</spec>
         <type>boolean</type>
-        <default>false</default>
+        <default>true</default>
         <description>
 			  <p>Enable or disable sound support.</p>
 			  <warning>dict.js use Windows Media Player plugin on Microsoft Windows platform and Adobe Flash Player for others. If you have any sound issues, read this first: <link topic="http://support.mozilla.com/en-US/kb/Using%20the%20Windows%20Media%20Player%20plugin%20with%20Firefox">Using the Windows Media Player plugin with Firefox</link></warning>
@@ -2809,7 +2809,7 @@ var INFO =
         <tags>'dich' 'dict-hasaudio'</tags>
         <spec>'dict-hasaudio' 'dich'</spec>
         <type>boolean</type>
-        <default>false</default>
+        <default>true</default>
         <description>
 			<p>开启或者关闭声音。</p>
 			<warning>在 Windows 平台下，dict.js 使用 Windows Media Player 插件来进行声音输出,其它平台使用 Adobe Flash Player。如果出现了声音方面的问题，请参考：<link topic="http://support.mozilla.com/zh-CN/kb/%E5%9C%A8%20Firefox%20%E4%B8%AD%E4%BD%BF%E7%94%A8%20Windows%20Media%20Player%20%E6%8F%92%E4%BB%B6">在 Firefox 中使用 Windows Media Player 插件</link></warning>
