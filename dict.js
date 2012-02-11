@@ -429,7 +429,7 @@ var tr = {
 		37: "Chinese ↔ French",
 		38: "Chinese ↔ Korean",
 		39: "Chinese ↔ Japanese",
-		40: "Open result in new tab!",
+		40: "Open result in current tab!",
 		41: "Han Dian",
 		42: "Wikipedia"
 	},
@@ -472,7 +472,7 @@ var tr = {
 		37: "汉法互译",
 		38: "汉韩互译",
 		39: "汉日互译",
-		40: "在新标签页中打开结果！",
+		40: "在当前标签页中打开结果！",
 		41: "汉典",
 		42: "维基百科"
 	}
@@ -1696,7 +1696,11 @@ let dict = {
 						return false;
 					dict.keyword = keyword;
 					if (args["-t"])
-						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.CURRENT_TAB});
+					if (dactyl.forceTarget)
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.forceTarget});
+					if (dactyl.forceBackground)
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:true, where:dactyl.NEW_TAB});
 					let key = dict.generateKey(keyword, engine, lp || "");
 					let ret = dict.getCache(key);
 					if (ret)
@@ -1721,7 +1725,11 @@ let dict = {
 		} else {
 			dict.keyword = keyword;
 			if (args["-t"])
-				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:false, where:dactyl.NEW_TAB});
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.CURRENT_TAB});
+			if (dactyl.forceTarget)
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.forceTarget});
+			if (dactyl.forceBackground)
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:true, where:dactyl.NEW_TAB});
 			let key = dict.generateKey(keyword, engine, lp||"");
 			let ret = dict.getCache(key);
 			if (ret)
@@ -2966,7 +2974,7 @@ var INFO =
 				  <dt>-e</dt>      <dd>specified dictionary engine <note><o>dice</o></note></dd>
 				  <dt>-l</dt>      <dd>specified langpair <note><o>dicl</o></note></dd>
 				  <dt>-o</dt>      <dd>specified method to show result <note><o>dico</o></note></dd>
-				  <dt>-t</dt>      <dd>open result on new tab</dd>
+				  <dt>-t</dt>      <dd>open result link in current tab</dd>
 			  </dl>
 		  </description>
 	  </item>
@@ -2982,7 +2990,7 @@ var INFO =
 				  <dt>-e</dt>      <dd>给定使用的翻译网站 <note><o>dice</o></note></dd>
 				  <dt>-l</dt>      <dd>谷歌翻译时的语言设置 <note><o>dicl</o></note></dd>
 				  <dt>-o</dt>      <dd>翻译结果的输出设置 <note><o>dico</o></note></dd>
-				  <dt>-t</dt>      <dd>在新标签页打开翻译页面</dd>
+				  <dt>-t</dt>      <dd>在当前标签页打开翻译链接</dd>
 			  </dl>
 		  </description>
 	  </item>
