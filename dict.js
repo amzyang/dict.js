@@ -1185,6 +1185,13 @@ let google = {
 		req.send(null);
 		return req;
 	},
+	href: function (params) {
+		let langpairs = (params["le"] || options["dict-langpair"]["g"] ||
+			options.get("dict-langpair").defaultValue["g"]).split("|");
+		langpairs[0] = langpairs[0] || "auto";
+		let pairs = langpairs.concat([encodeURIComponent(params['keyword'])]);
+		return "http://translate.google.cn/#" + pairs.join("|");
+	},
 	genSimpleOutput: function (result) {
 		let desc = result[0];
 		let output = '';
