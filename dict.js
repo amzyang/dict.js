@@ -1173,6 +1173,7 @@ let google = {
 		let langpair = args["-l"] || options["dict-langpair"]["g"] || options.get("dict-langpair").defaultValue["g"];
 		let langpairs = langpair.split("|");
 		langpairs[0] = langpairs[0] || 'auto';
+		langpairs[1] = langpairs[1] || 'auto';
 		google.langpairs = langpairs;
 		var req = new XMLHttpRequest();
 		dict.req = req;
@@ -1189,6 +1190,7 @@ let google = {
 		let langpairs = (params["le"] || options["dict-langpair"]["g"] ||
 			options.get("dict-langpair").defaultValue["g"]).split("|");
 		langpairs[0] = langpairs[0] || "auto";
+		langpairs[1] = langpairs[1] || "auto";
 		let pairs = langpairs.concat([encodeURIComponent(params['keyword'])]);
 		return "http://translate.google.cn/#" + pairs.join("|");
 	},
@@ -1689,18 +1691,23 @@ let dict = {
 		keyword = keyword.trim();
 		let engine = dict._route();
 		let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
+
+		let opener = false;
+		if (args["-t"])
+			opener = {where:dactyl.CURRENT_TAB};
+		if (dactyl.forceTarget)
+			opener = {where:dactyl.forceTarget};
+		if (dactyl.forceBackground)
+			opener = {background:true, where:dactyl.NEW_TAB};
 		if (keyword.length == 0) {
 			CommandPromptMode(T(4), update({onSubmit: function(keyword) {
 					var keyword = keyword.trim();
 					if (!keyword)
 						return false;
 					dict.keyword = keyword;
-					if (args["-t"])
-						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.CURRENT_TAB});
-					if (dactyl.forceTarget)
-						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.forceTarget});
-					if (dactyl.forceBackground)
-						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:true, where:dactyl.NEW_TAB});
+					if (opener)
+						return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), opener);
+
 					let key = dict.generateKey(keyword, engine, lp || "");
 					let ret = dict.getCache(key);
 					if (ret)
@@ -1721,15 +1728,11 @@ let dict = {
 					},
 					historyKey: 'dict.js'
 				}
-		)).open(options["dict-clipboard"] ? dactyl.clipboardRead() : "");
+			)).open(options["dict-clipboard"] ? dactyl.clipboardRead() : "");
 		} else {
 			dict.keyword = keyword;
-			if (args["-t"])
-				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.CURRENT_TAB});
-			if (dactyl.forceTarget)
-				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {where:dactyl.forceTarget});
-			if (dactyl.forceBackground)
-				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), {background:true, where:dactyl.NEW_TAB});
+			if (opener)
+				return dactyl.open(dict.engine.href({keyword:decodeURIComponent(dict.keyword), le: args["-l"], type: args["-l"]}), opener);
 			let key = dict.generateKey(keyword, engine, lp||"");
 			let ret = dict.getCache(key);
 			if (ret)
