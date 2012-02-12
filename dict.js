@@ -821,7 +821,7 @@ let youdao = {
 			audio: false
 		};
 		var doc = dict.htmlToDom(html);
-		dict.resolveRelative(doc, "http://dict.youdao.com/");
+		dict.resolveRelative(doc, "http://dict.youdao.com");
 		var _ret = youdao._simple(doc);
 		ret["audio"] = _ret["audio"] ? _ret["audio"] : ret["audio"];
 		ret["pron"] = _ret["pron"] ? _ret["pron"] : ret["pron"];
