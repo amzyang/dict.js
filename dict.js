@@ -2001,15 +2001,16 @@ let dict = {
 		// @TODO: #, name anchor
 		var protocol = prefix.split(":")[0] || "";
 		var pattern = /^((https?|ftps?|file|mailto|javascript):)?\/\//;
+		var anchor_pattern = /^#/;
 		var links = node.getElementsByTagName("a");
 		for (var i = links.length - 1; i >= 0; i--) {
 			var link = links[i];
 			var href = link.getAttribute("href");
-			if (!pattern.test(href))
+			if (!pattern.test(href) && !anchor_pattern.test(href))
 				link.setAttribute("href", prefix+href);
 			if (/^\/\//.test(href))
 				link.setAttribute("href", protocol + ":" + href);
-			link.setAttribute("target", "_blank");
+			// link.setAttribute("target", "_blank");
 			link.removeAttribute(","); // @HACK: hacks for youdao
 		}
 		var imgs = node.getElementsByTagName("img");
