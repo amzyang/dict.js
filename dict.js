@@ -998,7 +998,11 @@ let dict_cn = {
 			}
 
 			// def
-			ret["def"] = dict.tidy(def[0]);
+			ret["def"] = [];
+			Array.forEach(def, function (node) {
+				ret["def"].push(node.textContent);
+			})
+			ret["def"] = ret["def"].join("\n");
 			let piece = <></>;
 			let ps = ret["def"].trim().split("\n");
 			for (let [i, v] in Iterator(ps))
@@ -1053,14 +1057,17 @@ let dict_cn = {
 		if (dict.suggestReq)
 			dict.suggestReq.abort();
 		dict.suggestReq = req;
-		req.open("POST",
-			"http://dict.cn/ajax/suggestion.php"
+		req.open("GET",
+			"http://dict.cn/apis/suggestion.php?callback=hook&dict=dict&q=" + encodeURIComponent(args[0])
 		);
+		var hook = function() {
+			result_arr = arguments[0];
+		};
 		var suggestions = [];
 		req.onreadystatechange = function () {
 			if (req.readyState == 4) {
 				if (req.status == 200) {
-					var result_arr = JSON.parse(req.responseText);
+					eval(req.responseText);
 					result_arr["s"].forEach(function (r) {
 							r["e"] = dict.htmlToDom(r["e"].trim()).textContent;
 							r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
@@ -1090,10 +1097,7 @@ let dict_cn = {
 				}
 			}
 		};
-		var formData = new FormData();
-		formData.append("q", args[0]);
-		formData.append("s", "d");
-		req.send(formData);
+		req.send(null);
 	},
 
 	_fix: function () {
@@ -1350,7 +1354,6 @@ let dict = {
 		keyword = keyword.trim();
 		if (keyword.length == 0)
 			keyword = dict._selection() || "";
-			// keyword = content.window.getSelection().toString() || "";
 		keyword = keyword.trim();
 		let engine = dict._route();
 		let lp = args["-l"] || options["dict-langpair"][engine] || options.get("dict-langpair").defaultValue[engine] || "";
@@ -1693,11 +1696,12 @@ let dict = {
 		let engine = dict.engines[dict._route(args)];
 
 		var url = function(item, text)
-		<a xmlns:dactyl={NS} identifier={item.id || ""} dactyl:command={item.command || ""}
+		<a xmlns:dactyl={NS} title={text||""} identifier={item.id || ""} dactyl:command={item.command || ""}
 		href={item.item.url} highlight="URL">{text || ""}</a>;
 
 		context.title = [T(14) + " - " + engine.name,T(15)];
 		context.keys = {"text":"g", "description":"e"};
+		context.compare = null;
 		context.filterFunc = null;
 		context.process[1] = url;
 		let dash_e = args["-e"] || options.get("dict-engine").value || options.get("dict-engine").defaultValue;
