@@ -191,7 +191,7 @@ let wikipedia = {
 				if (req.status == 200) {
 					wikipedia.process(req.responseText);
 				} else
-					dict.error(req.status);
+					dict.error(req.status); // @TODO:
 			}
 		}
 		req.send(null);
@@ -210,11 +210,13 @@ let wikipedia = {
 		let ret = {
 			notfound: false,
 			pron: false,
-			def: result.displaytitle,
-			simple: result.displaytitle,
-			full: result.text,
+			def: result.displaytitle || decodeURIComponent(dict.keyword),
+			simple: result.displaytitle || decodeURIComponent(dict.keyword),
+			full: result.text || "",
 			audio: false
 		};
+		if (options["dict-hasaudio"])
+			dactyl.execute("speak " + (result.displaytitle || decodeURIComponent(dict.keyword)).replace(" ", "\\ "));
 		let output = <div><style tyle="text/css">
 			<![CDATA[
 				#wikipedia-output {background-color:#FFF;color:#000;padding:1em 2em;white-space:normal;}
@@ -367,7 +369,7 @@ let zdic = {
 		ret["def"] = _ret["def"] ? _ret["def"] : ret["def"];
 		ret["notfound"] = !ret["def"];
 		ret["simple"] = ret["def"].replace(/\n|\r/g, " ").replace(/\s\s+/g, " ").slice(0, 200);
-        ret["keyword"] = zdic.keyword;
+		ret["keyword"] = zdic.keyword;
 		ret["full"] = zdic._full(doc);
 		return ret;
 	},
@@ -2768,3 +2770,4 @@ var INFO =
 //  http://translate.google.com/translate_a/t?client=t&text=%E4%BD%A0%E5%A5%BD&hl=en&sl=auto&tl=en&multires=1&prev=conf&psl=az&ptl=en&otf=1&it=sel.5284%2Csrcd_gms.2521&ssel=4&tsel=6&uptl=en&alttl=zh-CN&sc=1 -- 自动检测语言
 //  如果是查询选区或者是光标下的词，可以根据当前页面的编码来猜测语言
 // try fanyi.youdao.com
+// dictw 无语音输出
