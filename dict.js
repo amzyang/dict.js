@@ -2245,6 +2245,7 @@ let dict = {
 		if (ret["pron"])
 			title += ": [" + ret["pron"] + "]";
 		let def = dict._pipelineToBr(ret["def"]);
+		// @FIXME: 当图标为远程资源时，不工作
 		notify.showAlertNotification(null, title, def, true, dict.engine.href({"keyword":ret["keyword"]}), listener, "dict-js-popup");
 	},
 
