@@ -232,9 +232,8 @@ let wikipedia = {
 			</style>
 			<p class="title">
 				<a href={wikipedia.href({keyword: ret.def})} target="_blank" highlight="URL">{ret.def}</a></p></div>;
-		let body = dict.htmlToDom('<article id="1A2b3C">' + ret.full['*'] + '</article>');
-		dict.resolveRelative(body, "http://zh.wikipedia.org");
-		output += new XML(dict.tidy(body));
+		let body = dict.htmlToDom(ret.full['*'], "http://zh.wikipedia.org");
+		output += new XML(dict.tidyNodes(body.childNodes, "article"));
 		dactyl.echo(<div id="wikipedia-output">{output}</div>);
 	},
 
@@ -389,9 +388,9 @@ let zdic = {
 			</p>.toXMLString();
 		}
 
-		var explain = doc.querySelectorAll("div#wrapper div#container div#content");
-		if (explain[0])
-			full["sub"][T(8)] = dict.tidy(explain[0]);
+		var explain = doc.querySelector("div#wrapper div#container div#content");
+		if (explain)
+			full["sub"][T(8)] = dict.tidy(explain);
 		return full;
 	},
 
@@ -531,8 +530,8 @@ let youdao = {
 		}
 
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
-		if (def[0])
-			full["sub"][T(8)] = dict.tidy(def[0]);
+		if (def)
+			full["sub"][T(8)] = dict.tidyNodes(def, "div");
 
 		var ph = document.querySelector("#wordGroup");
 		if (ph)
@@ -547,8 +546,8 @@ let youdao = {
 			full["sub"][T(18)] = dict.tidy(ex);
 
 		var mor = document.querySelectorAll("#etcTrans p");
-		if (mor[0])
-			full["sub"][T(13)] = dict.tidy(mor[0]);
+		if (mor)
+			full["sub"][T(13)] = dict.tidyNodes(mor, "div");
 
 		return full;
 	},
@@ -1976,6 +1975,21 @@ let dict = {
 	// remove comments, scripts, inline styles, stylesheets, unused properties
 	tidy: function(node) {
 		return (new XMLSerializer).serializeToString(node);
+	},
+
+	tidyNodes: function (nodes/*, tagname*/) {
+		let tagname = arguments[1] || "";
+		let nodesPretty = "";
+		Array.forEach(nodes, function (node) {
+			nodesPretty += dict.tidy(node);
+		});
+		if (tagname) {
+			let parentNode = document.createElementNS(XHTML, tagname);
+			parentNode.innerHTML = nodesPretty;
+			return dict.tidy(parentNode);
+		}
+		return nodesPretty;
+
 	},
 
 	/*
