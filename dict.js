@@ -173,9 +173,6 @@ function T(i) {
 	return tr["en-US"][i];
 }
 
-if (document.getElementById("dict-frame")) // workaround for :rehash
-	document.getElementById('main-window').removeChild(document.getElementById('dict-frame'));
-
 let wikipedia = {
 	name: T(42),
 	keyword: "",
