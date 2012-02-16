@@ -120,7 +120,9 @@ var tr = {
 		39: "Chinese ↔ Japanese",
 		40: "Open result in current tab!",
 		41: "Han Dian",
-		42: "Wikipedia"
+		42: "Wikipedia",
+		43: "Net Sentences",
+		44: "Situational Dialogues"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -163,7 +165,9 @@ var tr = {
 		39: "汉日互译",
 		40: "在当前标签页中打开结果！",
 		41: "汉典",
-		42: "维基百科"
+		42: "维基百科",
+		43: "网络例句",
+		44: "情景对话"
 	}
 };
 
@@ -229,8 +233,7 @@ let wikipedia = {
 			</style>
 			<p class="title">
 				<a href={wikipedia.href({keyword: ret.def})} target="_blank" highlight="URL">{ret.def}</a></p></div>;
-		let body = dict.htmlToDom(ret.full['*'], "http://zh.wikipedia.org");
-		output += new XML(dict.tidyNodes(body.childNodes, "article"));
+		output += new XML(dict.tidyStr(ret.full['*'], "article"));
 		dactyl.echo(<div id="wikipedia-output">{output}</div>);
 	},
 
@@ -696,7 +699,30 @@ let qq = {
 					}
 				}
 			});
-			full["sub"][T(8)] = '<div class="basic">'+des+"</div>";
+			full["sub"][T(8)] = '<div class="basic">' + dict.tidyStr(des) + "</div>";
+		}
+
+		if (e.netsen) {
+			let o = "";
+			Array.forEach(e.netsen, function(s) {
+				o += "<dl><dt>" + s.cs + "</dt>" +
+				 "<dd><a href=\"" + s.url + "\" highlight=\"URL\">" + s.es + "</a></dd></dl>";
+			});
+			full["sub"][T(43)] = dict.tidyStr(o, "div");
+		}
+
+		if (e.dlg) {
+			let o = "";
+			e.dlg.forEach(function (play, idx) {
+				o += "<dl><b>" + (idx + 1) + "." + play.t + play.s + "</b><dt>";
+				o += "<dd style=\"padding-left:2em;\">";
+				play.c.forEach(function (sen) {
+					o += "<p>" + sen.n + ": " + sen.es + "</p>";
+					o += "<p>&nbsp;&nbsp;&nbsp;" + sen.cs + "</p>";
+				});
+				o += "</dd></dl>";
+			});
+			full["sub"][T(44)] = dict.tidyStr(o, "div");
 		}
 
 		if (t.ph) { // Related phrases
@@ -704,9 +730,9 @@ let qq = {
 			t.ph.forEach(function(item) {
 				let href = qq.href({"keyword": item["phs"]});
 				let phs = item["phs"];
-				ph += "" + <li><a href={href} highlight="URL">{phs}</a> {item["phd"]}</li>.toXMLString();
+				ph += "<li><a href=\"" + href + "\" highlight=\"URL\">" + phs + "</a> " + item["phd"] + "</li>";
 			});
-			full["sub"][T(9)] = "<ol>"+ph+"</ol>";
+			full["sub"][T(9)] = dict.tidyStr(ph, "ol");
 		}
 
 		if (t.syn) { // Synonyms
@@ -1972,6 +1998,13 @@ let dict = {
 	// remove comments, scripts, inline styles, stylesheets, unused properties
 	tidy: function(node) {
 		return (new XMLSerializer).serializeToString(node);
+	},
+
+	tidyStr: function(str/*, tagname*/) {
+		let body = dict.htmlToDom(str);
+		if (arguments[1])
+			return dict.tidyNodes(body.childNodes, arguments[1]);
+		return dict.tidyNodes(body.childNodes);
 	},
 
 	tidyNodes: function (nodes/*, tagname*/) {
