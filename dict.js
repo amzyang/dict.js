@@ -3007,3 +3007,4 @@ var INFO =
 //  如果是查询选区或者是光标下的词，可以根据当前页面的编码来猜测语言
 // try fanyi.youdao.com
 // dictw 无语音输出
+// 添加 dictw/-h/:speak 的帮助文档
