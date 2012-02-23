@@ -2145,6 +2145,48 @@ let dict = {
 		return str.replace(/\n/g, "<br/>");
 	},
 
+	_getFlSl: function() { // get google translate langpairs
+		let req = new XMLHttpRequest();
+		req.open('GET', 'http://translate.google.cn/?hl=en');
+
+		req.onreadystatechange = function(ev) {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					let html = req.responseText;
+					let doc = document.implementation.createHTMLDocument('');
+					let ret = null;
+					ret = doc.documentElement;
+					doc.documentElement.setAttribute('xmlns',
+						doc.documentElement.namespaceURI);
+					ret.innerHTML = html;
+					// gt-sl
+					let gt_sl = doc.getElementById('gt-sl');
+					let options = gt_sl.getElementsByTagName('option');
+					let lang = '[';
+					Array.forEach(options, function(node, idx) {
+							if (idx == options.length - 1)
+								lang += '["' + node.value + '", "' + node.innerHTML + '"]]';
+							else
+								lang += '["' + node.value + '", "' + node.innerHTML + '"],';
+							lang += '\n';
+					});
+					let gt_tl = doc.getElementById('gt-tl');
+					options = gt_tl.getElementsByTagName('option');
+					lang += '\n[';
+					Array.forEach(options, function(node, idx) {
+							if (idx == options.length - 1)
+								lang += '["' + node.value + '", "' + node.innerHTML + '"]]';
+							else
+								lang += '["' + node.value + '", "' + node.innerHTML + '"],';
+							lang += '\n';
+					});
+					dactyl.clipboardWrite(lang);
+				}
+			}
+		};
+		req.send(null);
+	},
+
 	// @TODO: 给超链接加上 highlight 配色属性，值为 "URL"
 	// remove comments, scripts, inline styles, stylesheets, unused properties
 	tidy: function(node) {
