@@ -856,11 +856,20 @@ let google = {
 	logo: "http://www.gstatic.com/translate/intl/en/logo.png",
 	keyword: "",
 	langpairs: "",
+	_langpairs: function(langpair) {
+		let langpairs = langpair.split("|");
+		if (langpairs.length == 1) {
+			langpairs[1] = langpairs[0] || 'auto';
+			langpairs[0] = 'auto';
+		} else {
+			langpairs[0] = langpairs[0] || 'auto';
+			langpairs[1] = langpairs[1] || 'auto';
+		}
+		return langpairs;
+	},
 	init: function(keyword, args) {
 		let langpair = args["-l"] || options["dict-langpair"]["g"] || options.get("dict-langpair").defaultValue["g"];
-		let langpairs = langpair.split("|");
-		langpairs[0] = langpairs[0] || 'auto';
-		langpairs[1] = langpairs[1] || 'auto';
+		let langpairs = google._langpairs(langpair);
 		google.langpairs = langpairs;
 		var req = new XMLHttpRequest();
 		dict.req = req;
@@ -874,10 +883,9 @@ let google = {
 		return req;
 	},
 	href: function (params) {
-		let langpairs = (params["le"] || options["dict-langpair"]["g"] ||
-			options.get("dict-langpair").defaultValue["g"]).split("|");
-		langpairs[0] = langpairs[0] || "auto";
-		langpairs[1] = langpairs[1] || "auto";
+		let langpair = params["le"] || options["dict-langpair"]["g"] ||
+			options.get("dict-langpair").defaultValue["g"];
+		let langpairs = google._langpairs(langpair);
 		let pairs = langpairs.concat([encodeURIComponent(params['keyword'])]);
 		return "http://translate.google.cn/#" + pairs.join("|");
 	},
@@ -1184,7 +1192,150 @@ let dict = {
 		dict._DBConn = DBConn;
 		return dict._DBConn;
 	},
+	fl: [ // From:
+		["auto", "Auto Detect language"],
+		["en", "English"],
+		["zh", "Chinese"],
+		["zh-CN", "Chinese (Simplified)"],
+		["zh-TW", "Chinese (Traditional)"],
+		["ja", "Japanese"],
+		["ko", "Korean"],
+		["af", "Afrikaans"],
+		["sq", "Albanian"],
+		["ar", "Arabic"],
+		["hy", "Armenian"],
+		["az", "Azerbaijani"],
+		["eu", "Basque"],
+		["be", "Belarusian"],
+		["bn", "Bengali"],
+		["bg", "Bulgarian"],
+		["ca", "Catalan"],
+		["hr", "Croatian"],
+		["cs", "Czech"],
+		["da", "Danish"],
+		["nl", "Dutch"],
+		["eo", "Esperanto"],
+		["et", "Estonian"],
+		["tl", "Filipino"],
+		["fi", "Finnish"],
+		["fr", "French"],
+		["gl", "Galician"],
+		["ka", "Georgian"],
+		["de", "German"],
+		["el", "Greek"],
+		["gu", "Gujarati"],
+		["ht", "Haitian Creole"],
+		["iw", "Hebrew"],
+		["hi", "Hindi"],
+		["hu", "Hungarian"],
+		["is", "Icelandic"],
+		["id", "Indonesian"],
+		["ga", "Irish"],
+		["it", "Italian"],
+		["kn", "Kannada"],
+		["la", "Latin"],
+		["lv", "Latvian"],
+		["lt", "Lithuanian"],
+		["mk", "Macedonian"],
+		["ms", "Malay"],
+		["mt", "Maltese"],
+		["no", "Norwegian"],
+		["fa", "Persian"],
+		["pl", "Polish"],
+		["pt", "Portuguese"],
+		["ro", "Romanian"],
+		["ru", "Russian"],
+		["sr", "Serbian"],
+		["sk", "Slovak"],
+		["sl", "Slovenian"],
+		["es", "Spanish"],
+		["sw", "Swahili"],
+		["sv", "Swedish"],
+		["ta", "Tamil"],
+		["te", "Telugu"],
+		["th", "Thai"],
+		["tr", "Turkish"],
+		["uk", "Ukrainian"],
+		["ur", "Urdu"],
+		["vi", "Vietnamese"],
+		["cy", "Welsh"],
+		["yi", "Yiddish"]
+	],
+	tl: [ // To:
+		["en", "English"],
+		["zh", "Chinese"],
+		["zh-CN", "Chinese (Simplified)"],
+		["zh-TW", "Chinese (Traditional)"],
+		["ja", "Japanese"],
+		["ko", "Korean"],
+		["af", "Afrikaans"],
+		["sq", "Albanian"],
+		["ar", "Arabic"],
+		["hy", "Armenian"],
+		["az", "Azerbaijani"],
+		["eu", "Basque"],
+		["be", "Belarusian"],
+		["bn", "Bengali"],
+		["bg", "Bulgarian"],
+		["ca", "Catalan"],
+		["hr", "Croatian"],
+		["cs", "Czech"],
+		["da", "Danish"],
+		["nl", "Dutch"],
+		["eo", "Esperanto"],
+		["et", "Estonian"],
+		["tl", "Filipino"],
+		["fi", "Finnish"],
+		["fr", "French"],
+		["gl", "Galician"],
+		["ka", "Georgian"],
+		["de", "German"],
+		["el", "Greek"],
+		["gu", "Gujarati"],
+		["ht", "Haitian Creole"],
+		["iw", "Hebrew"],
+		["hi", "Hindi"],
+		["hu", "Hungarian"],
+		["is", "Icelandic"],
+		["id", "Indonesian"],
+		["ga", "Irish"],
+		["it", "Italian"],
+		["kn", "Kannada"],
+		["la", "Latin"],
+		["lv", "Latvian"],
+		["lt", "Lithuanian"],
+		["mk", "Macedonian"],
+		["ms", "Malay"],
+		["mt", "Maltese"],
+		["no", "Norwegian"],
+		["fa", "Persian"],
+		["pl", "Polish"],
+		["pt", "Portuguese"],
+		["ro", "Romanian"],
+		["ru", "Russian"],
+		["sr", "Serbian"],
+		["sk", "Slovak"],
+		["sl", "Slovenian"],
+		["es", "Spanish"],
+		["sw", "Swahili"],
+		["sv", "Swedish"],
+		["ta", "Tamil"],
+		["te", "Telugu"],
+		["th", "Thai"],
+		["tr", "Turkish"],
+		["uk", "Ukrainian"],
+		["ur", "Urdu"],
+		["vi", "Vietnamese"],
+		["cy", "Welsh"],
+		["yi", "Yiddish"]
+	],
 	languages: [
+		["zh", "Chinese"],
+		["zh-CN", "Chinese Simplified"],
+		["zh-TW", "Chinese Traditional"],
+		["ja", "Japanese"],
+		["ko", "Korean"],
+		["en", "English"],
 		["af", "Afrikaans"],
 		["sq", "Albanian"],
 		["am", "Amharic"],
@@ -1200,16 +1351,12 @@ let dict = {
 		["my", "Burmese"],
 		["ca", "Catalan"],
 		["chr", "Cherokee"],
-		["zh", "Chinese"],
-		["zh-CN", "Chinese Simplified"],
-		["zh-TW", "Chinese Traditional"],
 		["co", "Corsican"],
 		["hr", "Croatian"],
 		["cs", "Czech"],
 		["da", "Danish"],
 		["dv", "Dhivehi"],
 		["nl", "Dutch"],
-		["en", "English"],
 		["eo", "Esperanto"],
 		["et", "Estonian"],
 		["fo", "Faroese"],
@@ -1231,12 +1378,10 @@ let dict = {
 		["iu", "Inuktitut"],
 		["ga", "Irish"],
 		["it", "Italian"],
-		["ja", "Japanese"],
 		["jw", "Javanese"],
 		["kn", "Kannada"],
 		["kk", "Kazakh"],
 		["km", "Khmer"],
-		["ko", "Korean"],
 		["ku", "Kurdish"],
 		["ky", "Kyrgyz"],
 		["lo", "Lao"],
@@ -1333,15 +1478,17 @@ let dict = {
 	get langpairs()  {
 		if (!dict._langpairs) {
 			let cpt = [];
-			for (let [, [abbr, lang]] in Iterator(dict.languages)) {
-				for (let [, [inabbr, inlang]] in Iterator(dict.languages)) {
-					if (inabbr == "")
-						continue;
+			for (let [, [inabbr, inlang]] in Iterator(dict.tl))
+				cpt.push([inabbr, T(2) + dict.fl[0][1] + T(3) + inlang]);
+			for (let [, [abbr, lang]] in Iterator(dict.fl)) {
+				for (let [, [inabbr, inlang]] in Iterator(dict.tl)) {
 					if (abbr == inabbr)
 						continue;
 					cpt.push([abbr+"|"+inabbr, T(2) + lang + T(3) + inlang]);
 				}
 			}
+			for (let [, [inabbr, inlang]] in Iterator(dict.tl))
+				cpt.push(["|" + inabbr, T(2) + dict.fl[0][1] + T(3) + inlang]);
 			dict._langpairs = cpt;
 		}
 		return dict._langpairs;
@@ -1774,9 +1921,9 @@ let dict = {
 		context.compare = null;
 		let youdao_completions = [
 			['eng', T(36)],
-			['fr', T(37)],
+			['jap', T(39)],
 			['ko', T(38)],
-			['jap', T(39)]
+			['fr', T(37)]
 		];
 		let zdic_completions = [
 			["1hp", '条目 - 请直接输入汉字或词语进行查询，支持拼音查询，例：“han”;“han4”;“han yu”;“han4 yu3”'],
@@ -2355,7 +2502,6 @@ group.commands.add(["spe[ak]"],
 				dactyl.echo("重新播放失败，无播放器或者播放链接为空！", commandline.FORCE_SINGLELINE);
 			return true;
 		}
-		// let le = args["-l"] || "en";
 		let le = args["-l"] || "";
 		if (le) {
 			dict.speak(dict.getSoundUriByLocaleKeyword(le, words));
@@ -2393,8 +2539,9 @@ group.commands.add(["spe[ak]"],
 						["yfr",  "Youdao - French"],
 						["yko",  "Youdao - Korean"],
 						["yjap", "Youdao - Japanese"],
-					].concat(dict.languages); // TODO
+					].concat(dict.languages);
 					context.filters = [CompletionContext.Filter.textDescription];
+					context.compare = null;
 				}
 			}
 		]
