@@ -2372,7 +2372,7 @@ group.options.add(["dict-dblclick", "dicd"],
 group.options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao:jap
 	T(17),
 	"stringmap",
-	"g:|zh-CN,y:eng,z:1hp",
+	"g:zh-CN,y:eng,z:1hp",
 	{
 		completer: function(context, extra) {
 
@@ -2750,14 +2750,12 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:|zh-CN,y:eng,z:1hp</default>
+        <default>g:zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>This argument supplies the optional source language and required destination language. In order to translate from English to Spanish, specify a value of langpair=en|es.</p>
 
-			<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=|es.</p>
+			<p>To use the auto-detect source feature, leave off the source language and only specify the vertical bar followed by the destination langauge as in: langpair=|es. (vertical bar "|" is optional now.)</p>
 
-			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">List of translatable languages</link></p>
-			<warning>The Google Translate API has been officially deprecated as of May 26, 2011. Due to the substantial economic burden caused by extensive abuse, the number of requests you may make per day will be limited and the API will be shut off completely on December 1, 2011.</warning>
 			<dl dt="width: 8em;">
 				<dt>jap</dt>      <dd>Chinese ↔ Japanese&#160;&#160;&#160;&#160;Youdao</dd>
 				<dt>eng</dt>      <dd>Chinese ↔ English&#160;&#160;&#160;&#160;&#160;&#160;&#160;Youdao</dd>
@@ -2772,10 +2770,10 @@ var INFO =
         <tags>'dicl' 'dict-langpair'</tags>
         <spec>'dict-langpair' 'dicl'</spec>
         <type>stringmap</type>
-        <default>g:|zh-CN,y:eng,z:1hp</default>
+        <default>g:zh-CN,y:eng,z:1hp</default>
         <description>
 			<p>使用谷歌翻译时，从哪种来源语言翻译到指定的目标语言。比如 <str>en|zh-CN</str>，表明从英文翻译到简体中文。</p>
-			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
+			<note>来源语言可以省略，例如当设置<o>dicl</o>为<str>|zh-CN 或 zh-CN</str>时，表明从任何语言翻译至简体中文。</note>
 			<p><link topic="http://code.google.com/apis/language/translate/v1/getting_started.html#translatableLanguages">谷歌翻译所支持的语言及其对应的缩写。</link></p>
 			<dl dt="width: 8em;">
 				<dt>jap</dt>      <dd>汉日互译&#160;&#160;&#160;&#160;&#160;网易有道</dd>
