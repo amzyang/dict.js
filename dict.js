@@ -2,6 +2,8 @@
 XML.ignoreWhitespace = false;
 XML.prettyPrinting = false;
 
+var SPACE = ' ';
+
 var STYLE = <style type="text/css">
 <![CDATA[
 body { white-space:normal; }
@@ -741,7 +743,7 @@ let qq = {
 				let syn_item = <></>;
 				item.c.forEach(function(single) {
 					let href = qq.href({"keyword": single});
-					syn_item += <><a href={href} highlight="URL">{single}</a> </>;
+					syn_item += <><a href={href} highlight="URL">{single}</a>{SPACE}</>;
 				});
 				syn += <>{syn_item}</>;
 			});
