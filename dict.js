@@ -707,8 +707,8 @@ let qq = {
 		if (e.netsen) {
 			let o = "";
 			Array.forEach(e.netsen, function(s) {
-				o += "<dl><dt>" + s.cs + "</dt>" +
-				 "<dd><a href=\"" + s.url + "\" highlight=\"URL\">" + s.es + "</a></dd></dl>";
+				o += "<dl><dt>" + s.es + "</dt>" +
+				 "<dd><a href=\"" + s.url + "\" highlight=\"URL\">" + s.cs + "</a></dd></dl>";
 			});
 			full["sub"][T(43)] = dict.tidyStr(o, "div");
 		}
