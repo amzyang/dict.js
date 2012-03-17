@@ -124,7 +124,8 @@ var tr = {
 		41: "Han Dian",
 		42: "Wikipedia",
 		43: "Net Sentences",
-		44: "Situational Dialogues"
+		44: "Situational Dialogues",
+		45: "The 21st Century Unabridged English-Chinese Dictionary"
 	},
 	"zh-CN": {
 		1:  "描述",
@@ -169,7 +170,8 @@ var tr = {
 		41: "汉典",
 		42: "维基百科",
 		43: "网络例句",
-		44: "情景对话"
+		44: "情景对话",
+		45: "21世纪大英汉词典"
 	}
 };
 
@@ -534,6 +536,10 @@ let youdao = {
 		var def = document.querySelectorAll("#etcTrans>ul, #cjTrans #basicToggle, #ckTrans #basicToggle, #cfTrans #basicToggle");
 		if (def)
 			full["sub"][T(8)] = dict.tidyNodes(def, "div");
+
+		var twenty1st =  document.querySelector("#powerTrans");
+		if (twenty1st)
+			full["sub"][T(45)] = dict.tidy(twenty1st);
 
 		var ph = document.querySelector("#wordGroup");
 		if (ph)
