@@ -989,7 +989,7 @@ let dict_cn = {
 		var req = new XMLHttpRequest();
 		dict.req = req;
 		dict_cn.keyword = keyword;
-		dict_cn.url = "http://dict.cn/"+keyword;
+		dict_cn.url = dict_cn.href({keyword: decodeURIComponent(keyword)});
 		req.open("POST",
 			"http://dict.cn/ws.php?utf8=true&q="+keyword
 		);
@@ -1002,7 +1002,7 @@ let dict_cn = {
 
 	href: function (params) {
 		const DICT_CN_PREFIX = "http://dict.cn/";
-		let keyword = encodeURIComponent(params["keyword"]);
+		let keyword = encodeURIComponent(params["keyword"].replace('.', '_2E'));
 		return DICT_CN_PREFIX + keyword;
 	},
 
@@ -1071,7 +1071,7 @@ let dict_cn = {
 			if (rels.length) {
 				let rs = <></>;
 				for (var i = 0; i < rels.length; i++) {
-					let url = "http://dict.cn/"+encodeURIComponent(rels[i].textContent);
+					let url = dict_cn.href({keyword: rels[i].textContent.trim()});
 					rs += <><span><a href={url} target="_blank" highlight="URL">{rels[i].textContent}</a></span></>;
 				}
 				ret["full"]["sub"][T(9)] = rs.toXMLString();
@@ -1110,9 +1110,9 @@ let dict_cn = {
 						let result_arr = Components.utils.evalInSandbox(req.responseText, sb);
 						result_arr["s"].forEach(function (r) {
 							r["e"] = dict.htmlToDom(r["e"].trim()).textContent;
-							r["url"] = "http://dict.cn/" + encodeURIComponent(r["g"].trim());
 							r["g"] = r["g"].trim();
-							suggestions.push(r); // trim blank chars
+							r["url"] = dict_cn.href({keyword: r["g"]});
+							suggestions.push(r);
 						});
 					} finally {
 						context.incomplete = false;
@@ -3016,3 +3016,4 @@ var INFO =
 // try fanyi.youdao.com
 // dictw 无语音输出
 // 添加 dictw/-h/:speak 的帮助文档
+// 支持命令行下的查词工具，sdcv
