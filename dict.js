@@ -1572,12 +1572,10 @@ let dict = {
 				}},
 				{
 					completer: function (context/*, args*/) { // todo
-						let _args = args;
-						_args[0] = commandline.command;
-						if (_args.length >= 1 && _args[0] !== "-" && _args[0].length > 0 && !_args["-h"])
-							dict.suggest(context, _args);
-
-						context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, _args));
+						args[0] = commandline.command;
+						if (args[0] && args[0] !== "-")
+							dict.suggest(context, args);
+						context.fork("words_history", 0, this, function (context) dict.cacheSuggest(context, args));
 					},
 					historyKey: 'dict.js'
 				}
@@ -2056,8 +2054,8 @@ let dict = {
 			}
 			
 		} else {
-			var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
-			// var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=no&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop&einterface=yes";
+			// var value= "http://www.strangecube.com/audioplay/online/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop";
+			var value= "file:///home/eric/Downloads/audioplay/audioplay.swf?file="+encodeURIComponent(uri)+"&auto=no&sendstop=yes&repeat=1&buttondir=file:///home/eric/Downloads/audioplay/buttons/negative&bgcolor=0xffffff&mode=playstop&einterface=yes";
 
 			var dict_sound = document.getElementById("dict-sound");
 			if (!dict_sound) {
