@@ -223,7 +223,7 @@ let wikipedia = {
 			audio: false
 		};
 		if (options["dict-hasaudio"])
-			dactyl.execute("speak " + (result.displaytitle || decodeURIComponent(dict.keyword)).replace(" ", "\\ "));
+			ex.speak((result.displaytitle || decodeURIComponent(dict.keyword)).replace(" ", "\\ "));
 		let output = <div><style tyle="text/css">
 			<![CDATA[
 				#wikipedia-output {background-color:#FFF;color:#000;padding:1em 2em;white-space:normal;}
@@ -1753,7 +1753,7 @@ let dict = {
 
 		if (ret["notfound"]) {
 			dactyl.echo(T(19) + decodeURIComponent(dict.keyword), commandline.FORCE_SINGLELINE);
-			dict.timeout = dactyl.timeout(dict._clear, 3000);
+			dict.timeout = dactyl.timeout(ex.redraw, 3000);
 		} else {
 			var show = options.get("dict-show").value;
 			if (dict.args["-o"])
@@ -1765,7 +1765,7 @@ let dict = {
 					invert = !invert;
 				if (invert) {
 					dactyl.echomsg(ret["simple"], 0, commandline.FORCE_SINGLELINE);
-					dict.timeout = dactyl.timeout(dict._clear, 15000); // TODO: clickable, styling
+					dict.timeout = dactyl.timeout(ex.redraw, 15000); // TODO: clickable, styling
 				} else {
 					ret["full"]["title"] = new XML(ret["full"]["title"]);
 					for (var prop in ret["full"]["sub"]) {
@@ -1822,7 +1822,7 @@ let dict = {
 					case "s":
 					dactyl.echo(new XML(google.genOutput(g)));
 					if (!mow.visible)
-						dict.timeout = dactyl.timeout(dict._clear, 10000);
+						dict.timeout = dactyl.timeout(ex.redraw, 10000);
 					break;
 
 					case "a":
@@ -1841,7 +1841,7 @@ let dict = {
 							timeout: Date.now() + 15000
 						}
 					);
-					dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left top;background-size:contain contain;}');
+					ex.style('chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left top;background-size:contain contain;}');
 					break;
 
 					case "n":
@@ -2073,10 +2073,6 @@ let dict = {
 		dict.speak(uri);
 	},
 
-	_clear: function() { // TODO: more tests
-		dactyl.echo("", commandline.FORCE_SINGLELINE);
-	},
-
 	_eolToSpace: function(str) {
 		return str.replace(/\n/g, " | ").replace(/\s+/g, " ");
 	},
@@ -2120,7 +2116,7 @@ let dict = {
 				timeout: Date.now() + 15000
 			}
 		);
-		dactyl.execute('style chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left -8px;}');
+		ex.style('chrome://* .popup-notification-icon[popupid="dict-popup"] { background:transparent url("'+dict.engine.logo+'") no-repeat left -8px;}');
 
 	},
 
@@ -2357,12 +2353,8 @@ function dblclick(event) {
 
 	if (event.detail == 2 && keyword.length && re.test(keyword))
 		ex.dict();
-	else {
-		if (options.get("dict-simple").value)
-			dict._clear(); // TODO
-		else
-			if (mow.visible) events.feedkeys("<Space>");
-	}
+	else
+		ex.redraw();
 }
 
 group.options.add(["dict-dblclick", "dicd"],
