@@ -50,7 +50,7 @@ p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word
 .dict_block {
 	width:600px;
 	margin-left:1em;
-	font-size:120%;
+	font-size:110%;
 }
 
 #dict_js_d .fold, #dict_js_d .unfold, #dict_js_d .folds, #dict_js_d .cont-one .choose {
@@ -2362,7 +2362,7 @@ group.options.add(["dict-simple", "dics"],
 group.options.add(["dict-engine", "dice"],
 	T(23),
 	"string",
-	"d",
+	"q",
 	{
 		completer: function(context) [
 			["d", T(24)],
@@ -2749,7 +2749,7 @@ var INFO =
         <tags>'dice' 'dict-engine'</tags>
         <spec>'dict-engine' 'dice'</spec>
         <type>string</type>
-        <default>d</default>
+        <default>q</default>
         <description>
 			  <p>Sites that dict.js supports:  </p>
 			  <dl dt="width: 6em;">
@@ -2766,7 +2766,7 @@ var INFO =
         <tags>'dice' 'dict-engine'</tags>
         <spec>'dict-engine' 'dice'</spec>
         <type>string</type>
-        <default>d</default>
+        <default>q</default>
         <description>
 			<p>dict.js 当前支持的网站：</p>
 			<dl dt="width: 6em;">
