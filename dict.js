@@ -1038,22 +1038,34 @@ let dict_cn = {
 		let noword = doc.querySelectorAll('.no-word');
 
 		if (noword.length == 0) {
-			let data = doc.querySelector('#data-js');
-			let dict_data_declare = data.innerHTML.split('\n')[3]; // 'var $dict_data="";'
-			let sb = new Components.utils.Sandbox("http://www.example.com/");
-			Components.utils.evalInSandbox(dict_data_declare.trim(), sb); // get $dict_data
-			_data = dict_cn._x(sb.$dict_data, 100); // @TODO: $dict_key, hardcode.
+			let token_js = doc.querySelector('#token-js');
+			let src = 'http://dict.cn' + token_js.getAttribute('src');
+			let xhr = new XMLHttpRequest();
 
-			$data = _data.data;
-			
-			let _ret = dict_cn._simple(doc, $data);
-			if (_ret["pron"])
-				_ret["simple"] = _ret["keyword"] + " " + _ret["pron"] + " " + _ret["def"];
-			else
-				_ret["simple"] = _ret["keyword"] + " " + _ret["def"];
-			_ret["full"] = dict_cn._full(doc, $data);
-			_ret['notfound'] = false;
-			ret = update(ret, _ret);
+			xhr.open("GET", src, false);
+			xhr.send(null);
+			if (xhr.status == 200) {
+				let data = doc.querySelector('#data-js');
+				let dict_data_declare = data.innerHTML.split('\n')[4].trim(); // 'var $dict_data="";'
+				let dict_key_declare = xhr.responseText.split(';')[0].trim() + ';';
+				window.dump(dict_data_declare + dict_key_declare);
+				let sb = new Components.utils.Sandbox("http://www.example.com/");
+				Components.utils.evalInSandbox(dict_data_declare + dict_key_declare, sb); // get $dict_data, $dict_key
+				_data = dict_cn._x(sb.$dict_data, sb.$dict_key);
+
+				$data = _data.data;
+				
+				let _ret = dict_cn._simple(doc, $data);
+				if (_ret["pron"])
+					_ret["simple"] = _ret["keyword"] + " " + _ret["pron"] + " " + _ret["def"];
+				else
+					_ret["simple"] = _ret["keyword"] + " " + _ret["def"];
+				_ret["full"] = dict_cn._full(doc, $data);
+				_ret['notfound'] = false;
+				ret = update(ret, _ret);
+			}
+
+			window.dump(src);
 		}
 		return ret;
 	},
