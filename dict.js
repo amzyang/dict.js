@@ -2446,7 +2446,7 @@ group.options.add(["dict-langpair", "dicl"], // stringmap google:en|zh-CN,youdao
 	}
 );
 
-group.commands.add(["di[ct]", "dic"],
+group.commands.add(["di[ct]"],
 	T(31),
 	dict.init,
 	{
