@@ -815,7 +815,7 @@ let qq = {
 		let _ret = {};
 		_ret["word"] = t.word;
 		if (t.sd)
-			_ret["audio"] = qq._audioUri(t.sd);
+			_ret["audio"] = "http://dict.youdao.com/dictvoice?audio="+encodeURIComponent(t.word);
 		if (t.pho)
 			_ret["pron"] = dict.htmlToDom(t.pho.join(", ")).textContent.trim();
 		if (t.des) {
