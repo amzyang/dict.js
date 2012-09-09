@@ -261,7 +261,7 @@ let wikipedia = {
 			</style>
 			<p class="title">
 				<a href={wikipedia.href({keyword: ret.def})} target="_blank" highlight="URL">{ret.def}</a></p></div>;
-		output += new XML(dict.tidyStr(ret.full['*'], "article"));
+        output += new XML(dict.tidy(dict.htmlToDom(ret.full['*'], 'http://zh.wikipedia.org')));
 		dactyl.echo(<div id="wikipedia-output">{output}</div>);
 	},
 
@@ -2280,13 +2280,15 @@ let dict = {
 		let prefix = arguments[1] || false;
 		let isfull = arguments[2] || false;
 		let doc = document.implementation.createHTMLDocument("");
+		doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
 		let ret = null;
 		if (isfull) {
 			ret = doc.documentElement;
 		} else {
-			ret = doc.body;
+            let id = "htmlToDom";
+            doc.body.innerHTML = '<div id="' + id + '"></div>';
+            ret = doc.getElementById(id);
 		}
-		doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
 		ret.innerHTML = str;
 
 		if (prefix)
@@ -2303,7 +2305,7 @@ let dict = {
 
 	resolveRelative: function(node, prefix) {
 		// @TODO: #, name anchor
-		var protocol = prefix.split(":")[0] || "";
+		var protocol = prefix.split(":")[0] || "http";
 		var pattern = /^((https?|ftps?|file|mailto|javascript):)?\/\//;
 		var anchor_pattern = /^#/;
 		var links = node.getElementsByTagName("a");
