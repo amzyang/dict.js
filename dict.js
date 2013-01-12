@@ -248,7 +248,7 @@ let wikipedia = {
         article.innerHTML = dict.tidy(dict.htmlToDom(ret.full['*'], 'http://zh.wikipedia.org'));
         let output = ['div', {id: 'wikipedia-output'},
             [
-                ['p', {class: 'title'}, ['a', {'href': wikipedia.href({keyword: ret.def}), target: '_blank', 'dactyl:highlight': 'URL'}, ret.def]],
+                ['p', {class: 'title'}, ['a', {'href': wikipedia.href({keyword: ret.def}), target: '_blank', highlight: 'URL'}, ret.def]],
                 article
             ]
         ];
@@ -401,12 +401,12 @@ let zdic = {
         var keyword_url = zdic.href({keyword: simp['word']});
         if (simp['pron']) {
             full['title'] = '<p class="title">' +
-            '<a href="'+keyword_url+'" target="_new" dactyl:highlight="URL">'+simp['word']+'</a>' +
+            '<a href="'+keyword_url+'" target="_new" highlight="URL">'+simp['word']+'</a>' +
                 '<span>[' + simp['pron'] + ']</span>' +
                 '</p>';
         } else {
             full['title'] = '<p class="title">' +
-                '<a href="'+keyword_url+'" target="_blank" dactyl:highlight="URL">'+simp['word']+'</a>' +
+                '<a href="'+keyword_url+'" target="_blank" highlight="URL">'+simp['word']+'</a>' +
             '</p>';
         }
 
@@ -558,12 +558,12 @@ let youdao = {
         var keyword_url = youdao.href({keyword: simple['word'], le: dict.args['-l']});
         if (simple['pron']) {
             full['title'] = '<p class="title">' +
-            '<a href="'+keyword_url+'" target="_new" dactyl:highlight="URL">'+simple['word']+'</a>'+
+            '<a href="'+keyword_url+'" target="_new" highlight="URL">'+simple['word']+'</a>'+
                 '<span>[' + simple['pron'] + ']</span>' +
             '</p>';
         } else {
             full['title'] = '<p class="title">' +
-                '<a href="'+keyword_url+'" target="_blank" dactyl:highlight="URL">'+simple['word']+'</a>' +
+                '<a href="'+keyword_url+'" target="_blank" highlight="URL">'+simple['word']+'</a>' +
             '</p>';
         }
 
@@ -691,12 +691,12 @@ let qq = {
         let keyword_url = qq.href({'keyword':_simple['word']});
         if (_simple['pron']) {
             full['title'] = '<p class="title">' +
-            '<a href="'+keyword_url+'" target="_new" dactyl:highlight="URL">'+_simple['word']+'</a>'+
+            '<a href="'+keyword_url+'" target="_new" highlight="URL">'+_simple['word']+'</a>'+
                 '<span>['+_simple['pron']+']</span>'
             '</p>';
         } else {
             full['title'] = '<p class="title">' +
-                '<a href="'+keyword_url+'" target="_blank" dactyl:highlight="URL">'+_simple['word']+'</a>'+
+                '<a href="'+keyword_url+'" target="_blank" highlight="URL">'+_simple['word']+'</a>'+
             '</p>';
         }
         if (t.des) { // Define
@@ -736,7 +736,7 @@ let qq = {
             let o = '';
             Array.forEach(e.netsen, function(s) {
                 o += '<dl><dt>' + s.es + '</dt>' +
-                 '<dd><a href="' + s.url + '" dactyl:highlight="URL">' + s.cs + '</a></dd></dl>';
+                 '<dd><a href="' + s.url + '" highlight="URL">' + s.cs + '</a></dd></dl>';
             });
             full['sub'][T(43)] = dict.tidyStr(o, 'div');
         }
@@ -760,7 +760,7 @@ let qq = {
             t.ph.forEach(function(item) {
                 let href = qq.href({'keyword': item['phs']});
                 let phs = item['phs'];
-                ph += '<li><a href="' + href + '" dactyl:highlight="URL">' + phs + '</a> ' + item['phd'] + '</li>';
+                ph += '<li><a href="' + href + '" highlight="URL">' + phs + '</a> ' + item['phd'] + '</li>';
             });
             full['sub'][T(9)] = dict.tidyStr(ph, 'ol');
         }
@@ -770,7 +770,7 @@ let qq = {
             t.syn.forEach(function(item) {
                 item.c.forEach(function(single) {
                     let href = qq.href({'keyword': single});
-                    syn += '<a href="' + href + '" dactyl:highlight="URL">' +
+                    syn += '<a href="' + href + '" highlight="URL">' +
                            single + '</a>';
                 });
             });
@@ -781,7 +781,7 @@ let qq = {
             t.ant.forEach(function(item) {
                 item.c.forEach(function(single) {
                     let href = qq.href({'keyword': single});
-                    ant += '<a href="' + href + '" dactyl:highlight="URL">' +
+                    ant += '<a href="' + href + '"highlight="URL">' +
                            single + '</a>';
                 });
             });
@@ -795,7 +795,7 @@ let qq = {
             t.mor.forEach(function(item) {
                 item['m'] = dict.htmlToDom(item['m']).textContent.trim();
                 let href = qq.href({'keyword': item['m']});
-                mor += '<span><b>'+item['c']+'</b><a href="'+href+'" dactyl:highlight="URL">'+item['m']+'</a></span>';
+                mor += '<span><b>'+item['c']+'</b><a href="'+href+'" highlight="URL">'+item['m']+'</a></span>';
             });
             full['sub'][T(13)] = '<p>' + mor + '</p>';
         }
@@ -1103,12 +1103,12 @@ let dict_cn = {
         var keyword_url = dict_cn.href({keyword: simple['keyword']});
         if (simple['pron']) {
             full['title'] = '<p class="title">' +
-            '<a href="' + keyword_url + '" target="_new" dactyl:highlight="URL">' + simple['keyword'] + '</a>' +
+            '<a href="' + keyword_url + '" target="_new" highlight="URL">' + simple['keyword'] + '</a>' +
                 '<span>' + simple['pron'] + '</span><span>' + simple['def'] + '</span>' +
             '</p>';
         } else {
             full['title'] = '<p class="title">' +
-                '<a href="' + keyword_url + '" target="_blank" dactyl:highlight="URL">' + simple['keyword'] + '</a>' +
+                '<a href="' + keyword_url + '" target="_blank" highlight="URL">' + simple['keyword'] + '</a>' +
                 '<span>' + simple['def'] + '</span>' +
                 '</p>';
         }
@@ -1704,7 +1704,7 @@ let dict = {
     cacheSuggest: function(context, args) {
         // TODO item.command/item.id ??? invalid???
         var url = function(item, text)
-        ['a', {'identifier': (item.id || ''), 'dactyl:command': (item.command || ''), 'href': item.item.url, 'dactyl:highlight': 'URL', 'title': text || ''}, text || ''];
+        ['a', {'identifier': (item.id || ''), 'dactyl:command': (item.command || ''), 'href': item.item.url, 'highlight': 'URL', 'title': text || ''}, text || ''];
         context.title = ['Words from history!'];
         context.keys = {'text':'word', 'description':'desc'};
         context.process[1] = url;
@@ -1931,7 +1931,7 @@ let dict = {
         let engine = dict.engines[dict._route(args)];
 
         var url = function(item, text)
-        ['a', {'identifier': (item.id || ''), 'dactyl:command': (item.command || ''), 'href': item.item.url, 'dactyl:highlight': 'URL', 'title': text || ''}, text || ''];
+        ['a', {'identifier': (item.id || ''), 'dactyl:command': (item.command || ''), 'href': item.item.url, 'highlight': 'URL', 'title': text || ''}, text || ''];
         context.title = [T(14) + ' - ' + engine.name,T(15)];
         context.keys = {'text':'g', 'description':'e'};
         context.compare = null;
@@ -2289,7 +2289,7 @@ let dict = {
             dict.resolveRelative(doc, prefix);
 
         Array.forEach(doc.links, function (link) {
-            link.setAttributeNS(NS, 'highlight', 'URL');
+            link.setAttribute('highlight', 'URL');
             // @HACK workaround for youdao
             link.removeAttribute(',');
             link.removeAttribute(')');
