@@ -960,9 +960,9 @@ let google = {
                 });
             });
             values.forEach(function(row) {
-                output += '<p>' + row.join('<br/>') + '</p>';
+                output += '<p>' + row.join(' ') + '</p>';
             });
-            output += '<a href="http://translate.google.com/#' + pairs + '" highlight="URL" target="_blank">...</a>';
+            output += '<a href="http://translate.google.com/#' + pairs + '" dactyl:highlight="URL" target="_blank">...</a>';
             output = '<div style="line-height:36px;font-size:18px;">' + output + '</div>';
         }
         let explain = result[1];
@@ -982,8 +982,8 @@ let google = {
             words.forEach(function(word) {
                 if (word[2]) {
                     assoc += '<span class="LinkWord" dactyl:highlight="Link" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+word[2][0][0]+'<span style="white-space:nowrap;top:-1.6em;" dactyl:highlight="LinkInfo" xmlns:dactyl="http://vimperator.org/namespaces/liberator">';
-                    assoc += word[0] + ': ';
-                    assoc += word[2].map(function(i) i[0]).join('; ') + '<br/>';
+                    assoc += '<b>' + word[0] + '</b> ';
+                    assoc += word[2].map(function(i) i[0]).join('; ');
                     assoc += '</span></span>';
                 }
             });
