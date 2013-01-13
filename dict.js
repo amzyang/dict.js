@@ -2341,7 +2341,7 @@ let dict = {
 group.options.add(['dict-hasaudio', 'dich'],
     T(21),
     'boolean',
-    true
+    false
 );
 
 group.options.add(['dict-clipboard', 'dicb'],
