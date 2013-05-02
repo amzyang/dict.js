@@ -1,5 +1,21 @@
 'use strict';
 
+// Initialise highlight groups
+highlight.loadCSS(literal(/*
+     LinkWord {
+         padding:0.4em 0.2em !important;
+         font-size:18px;
+     }
+     LinkWord:hover {
+         background-color:blue;
+         border-radius:1ex;
+     }
+*/), true);
+// load needed highlight groups
+['URL', 'Link', 'LinkInfo', 'LinkWord'].forEach(function(hl) {
+    highlight.loaded[hl] = true;
+});
+
 var DICT_LANGUAGE = window.navigator.language;
 
 var tr = {
@@ -981,7 +997,7 @@ let google = {
             let assoc = '';
             words.forEach(function(word) {
                 if (word[2]) {
-                    assoc += '<span class="LinkWord" dactyl:highlight="Link" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+word[2][0][0]+'<span style="white-space:nowrap;top:-1.6em;" dactyl:highlight="LinkInfo" xmlns:dactyl="http://vimperator.org/namespaces/liberator">';
+                    assoc += '<span dactyl:highlight="Link LinkWord" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+word[2][0][0]+'<span style="white-space:nowrap;top:-1.6em;" dactyl:highlight="LinkInfo" xmlns:dactyl="http://vimperator.org/namespaces/liberator">';
                     assoc += '<b>' + word[0] + '</b> ';
                     assoc += word[2].map(function(i) i[0]).join('; ');
                     assoc += '</span></span>';
@@ -989,12 +1005,6 @@ let google = {
             });
 
             output += '<p>' + assoc + '</p>';
-            output += literal(/*
-                 <style type="text/css">
-                 .LinkWord {padding:0.4em 0.2em;font-size:18px;}
-                 .LinkWord:hover {background-color:blue;border-radius:1ex;}
-                 </style>
-                 */);
         }
         output = '<div style="padding:40px;line-height:24px;width:600px;white-space:normal;">' + output + '</div>';
         return output;
