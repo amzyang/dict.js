@@ -2661,26 +2661,9 @@ var mousemove = function (e) {
         wordUnderCursor = '';
     }
 };
-if (config.OS.isWindows) {
-    var removePlayer = function () {
-        var dict_sound = document.getElementById('dict-sound');
-        if (dict_sound) {
-            var addonbar = document.getElementById('addon-bar');
-            addonbar.removeChild(dict_sound);
-        }
-    };
-    var fullscreen = function (e) {
-        removePlayer();
-    };
-    window.addEventListener('fullscreen', fullscreen, false);
-}
 window.gBrowser.addEventListener('mousemove', mousemove, false);
 
 function onUnload() {
-    if (config.OS.isWindows) {
-        window.removeEventListener('fullscreen', fullscreen, false);
-        removePlayer();
-    }
     window.gBrowser.removeEventListener('mousemove', mousemove, false);
     if (options['dict-dblclick'])
         window.gBrowser.removeEventListener('click', dblclick, false);
