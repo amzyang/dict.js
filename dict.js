@@ -2093,32 +2093,13 @@ let dict = {
     },
 
     speak: function(uri) {
-        var dict_sound = document.getElementById('dict-sound');
-        if (config.OS.isWindows) {
-            if (!dict_sound) {
-                dict_sound = DOM.fromJSON(['embed', {'id': 'dict-sound', 'src': '', 'autostart': 'false',  'type': 'application/x-mplyaer2', 'hidden': 'true', 'height': 0, 'width': 0, 'enablejavascript': 'true', 'xmlns': XHTML}], document);
-                var addonbar = document.getElementById('addon-bar');
-                addonbar.appendChild(dict_sound);
-            }
+        let dict_sound = document.getElementById('dict-sound');
+        if (dict_sound) {
             dict_sound.setAttribute('src', uri);
-            dict_sound.setAttribute('src', uri);
-            if (dict_sound.Play)
-                dict_sound.Play();
-            else {
-                window.setTimeout(function () dict_sound.controls.play(), 1000);
-                dict_sound.controls.play();
-            }
-            
         } else {
-            var value= 'http://www.strangecube.com/audioplay/online/audioplay.swf?file='+encodeURIComponent(uri)+'&auto=yes&sendstop=yes&repeat=1&buttondir=http://www.strangecube.com/audioplay/online/alpha_buttons/negative&bgcolor=0xffffff&mode=playstop';
-
-            if (!dict_sound) {
-                dict_sound = DOM.fromJSON(['embed', {'id': 'dict-sound', 'src': value, 'quality': 'high', 'wmode': 'transparent', 'wdith': 0, 'height': 0, 'align': '', 'hidden': 'true', 'type': 'application/x-shockwave-flash', 'pluginspage': 'http://www.macromedia.com/go/getflashplayer', 'allowScriptAccess': 'always', 'xmlns': XHTML}], document);
-                var addonbar = document.getElementById('addon-bar');
-                addonbar.appendChild(dict_sound);
-            }
-            dict_sound.setAttribute('src', value);
-            window.setTimeout(function () dict_sound.playMusic(), 1000);
+            dict_sound = DOM.fromJSON(['audio', {'id': 'dict-sound', 'src': uri, 'autoplay': 'true',  'preload': 'auto', 'xmlns': XHTML}], document);
+            let addonbar = document.getElementById('addon-bar');
+            addonbar.appendChild(dict_sound);
         }
     },
 
@@ -2586,24 +2567,11 @@ group.commands.add(['spe[ak]'],
         let words = args[0] || dict._selection();
         if (args.bang || !words) {
             let player = DOM('#dict-sound', document)[0] || false;
-            if (player && player.getAttribute('src'))
-                try {
-                    player.controls.play();
-                } catch (e if e instanceof TypeError) {
-                    try {
-                        player.playMusic();
-                    } catch (e if e instanceof TypeError) {
-                        try {
-                            player.Play();
-                        } catch (e if e instanceof TypeError) {
-                            ; // do nth
-                        } catch (e) {
-                            player.setAttribute('src', player.getAttribute('src'));
-                        }
-                    }
-                }
-            else
+            if (player) {
+                player.play();
+            } else {
                 dactyl.echo('重新播放失败，无播放器或者播放链接为空！', commandline.FORCE_SINGLELINE);
+            }
             return true;
         }
         let le = args['-l'] || '';
