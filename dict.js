@@ -2328,7 +2328,6 @@ let dict = {
     }
 };
 
-// check whether windows media player plugin exists.
 group.options.add(['dict-hasaudio', 'dich'],
     T(21),
     'boolean',
