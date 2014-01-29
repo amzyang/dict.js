@@ -401,9 +401,9 @@ let zdic = {
         });
 
         var _ret = zdic._simple(doc);
-        ret['audio'] = _ret['audio'] ? _ret['audio'] : ret['audio'];
-        ret['pron'] = _ret['pron'] ? _ret['pron'] : ret['pron'];
-        ret['def'] = _ret['def'] ? _ret['def'] : ret['def'];
+        ret['audio'] = _ret['audio'] || ret['audio'];
+        ret['pron'] = _ret['pron'] || ret['pron'];
+        ret['def'] = _ret['def'] || ret['def'];
         ret['notfound'] = !ret['def'];
         ret['simple'] = ret['def'].replace(/\n|\r/g, ' ').replace(/\s\s+/g, ' ').slice(0, 200);
         ret['keyword'] = zdic.keyword;
@@ -539,9 +539,9 @@ let youdao = {
         };
         let doc = dict.htmlToDom(text, 'http://dict.youdao.com', true);
         let _ret = youdao._simple(doc);
-        ret['audio'] = _ret['audio'] ? _ret['audio'] : ret['audio'];
-        ret['pron'] = _ret['pron'] ? _ret['pron'] : ret['pron'];
-        ret['def'] = _ret['def'] ? _ret['def'] : ret['def'];
+        ret['audio'] = _ret['audio'] || ret['audio'];
+        ret['pron'] = _ret['pron'] || ret['pron'];
+        ret['def'] = _ret['def'] || ret['def'];
         ret['notfound'] = !ret['def'];
         if (ret['pron'])
             ret['simple'] = _ret['word'] + ' [' + ret['pron'] + '] ' + ret['def'];
@@ -685,9 +685,9 @@ let qq = {
         };
         if (j['local']) {
             let _ret = qq._simple(j);
-            ret['audio'] = _ret['audio'] ? _ret['audio'] : ret['audio'];
-            ret['pron'] = _ret['pron'] ? _ret['pron'] : ret['pron'];
-            ret['def'] = _ret['def'] ? _ret['def'] : ret['def'];
+            ret['audio'] = _ret['audio'] || ret['audio'];
+            ret['pron'] = _ret['pron'] || ret['pron'];
+            ret['def'] = _ret['def'] || ret['def'];
             if (ret['pron'])
                 ret['simple'] = _ret['word'] + ' [' + ret['pron'] + '] ' + ret['def'];
             else
