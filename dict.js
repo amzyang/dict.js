@@ -2330,7 +2330,7 @@ let dict = {
 group.options.add(['dict-hasaudio', 'dich'],
     T(21),
     'boolean',
-    false
+    true
 );
 
 group.options.add(['dict-clipboard', 'dicb'],
