@@ -43,7 +43,6 @@ var tr = {
         22: 'Simple output',
         23: 'Dictionary engine',
         24: 'Dict.cn',
-        25: 'QQ Dictionary',
         26: 'Show result',
         27: 'Statusline',
         28: 'Alert',
@@ -92,7 +91,6 @@ var tr = {
         22: '简洁输出',
         23: '词典引擎',
         24: '海词',
-        25: 'QQ 词典',
         26: '显示结果方式',
         27: '状态栏',
         28: '提醒',
@@ -650,253 +648,6 @@ let youdao = {
     }
 };
 
-let qq = {
-    name: T(25),
-    keyword: '',
-    logo: 'http://im-img.qq.com/inc/images/new_header2/logo.gif',
-    favicon: 'http://dict.qq.com/favicon.ico',
-    init: function(keyword, args) {
-        var req = new window.XMLHttpRequest();
-        dict.req = req;
-        req.open('GET', 'http://dict.qq.com/dict?f=web&q='+keyword);
-        req.setRequestHeader('Referer', 'http://dict.qq.com/');
-        req.send(null);
-        req.onreadystatechange = function(ev) {
-            dict.ready(qq, req);
-        };
-        return req;
-    },
-
-    href: function (params) {
-        const QQ_PREFIX = 'http://dict.qq.com/dict?f=cloudmore&q=';
-        let keyword = encodeURIComponent(params['keyword']);
-        return QQ_PREFIX + keyword;
-    },
-
-    process: function(text) {
-        let j = JSON.parse(text);
-        let ret = {
-            notfound: false,
-            pron: false,
-            def: false,
-            simple: false,
-            full: false,
-            audio: false
-        };
-        if (j['local']) {
-            let _ret = qq._simple(j);
-            ret['audio'] = _ret['audio'] || ret['audio'];
-            ret['pron'] = _ret['pron'] || ret['pron'];
-            ret['def'] = _ret['def'] || ret['def'];
-            if (ret['pron'])
-                ret['simple'] = _ret['word'] + ' [' + ret['pron'] + '] ' + ret['def'];
-            else
-                ret['simple'] = _ret['word'] + ' ' + ret['def'];
-            ret['keyword'] = _ret['word'];
-            ret['full'] = qq._full(j);
-        } else
-            ret['notfound'] = true;
-        return ret;
-    },
-
-    _full: function(e) {
-        let local = e['local'];
-        let t = local[0];
-        let full = {title: '', sub: {}};
-        let _simple = qq._simple(e);
-        let keyword_url = qq.href({'keyword':_simple['word']});
-        if (_simple['pron']) {
-            full['title'] = '<p class="title">' +
-            '<a href="'+keyword_url+'" target="_new" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+_simple['word']+'</a>'+
-                '<span>['+_simple['pron']+']</span>'
-            '</p>';
-        } else {
-            full['title'] = '<p class="title">' +
-                '<a href="'+keyword_url+'" target="_blank" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+_simple['word']+'</a>'+
-            '</p>';
-        }
-        if (t.des) { // Define
-            let des = '';
-            let gsen = [];
-            if (t.sen)
-                gsen = t.sen;
-            t.des.forEach(function(item) {
-                if (typeof item === 'string') {
-                    let dt = '<dt><span>'+item+'</span></dt>';
-                    des += '<dl>'+dt+'</dl>';
-                } else {
-                    if (item['p']) {
-                        let pos = item['p'];
-                        let sen = qq._digIntoSen(pos, gsen);
-                        let dt = '<dt><span>'+item['p']+'</span><span>'+item['d']+'</span></dt>';
-                        let dds = '';
-                        if (sen) {
-                            sen.s.forEach(function(single) {
-                                    let es = single['es'];
-                                    let cs = single['cs'];
-                                    dds += '<dd>'+es+'</dd>';
-                                    dds += '<dd>'+cs+'</dd>';
-                            });
-                        }
-                        des += '<dl>'+dt+dds+'</dl>';
-                    } else {
-                        let dt = '<dt><span>'+item['d']+'</span></dt>';
-                        des += '<dl>'+dt+'</dl>';
-                    }
-                }
-            });
-            full['sub'][T(8)] = '<div class="basic">' + dict.tidyStr(des) + '</div>';
-        }
-
-        if (e.netsen) {
-            let o = '';
-            Array.forEach(e.netsen, function(s) {
-                o += '<dl><dt>' + s.es + '</dt>' +
-                 '<dd><a href="' + s.url + '" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">' + s.cs + '</a></dd></dl>';
-            });
-            full['sub'][T(43)] = dict.tidyStr(o, 'div');
-        }
-
-        if (e.dlg) {
-            let o = '';
-            e.dlg.forEach(function (play, idx) {
-                o += '<dl><b>' + (idx + 1) + '.' + play.t + play.s + '</b><dt>';
-                o += '<dd style="padding-left:2em;">';
-                play.c.forEach(function (sen) {
-                    o += '<p>' + sen.n + ': ' + sen.es + '</p>';
-                    o += '<p>&nbsp;&nbsp;&nbsp;' + sen.cs + '</p>';
-                });
-                o += '</dd></dl>';
-            });
-            full['sub'][T(44)] = dict.tidyStr(o, 'div');
-        }
-
-        if (t.ph) { // Related phrases
-            let ph = '';
-            t.ph.forEach(function(item) {
-                let href = qq.href({'keyword': item['phs']});
-                let phs = item['phs'];
-                ph += '<li><a href="' + href + '" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">' + phs + '</a> ' + item['phd'] + '</li>';
-            });
-            full['sub'][T(9)] = dict.tidyStr(ph, 'ol');
-        }
-
-        if (t.syn) { // Synonyms
-            let syn = '';
-            t.syn.forEach(function(item) {
-                item.c.forEach(function(single) {
-                    let href = qq.href({'keyword': single});
-                    syn += '<a href="' + href + '" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">' +
-                           single + '</a>';
-                });
-            });
-            full['sub'][T(12)] = '<p>' + T(10) + syn + '</p>';
-        }
-        if (t.ant) { // Antonyms
-            let ant = '';
-            t.ant.forEach(function(item) {
-                item.c.forEach(function(single) {
-                    let href = qq.href({'keyword': single});
-                    ant += '<a href="' + href + '" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">' +
-                           single + '</a>';
-                });
-            });
-            if (full['sub'][T(12)])
-                full['sub'][T(12)] += '<p>' + T(11) + ant + '</p>';
-            else
-                full['sub'][T(12)] = '<p>' + T(11) + ant + '</p>';
-        }
-        if (t.mor) { // Inflected
-            let mor = '';
-            t.mor.forEach(function(item) {
-                item['m'] = dict.htmlToDom(item['m']).textContent.trim();
-                let href = qq.href({'keyword': item['m']});
-                mor += '<span><b>'+item['c']+'</b><a href="'+href+'" dactyl:highlight="URL" xmlns:dactyl="http://vimperator.org/namespaces/liberator">'+item['m']+'</a></span>';
-            });
-            full['sub'][T(13)] = '<p>' + mor + '</p>';
-        }
-        return full;
-    },
-
-    _simple: function(e) {
-        let local = e['local'];
-        let t = local[0];
-        let _ret = {};
-        _ret['word'] = dict.htmlToDom(t.word).textContent.trim();
-        _ret['audio'] = 'http://dict.youdao.com/dictvoice?audio=' +
-                encodeURIComponent(_ret['word']);
-        if (t.pho)
-            _ret['pron'] = dict.htmlToDom(t.pho.join(', ')).textContent.trim();
-        if (t.des) {
-            _ret['def'] = [];
-            t.des.forEach(function(item) {
-                    if (typeof(item) !== 'string') {
-                        if (item['p'])
-                            _ret['def'].push(item['p'] + ' ' + item['d']);
-                        else
-                            _ret['def'].push(item['d']);
-                    } else {
-                        _ret['def'].push(item);
-                    }
-            });
-            _ret['def'] = dict.htmlToDom(_ret['def'].join(' | ')).
-                textContent.trim();
-        }
-        return _ret;
-    },
-
-    _audioUri: function(str) {
-        let prefix = 'http://speech.dict.qq.com/audio/';
-        let uri = prefix + str[0] + '/' + str[1] +
-                  '/' + str[2] + '/' + str + '.mp3';
-        return uri;
-    },
-
-    _digIntoSen: function(pos, sen) {
-        for (var i = 0; i < sen.length; i++) {
-            if (sen[i]['p'] == pos)
-                return sen[i];
-        }
-        return false;
-    },
-
-    generate: function(context, args) {
-        var req = new window.XMLHttpRequest();
-        if (dict.suggestReq)
-            dict.suggestReq.abort();
-        dict.suggestReq = req;
-        req.open('GET',
-            'http://dict.qq.com/sug?' + encodeURIComponent(args[0])
-        );
-        req.setRequestHeader('Referer', 'http://dict.qq.com/');
-        var suggestions = [];
-        req.onreadystatechange = function() {
-            if (req.readyState == 4) {
-                if (req.status == 200) {
-                    var text = req.responseText.trim();
-                    var result_arr = text.split('\n');
-                    result_arr.forEach(function(line) {
-                            if (line.trim().length == 0)
-                                return false;
-                            let pair = line.split('\t');
-                            let r = {};
-                            r['g'] = pair[0].trim();
-                            r['e'] = pair[1].trim();
-                            r['url'] = qq.href({'keyword': pair[0].trim()});
-                            suggestions.push(r);
-                    });
-                    context.incomplete = false;
-                    if (suggestions.length == 0 && args[0].trim().length > 0)
-                        context.completions = [{url:qq.href({keyword:args[0]}), g:args[0], e:'自动补全查询结束, 无返回结果'}];
-                    else
-                        context.completions = suggestions;
-                }
-            }
-        };
-        req.send(null);
-    }
-};
-
 let google = {
     name: T(34),
     favicon: 'http://translate.google.com/favicon.ico',
@@ -1222,7 +973,7 @@ let dict_cn = {
 }
 
 let dict = {
-    engines: {'d' : dict_cn, 'g' : google, 'q': qq, 'y': youdao, 'z': zdic, 'w': wikipedia},
+    engines: {'d' : dict_cn, 'g' : google, 'y': youdao, 'z': zdic, 'w': wikipedia},
     get DBConn() {
         if (dict._DBConn)
             return dict._DBConn;
@@ -2015,7 +1766,6 @@ let dict = {
             break;
 
             case 'd':
-            case 'q':
             case 'w':
             context.completions = [];
             break;
@@ -2348,11 +2098,10 @@ group.options.add(['dict-simple', 'dics'],
 group.options.add(['dict-engine', 'dice'],
     T(23),
     'string',
-    'q',
+    'g',
     {
         completer: function(context) [
             ['d', T(24)],
-            ['q', T(25)],
             ['g', T(34)],
             ['y', T(35)],
             ['z', T(41)],
@@ -2454,7 +2203,6 @@ group.commands.add(['di[ct]'],
                 type: CommandOption.STRING,
                 completer: [
                     ['d', T(24)],
-                    ['q', T(25)],
                     ['g', T(34)],
                     ['y', T(35)],
                     ['z', T(41)],
@@ -2495,7 +2243,7 @@ group.commands.add(['di[ct]'],
     true
 );
 
-Array.forEach('dgqyzw', function(char) {
+Array.forEach('dgyzw', function(char) {
         let extra_options = [];
         if ('gyz'.indexOf(char) + 1) {
             extra_options = [
