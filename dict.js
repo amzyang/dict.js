@@ -2136,7 +2136,6 @@ let dict = {
 
     _alert: function(ret) {
         // https://developer.mozilla.org/en/Using_popup_notifications
-        // check firefox version, enable on firefox 4.0 or above.
         PopupNotifications.show(window.gBrowser.selectedBrowser, 'dict-popup',
             dict._pipelineToBr(ret['simple']),
             'dict-popup-anchor', /* anchor ID */
