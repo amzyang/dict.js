@@ -2171,7 +2171,7 @@ group.options.add(['dict-langpair', 'dicl'], // stringmap google:en|zh-CN,youdao
                     ['y', T(35)],
                     ['g', T(34)],
                     ['z', T(41)]
-                ].filter(function (e) !Set.has(extra.values, e[0]));
+                ].filter(function (e) !hasOwnProperty(extra.values, e[0]));
             else
                 dict.optsCompleter(context, extra);
         },
