@@ -979,11 +979,11 @@ let dict = {
             return dict._DBConn;
         // https://developer.mozilla.org/En/Storage
         Components.utils.import('resource://gre/modules/Services.jsm');
-        Components.utils.import('resource://gre/modules/FileUtils.jsm');
 
-        let file = FileUtils.getFile('ProfD', ['dict.js.sqlite']);
+        var file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+        file.append('dict.js.sqlite');
         let DBConn = Services.storage.openDatabase(file); // Will also create the file
-        //
+
         // id, key, engine, word, lp, simple, all, create_time, frequency
         let dict_js = 'id            INTEGER PRIMARY KEY, ' +
                       'key           TEXT NOT NULL DEFAULT "{}", ' +
