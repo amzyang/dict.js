@@ -1,7 +1,7 @@
 'use strict';
 
 // Initialise highlight groups
-highlight.loadCSS(literal(function() /*
+highlight.loadCSS(`
      LinkWord {
          padding:0.4em 0.2em !important;
          font-size:18px;
@@ -10,7 +10,7 @@ highlight.loadCSS(literal(function() /*
          background-color:blue;
          border-radius:1ex;
      }
-*/$), true);
+`, true);
 // load needed highlight groups
 ['URL', 'Link', 'LinkInfo', 'LinkWord'].forEach(function(hl) {
     highlight.loaded[hl] = true;
@@ -123,7 +123,7 @@ function T(i) {
     return tr['en-US'][i];
 }
 
-var STYLE = literal(function() /*
+var STYLE = `
 <style type="text/css" xmlns="http://www.w3.org/1999/xhtml">
 body { white-space:normal;}
 * {line-height:24px;}
@@ -211,7 +211,7 @@ p,dd,dt,h1,h2,h3,h4,h5,h6,h7,li,td,th {white-space:normal; word-wrap: break-word
 #dict_js_z #zm{text-indent:40px;background:url("http://www.zdic.net/images/z_i_zm.gif") no-repeat;margin:0 15px 0 0;float: left;}
 #dict_js_z #fc{text-indent:40px;background:url("http://www.zdic.net/images/z_i_fc.gif") no-repeat;margin:0 15px 0 0;float: left;}
 </style>
-*/$);
+`;
 
 let wikipedia = {
     name: T(42),
